@@ -9,5 +9,9 @@ name = db.sqlite3
 
 [hosts]
 localhost = 127.0.0.1
-ipv6 = [2001:700:1d00:ec10:250:56ff:fe8d:2866]
-hostname = bootstrap
+hostname = fqdn.example.loc
+
+[LDAP]
+url = ldaps://win-dc3.win.ntnu.no:636
+search-base = OU=Brukere,DC=win,DC=ntnu,DC=no
+domain = win-ntnu-no

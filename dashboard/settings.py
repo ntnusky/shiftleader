@@ -18,7 +18,7 @@ from configparser import ConfigParser
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 parser = ConfigParser()
-parser.read(['/etc/hostadmin/settings.ini', os.path.join(BASE_DIR, 'settings.ini')])
+parser.read(['/etc/machineadmin/settings.ini', os.path.join(BASE_DIR, 'settings.ini')])
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -120,47 +120,24 @@ else:
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "loggers": {
-        "django_python3_ldap": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        },
-    },
-}
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = parser.get('general', 'staticpath')
 LOGIN_URL = '/login/'
 
 # The URL of the LDAP server.
-LDAP_AUTH_URL = "ldaps://win-dc3.win.ntnu.no:636"
+LDAP_AUTH_URL = parser.get('LDAP', 'url') 
 
 # Initiate TLS on connection.
 LDAP_AUTH_USE_TLS = False
 
 # The LDAP search base for looking up users.
-LDAP_AUTH_SEARCH_BASE = "OU=Brukere,DC=win,DC=ntnu,DC=no"
+LDAP_AUTH_SEARCH_BASE = parser.get('LDAP', 'search-base')
 
 # The LDAP class that represents a user.
 LDAP_AUTH_OBJECT_CLASS = "user"
@@ -204,7 +181,7 @@ LDAP_AUTH_FORMAT_SEARCH_FILTERS = "django_python3_ldap.utils.format_search_filte
 #LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = "win.ntnu.no"
 
 LDAP_AUTH_FORMAT_USERNAME = "django_python3_ldap.utils.format_username_active_directory"
-LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = "win-ntnu-no"
+LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN = parser.get('LDAP', 'domain')
 
 # The LDAP username and password of a user for querying the LDAP database for user
 # details. If None, then the authenticated user will be used for querying, and
