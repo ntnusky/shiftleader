@@ -1,0 +1,46 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title> 
+      {% block title %} 
+        {{ title|default:"Machine administration login" }} 
+      {% endblock title %}
+    </title>
+
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'login.css' %}" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      {% if next %}
+        <form action="{% url 'login' %}?next={{ next }}" method="post" class="form-signin" >
+      {% else %}
+        <form action="{% url 'login' %}" method="post" class="form-signin" >
+      {% endif %}
+        <h2 class="form-signin-heading">Machine administration</h2>
+        
+        {% if message %}
+          <p>{{ message }}</p>
+        {% endif %}
+
+        <p>Please sign in:</p>
+        {% csrf_token %}
+        <label for="username" class="sr-only">Username</label>
+        <input type="text" name="username" id="username" class="form-control" placeholder="username" required autofocus>
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" name=password id="inputPassword" class="form-control" placeholder="Password" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+    </div>
+  </body>
+</html>
+
