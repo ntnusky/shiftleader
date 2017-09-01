@@ -1,0 +1,6 @@
+settings.ini
+db.sqlite
+static/
+
+*.swp
+*.py[oc]
