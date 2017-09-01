@@ -2,6 +2,7 @@
 debug = true
 secret = *nb=w$bn8k$#zd294sextftb!&vh@yg=r9-7)lpg5)$7p&-m8l
 staticpath = ./static
+api = 127.0.0.1:8000
 
 [database]
 type = sqlite
