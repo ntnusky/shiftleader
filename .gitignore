@@ -1,6 +1,6 @@
 settings.ini
 db.sqlite
-static/
+/static
 
 *.swp
 *.py[oc]
