@@ -15,13 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 
-from dashboard.views import main
+from dhcp.views import main
 
 urlpatterns = [
-  url(r'^$', main.index, name="index"),
-  url(r'^login/$', main.loginPage, name="login"),
-  url(r'^logout/$', main.logoutPage, name="logout"),
-
-  url(r'^puppet/', include('puppet.urls')),
-  url(r'^dhcp/', include('dhcp.urls')),
+  url(r'^$', main.index, name="dhcpIndex"),
 ]
