@@ -4,7 +4,6 @@ from django.core.management.base import BaseCommand, CommandError
 
 from dashboard.settings import parser
 from dhcp.models import Subnet
-from dhcp.utils import calculateMaskLength
 
 class Command(BaseCommand):
   help = "Reads the configuration-file and loads relevand dhcp configuration" \
@@ -30,16 +29,14 @@ class Command(BaseCommand):
         self.stderr.write(" - %s" % str(e))
         continue
 
-      mask = calculateMaskLength(netmask)
-      
       toSave = False
       try:
         subnet = Subnet.objects.get(name=pool)
-        if(subnet.setSubnet(network, mask)):
+        if(subnet.setSubnet(network, netmask)):
           self.stdout.write(" - Updating the pool with new net-id and mask")
       except Subnet.DoesNotExist:
-        subnet = Subnet(name=pool, active=True, prefix=network, mask=mask)
-        subnet.save()
+        subnet = Subnet(name=pool, active=True)
+        subnet.setSubnet(network, netmask)
         self.stdout.write(" - The pool is new.")
     
     activeNets = Subnet.objects.filter(active=True). \
