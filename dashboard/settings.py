@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'dashboard',
     'puppet',
     'dhcp',
+    'nameserver',
 )
 
 AUTHENTICATION_BACKENDS = ("django_python3_ldap.auth.LDAPBackend",)

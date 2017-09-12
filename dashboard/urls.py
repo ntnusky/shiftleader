@@ -24,4 +24,5 @@ urlpatterns = [
 
   url(r'^puppet/', include('puppet.urls')),
   url(r'^dhcp/', include('dhcp.urls')),
+  url(r'^dns/', include('nameserver.urls')),
 ]

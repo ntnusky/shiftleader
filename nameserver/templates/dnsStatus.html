@@ -1,0 +1,20 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <h2>Servers:</h2>
+  {% if servers %}
+    {% for s in servers %}
+      <h3>{{ s.name }} - {{ s.address }}</h3>
+      <p>The server "{{ s.name }}" administers the following domains:</p>
+      <ul>
+        {% for d in s.domain_set.all %}
+          {% if d.testConnection %}
+            <li>{{d.name}}</li>
+          {% else %}
+            <li class="inactive">{{d.name}}</li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  {% endif %}
+{% endblock page-content %}

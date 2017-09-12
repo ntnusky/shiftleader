@@ -10,6 +10,12 @@ def populateMenu(request):
   menu.append(m)
 
   m = {}
+  m['name'] = 'DNS' 
+  m['url'] = reverse('dnsIndex')
+  m['active'] = request.path == m['url']
+  menu.append(m)
+
+  m = {}
   m['name'] = 'DHCP' 
   m['url'] = reverse('dhcpIndex')
   m['active'] = request.path == m['url']
