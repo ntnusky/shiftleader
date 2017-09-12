@@ -36,7 +36,7 @@ class Subnet(models.Model):
       self.prefix = str(subnet.network_address)
       toSave = True
     if(self.mask != subnet.prefixlen):
-      self.mask = newPrefix
+      self.mask = subnet.prefixlen
       toSave = True
 
     if(toSave):

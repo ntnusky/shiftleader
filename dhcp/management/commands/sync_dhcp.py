@@ -70,4 +70,3 @@ class Command(BaseCommand):
 
       subnet.free = free
       subnet.save()
-      print("%d free addresses" % subnet.free)
