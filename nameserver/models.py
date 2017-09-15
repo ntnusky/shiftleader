@@ -1,5 +1,4 @@
 import dns.query
-import dns.tsigkeyring
 import dns.update
 
 from django.db import models
@@ -30,3 +29,5 @@ class Domain(models.Model):
     except:
       return False
 
+  class Meta:
+    ordering = ['name']

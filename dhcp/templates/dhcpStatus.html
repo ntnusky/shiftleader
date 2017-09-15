@@ -1,0 +1,17 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <h2>Subnets</h2>
+  <p>These are the subnets where DHCP is configured:</p>
+  <table class="table table-striped table-hover table-condensed"> 
+  <tr><th>Name</th><th>Active</th><th>Prefix</th><th># free adresses</th></tr>
+  {% for s in subnets %}
+    <tr>
+      <td>{{s.name}}</td>
+      <td>{{s.active}}</td>
+      <td>{{s.prefix}}/{{s.mask}}</td>
+      <td>{{s.free}}</td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endblock page-content %}

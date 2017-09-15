@@ -1,0 +1,138 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <p class="ajax"></p>
+
+  <h2>Existing hosts</h2>
+
+  <p>This table contains the hosts currently configured in the system.</p>
+
+  <div class="btn-group btn-group-justified">
+    <a href="#" class="btn btn-success changeButton disabled addInterface">Add Interface</a>
+    <a href="#" class="btn btn-success changeButton disabled updateEnv">Update Environment</a>
+    <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
+    <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
+  </div>
+  <table class="table table-hover table-condensed">
+    <tr>
+      <th><input type="checkbox" class="selectAllHosts"></th>
+      <th colspan="2">Hostname</th>
+      <th>Environment</th>
+      <th>Status</th>
+      <th># Interfaces</th>
+      <th>Actions</th>
+    </tr>
+    {% for h in hosts %}
+      <tr>
+        <td><input type="checkbox" name="selectHost" class="selectHost" value="{{h.id}}"></td>
+        <td colspan="2">{{h.name}}.{{h.domain.name}}</td>
+        <td>{{h.environment.name}}</td>
+        <td>{{h.getStatusText}}</td>
+        <td>{{h.interface_set.count}}</td>
+        <td>
+          <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-success">Open</a>
+          <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-danger">Delete</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  <script>
+    $(document).ready(function(){
+      // Select all hosts if the "selectAllHosts" checkbox is clicked on
+      $(".selectAllHosts").change(function() {
+        $(".selectHost").attr('checked', this.checked);
+      });
+      
+      // Enable/disable buttons based on how many hosts are selected
+      $(".selectHost").change(function() {
+        var antall = $('.selectHost:checked').length;
+        if(antall == 0) {
+          $(".addInterface").toggleClass('disabled', true);
+          $(".updateEnv").toggleClass('disabled', true);
+          $(".rebuild").toggleClass('disabled', true);
+          $(".deleteHost").toggleClass('disabled', true);
+        } else if (antall == 1) {
+          $(".addInterface").toggleClass('disabled', false);
+          $(".updateEnv").toggleClass('disabled', false);
+          $(".rebuild").toggleClass('disabled', false);
+          $(".deleteHost").toggleClass('disabled', false);
+        } else {
+          $(".addInterface").toggleClass('disabled', true);
+          $(".updateEnv").toggleClass('disabled', false);
+          $(".rebuild").toggleClass('disabled', false);
+          $(".deleteHost").toggleClass('disabled', false);
+        }
+      });
+    });
+  </script>
+
+  <div class="col-lg-12">
+    <h2>Add new host</h2>
+    <p>Use the following form to create a new host:</p>
+    <form  class="form-horizontal">
+      {% csrf_token %} 
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="hostname">Hostname</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" id="hostname">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="domain">Domain</label>
+        <div class="col-sm-8">
+          <select class="form-control" id="domain">
+            {% for domain in domains %}
+              <option>{{domain.name}}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="environment">Environment</label>
+        <div class="col-sm-8">
+          <select class="form-control" id="environment">
+            {% for environment in environments %}
+              <option>{{environment.name}}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="name">Interface desc.</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" id="name" placeholder="management">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="ifname">Interface name</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" id="ifname" placeholder="eth0">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="mac">MAC Address</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" id="mac" 
+              placeholder="00:53:ac:01:4a:f2">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="control-label col-sm-4" for="ipv4">IPv4 address</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" id="ipv4"
+              placeholder="198.51.100.218">
+        </div>
+      </div>
+      <div class="col-sm-4"></div>
+      <div class="col-sm-8">
+        <button class="btn btn-primary newHost" type="button">Add</button>
+      </div>
+    </form>
+  </div
+{% endblock page-content %}

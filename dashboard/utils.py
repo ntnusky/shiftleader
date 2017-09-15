@@ -10,6 +10,12 @@ def populateMenu(request):
   menu.append(m)
 
   m = {}
+  m['name'] = 'Hosts' 
+  m['url'] = reverse('hostIndex')
+  m['active'] = request.path.startswith(m['url'])
+  menu.append(m)
+
+  m = {}
   m['name'] = 'DNS' 
   m['url'] = reverse('dnsIndex')
   m['active'] = request.path == m['url']

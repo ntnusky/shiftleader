@@ -1,72 +1,41 @@
-import pypureomapi
-import ipaddress
-from configparser import NoOptionError
+from django.core.management.base import BaseCommand
 
-from django.core.management.base import BaseCommand, CommandError
-
-from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
+from dhcp.omapi import Servers
+from host.models import Interface
 
 class Command(BaseCommand):
   help = "Loads all active reservations from DHCP server" 
 
   def handle(self, *args, **options):
-    try:
-      host = parser.get("DHCP", "omapiHost")
-      port = parser.get("DHCP", "omapiPort")
-      name = parser.get("DHCP", "omapiKeyname")
-      key = parser.get("DHCP", "omapiKey")
-    except NoOptionError as e:
-      self.stderr.write("Could not find omapi configuration in the configfile")
-      self.stderr.write(" - %s" % str(e))
+    servers = Servers()
 
-    try:
-      connection = pypureomapi.Omapi(host, int(port), name.encode('utf-8'), key)
-    except pypureomapi.OmapiError:
-      self.stderr.write("Could not connect to DHCP server trough the OMAPI")
-      return
-
+    # For each subnet we ar handling DHCP
     for subnet in Subnet.objects.filter(active=True).all():
-      gateway = parser.get("DHCP", "%sGateway" % subnet.name)
-      reservedAddresses = []
-      free = 0
-      try:
-        reserved = parser.get("DHCP", "%sReserved" % subnet.name)
-        for address in reserved.split(','):
-          if('-' in address):
-            first = ipaddress.ip_address(address.split('-')[0])
-            last = ipaddress.ip_address(address.split('-')[1])
-            for ip in range(int(first), int(last)+1):
-              reservedAddresses.append(ipaddress.ip_address(ip))
-          else:
-            reservedAddresses.append(ipaddress.ip_address(address))
-      except NoOptionError:
-        pass
+      # Initialize a counter over free adressess and a list over reserved
+      # addresses.
+      free = subnet.getSubnet().num_addresses
+      free -= len(subnet.getReservedAddresses())
 
-      for host in subnet.getSubnet().hosts():
-        if(gateway == str(host) or host in reservedAddresses):
-          continue
-
+      # For each lease in the database
+      for lease in Lease.objects.all():
         try:
-          mac = connection.lookup_mac(str(host))
-        except pypureomapi.OmapiErrorNotFound:
-          free += 1
-          continue
+          name = "%s.%s.%s" % (lease.interface.name, lease.interface.host.name,
+              lease.interface.host.domain.name)
+        except Interface.DoesNotExist:
+          name = None
 
-        self.stdout.write(host)
+        status = servers.configureLease(lease.IP, lease.MAC, lease.present, name)
 
-        try:
-          lease = Lease.objects.get(MAC=mac)
-          if(lease.IP != str(host)):
-            lease.IP = str(host)
-            lease.save()
-            self.stdout.write("Updating IP address for %s (%s)" % (lease.MAC,
-                lease.IP))
-        except Lease.DoesNotExist:
-          lease = Lease(IP=str(host), MAC=mac, subnet=subnet)
-          lease.save()
-          self.stdout.write("Adding a new lease for %s (%s)" % (lease.MAC, 
-              lease.IP))
+        if status & Servers.CREATED:
+          self.stdout.write("Created lease for %s->%s" % (lease.IP, lease.MAC))
+        if status & Servers.UPDATED:
+          self.stdout.write("Updated lease for %s->%s" % (lease.IP, lease.MAC))
+        if status & Servers.DELETED:
+          self.stdout.write("Deleted lease for %s->%s" % (lease.IP, lease.MAC))
+
+        if lease.present:
+          free -= 1
 
       subnet.free = free
       subnet.save()

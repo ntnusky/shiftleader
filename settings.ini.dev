@@ -2,7 +2,7 @@
 debug = true
 secret = *nb=w$bn8k$#zd294sextftb!&vh@yg=r9-7)lpg5)$7p&-m8l
 staticpath = ./static
-api = 127.0.0.1:8000
+api = http://127.0.0.1:8000
 
 [database]
 type = sqlite
@@ -16,3 +16,25 @@ hostname = fqdn.example.loc
 url = ldaps://win-dc3.win.ntnu.no:636
 search-base = OU=Brukere,DC=win,DC=ntnu,DC=no
 domain = win-ntnu-no
+
+[DHCP-SERVERS]
+servers = primary
+primaryHost = 127.0.0.1
+primaryPort = 7911
+primaryKeyname = main_key
+primaryKey = <omapi_key>
+
+[DHCP]
+pools = management
+managementNetwork = 192.168.254.0
+managementNetmask = 255.255.255.192
+managementGateway = 192.168.254.1
+managementReserved = 192.168.254.2,192.168.254.50-192.168.254.62
+
+[DNS]
+servers = local
+localAddress = 127.0.0.1
+#localKey = 123123
+
+[Domains]
+sky.rothaugane.com = local

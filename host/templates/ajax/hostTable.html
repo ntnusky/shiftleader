@@ -1,0 +1,23 @@
+<table class="table table-hover table-condensed">
+  <tr>
+    <th><input type="checkbox" class="selectAllHosts"></th>
+    <th colspan="2">Hostname</th>
+    <th>Environment</th>
+    <th>Status</th>
+    <th># Interfaces</th>
+    <th>Actions</th>
+  </tr>
+  {% for h in hosts %}
+    <tr>
+      <td><input type="checkbox" name="selectHost" class="selectHost" value="{{h.id}}"></td>
+      <td colspan="2">{{h.name}}.{{h.domain.name}}</td>
+      <td>{{h.environment.name}}</td>
+      <td>{{h.getStatusText}}</td>
+      <td>{{h.interface_set.count}}</td>
+      <td>
+        <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-success">Open</a>
+        <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-danger">Delete</a>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
