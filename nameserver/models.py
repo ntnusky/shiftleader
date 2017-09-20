@@ -1,5 +1,9 @@
 import dns.query
 import dns.update
+import dns.rdatatype
+import random
+import string
+
 
 from django.db import models
 
@@ -18,12 +22,53 @@ class Domain(models.Model):
   def __str__(self):
     return "%s" % self.name
 
+  def query(self, name, rtype=dns.rdatatype.A):
+    qname = dns.name.from_text("%s.%s" % (name, self.name))
+    q = dns.message.make_query(qname, rtype)
+    r = dns.query.udp(q, self.server.address)
+    try:
+      data = []
+      ns_rrset = r.find_rrset(r.answer, qname, dns.rdataclass.IN, rtype)
+      for rr in ns_rrset:
+        data.append(rr)
+      return data
+    except:
+      return None
+
+  def deleteDomain(self, name):
+    update = dns.update.Update(self.name)
+    update.delete(name)
+    dns.query.tcp(update, self.server.address)
+
+  def configureA(self, name, address):
+    qname = dns.name.from_text("%s.%s" % (name, self.name))
+    response = self.query(name)
+
+    try:
+      # If a response is received, and it is correct, return true.
+      if(response[0].address == address):
+        return True
+      # If it is wrong, delete it.
+      else:
+        update = dns.update.Update(self.name)
+        update.delete(name)
+        dns.query.tcp(update, self.server.address)
+    except (TypeError, IndexError):
+      pass
+
+    # Create the new record
+    update = dns.update.Update(self.name)
+    update.add(name, 300, 'a', address)
+    dns.query.tcp(update, self.server.address)
+    return True
+
   def testConnection(self):
+    dnsName = ''.join(random.choice(string.ascii_lowercase) for i in range(20))
     try:
       update = dns.update.Update(self.name)
-      update.add('dnstesting', 300, 'a', '127.0.0.1')
+      update.add(dnsName, 300, 'a', '127.0.0.1')
       response = dns.query.tcp(update, self.server.address)
-      update.delete('dnstesting')
+      update.delete(dnsName)
       response = dns.query.tcp(update, self.server.address)
       return True
     except:
