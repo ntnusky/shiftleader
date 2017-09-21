@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import user_passes_test 
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
 
-from dashboard.utils import createContext, requireSuperuser
+from dashboard.utils import createContext, requireSuperuser, get_client_ip
+from dashboard.settings import parser
 from host.models import Host
+from host.utils import authorize, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment
 
@@ -26,3 +29,36 @@ def single(request, id):
       context['host'].domain.name)
 
   return render(request, 'hostStatus.html', context)
+
+def preseed(request, id):
+  context = {} 
+
+  context['host'] = get_object_or_404(Host, pk=id)
+  context['diskname'] = '/dev/sda'
+
+  auth = authorize(request, context['host'])
+  if auth == NONE:
+    return HttpResponseForbidden()
+
+  if auth == IP:
+    context['host'].status = Host.INSTALLING
+    context['host'].save()
+
+  return render(request, 'preseed/default.cfg', context)
+
+def tftp(request, id):
+  context = {} 
+
+  key, context['dashboardURL'] = parser.items("hosts")[0]
+  context['host'] = get_object_or_404(Host, pk=id)
+
+  if not authorize(request, context['host']):
+    return HttpResponseForbidden()
+
+  if(int(context['host'].status) == Host.OPERATIONAL):
+    template = 'tftpboot/localboot.cfg'
+  elif(int(context['host'].status) == Host.PROVISIONING or
+      int(context['host'].status) == Host.INSTALLING):
+    template = 'tftpboot/install.cfg'
+
+  return render(request, template, context)
