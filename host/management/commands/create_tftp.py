@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
   def handle(self, *args, **options):
     data = {}
-    location = parser.get("TFTP", "rootdir")
+    location = os.path.join(parser.get("TFTP", "rootdir"), 'pxelinux.cfg')
     key, data['dashboardURL'] = url = parser.items("hosts")[0]
 
     if not os.path.exists(location):
