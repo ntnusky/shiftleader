@@ -4,6 +4,7 @@ from random import sample, choice
 from django.db import models
 
 from dhcp.models import Lease
+from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment
 
@@ -70,6 +71,21 @@ class Host(models.Model):
     chars = string.ascii_letters + string.digits
     self.password = ''.join(choice(chars) for _ in range(16))
     self.save()
+
+  def remove(self):
+    self.deleteDNS()
+    dhcp = Servers()
+    for interface in self.interface_set.all():
+      dhcp.configureLease(interface.ipv4Lease.IP, interface.ipv4Lease.MAC,
+          present = False)
+      lease = interface.ipv4Lease
+      lease.present = False
+      lease.lease = False
+      lease.save()
+      lease.subnet.free += 1
+      lease.subnet.save()
+      interface.delete()
+    self.delete()
 
   class Meta:
     ordering = ['domain', 'name']

@@ -87,6 +87,7 @@ class Subnet(models.Model):
       if self.checkFree(str(host)):
         lease = Lease(IP=str(host), MAC=mac, subnet=self)
         self.free -= 1
+        self.save()
         lease.save()
         return lease
     else:
@@ -96,6 +97,7 @@ class Subnet(models.Model):
         if self.checkFree(str(host)):
           lease = Lease(IP=str(host), MAC=mac, subnet=self)
           self.free -= 1
+          self.save()
           lease.save()
           return lease
     return None

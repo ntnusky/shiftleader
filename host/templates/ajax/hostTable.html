@@ -15,8 +15,9 @@
       <td>{{h.getStatusText}}</td>
       <td>{{h.interface_set.count}}</td>
       <td>
-        <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-success">Open</a>
-        <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-danger">Delete</a>
+        <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn btn-info">
+          Show details
+        </a>
       </td>
     </tr>
   {% endfor %}

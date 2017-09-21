@@ -2,8 +2,9 @@ import re
 import ipaddress
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.http import JsonResponse 
+from django.http import JsonResponse, HttpResponseBadRequest 
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt 
 
 from dashboard.utils import requireSuperuser
 from dhcp.models import Subnet
@@ -25,6 +26,98 @@ def table(request):
   context = {}
   context['hosts'] = Host.objects.all()
   return render(request, 'ajax/hostTable.html', context)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def environment(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest()
+
+  try:
+    environment = Environment.objects.get(
+        pk=int(request.POST.get('environment')))
+  except:
+    return HttpResponseBadRequest()
+
+  names = []
+  for host in hosts:
+    names.append(host.name)
+    host.environment = environment
+    host.save()
+
+  response['status'] = 'success'
+  response['message'] = 'Changed the environment of "%s" to %s.' % \
+      (', '.join(names), environment.name)
+  return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def provision(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest()
+
+  for host in hosts:
+    host.status = Host.PROVISIONING
+    host.save()
+
+  response['status'] = 'success'
+  response['message'] = 'Provisioned hosts for reinstall at next reboot'
+  return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def remove(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest()
+
+  for host in hosts:
+    host.remove()
+
+  response['status'] = 'success'
+  response['message'] = 'Removed the selected hosts.'
+  return JsonResponse(response)
 
 @user_passes_test(requireSuperuser)
 def new(request):

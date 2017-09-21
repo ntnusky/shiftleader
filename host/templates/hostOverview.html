@@ -9,11 +9,22 @@
     <p>This table contains the hosts currently configured in the system.</p>
 
     <div class="btn-group btn-group-justified">
-      <a href="#" class="btn btn-success changeButton disabled addInterface">Add Interface</a>
-      <a href="#" class="btn btn-success changeButton disabled updateEnv">Update Environment</a>
+      <div class="btn-group">
+        <button type="button"
+            class="btn btn-success disabled dropdown-toggle updateEnv" 
+            data-toggle="dropdown">
+          Update Environment <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+          {% for e in environments %}
+            <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
       <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
       <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
     </div>
+    <p class="tablemessage"></p>
     <div class="hosttable"></div>
   </div>
   <div class="col-sm-12">
@@ -49,6 +60,73 @@
             $(".updateEnv").toggleClass('disabled', false);
             $(".rebuild").toggleClass('disabled', false);
             $(".deleteHost").toggleClass('disabled', false);
+          }
+        });
+        
+        $(".updateEvironment").click(function() {
+          var data = {'environment': this.id};
+          data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+          if (confirm('Are you sure you want to update these hosts?')) {
+            $(".tablemessage").html("<div class='alert alert-info'>" +
+                "Request sent to the server</div>");
+            $.ajax({
+              type        : 'POST',
+              url         : '{% url 'hostEnvironment' %}',
+              data        : data,
+              dataType    : 'json',
+            }).done(function(response) {
+              $(".tablemessage").html("<div class='alert alert-" +
+                  response['status'] + "'>" +
+                  response['message'] + "</div>");
+
+              if(response['status'] == 'success') {
+                reloadTable();
+              }
+            });
+          }
+        });
+        $(".deleteHost").click(function() {
+          var selected = $('input[name="selectHost"]:checked').serialize()
+          if (confirm('Are you sure you want to delete these hosts?')) {
+            $(".tablemessage").html("<div class='alert alert-info'>" +
+                "Request sent to the server</div>");
+            $.ajax({
+              type        : 'POST',
+              url         : '{% url 'hostDelete' %}',
+              data        : {'selected':selected},
+              dataType    : 'json',
+            }).done(function(response) {
+              $(".tablemessage").html("<div class='alert alert-" +
+                  response['status'] + "'>" +
+                  response['message'] + "</div>");
+
+              if(response['status'] == 'success') {
+                reloadTable();
+              }
+            });
+          }
+        });
+        $(".rebuild").click(function() {
+          var selected = $('input[name="selectHost"]:checked').serialize()
+
+          if (confirm('Are you sure you want to reinstall these hosts?')) {
+            $(".tablemessage").html("<div class='alert alert-info'>" +
+                "Request sent to the server</div>");
+            $.ajax({
+              type        : 'POST',
+              url         : '{% url 'hostProvision' %}',
+              data        : {'selected':selected},
+              dataType    : 'json',
+            }).done(function(response) {
+              $(".tablemessage").html("<div class='alert alert-" +
+                  response['status'] + "'>" +
+                  response['message'] + "</div>");
+
+              if(response['status'] == 'success') {
+                reloadTable();
+              }
+            });
           }
         });
       });

@@ -11,6 +11,9 @@ urlpatterns = [
 
   # AJAX JSON URL's
   url(r'^new/$', ajax.new, name='hostNew'),
+  url(r'^provision/$', ajax.provision, name='hostProvision'),
+  url(r'^envrionment/$', ajax.environment, name='hostEnvironment'),
+  url(r'^remove/$', ajax.remove, name='hostDelete'),
 
   # TFTP Boot URL's
   url(r'^([0-9]+)/tftp$', main.tftp, name="hostTftp"),
