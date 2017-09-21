@@ -29,7 +29,7 @@ class Command(BaseCommand):
         template = 'tftpboot/install.cfg'
 
       mac = host.interface_set.filter(primary=True).get().ipv4Lease.MAC
-      filename = os.path.join(location, mac.replace(':', '-'))
+      filename = os.path.join(location, "01-%s" % mac.replace(':', '-'))
       data['host'] = host
 
       self.stdout.write("Creating %s based on %s" % (filename, template))
