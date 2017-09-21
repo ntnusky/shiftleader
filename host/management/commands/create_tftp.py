@@ -22,11 +22,10 @@ class Command(BaseCommand):
     open(path, "w").write(render_to_string('tftpboot/localboot.cfg', {}))
 
     for host in Host.objects.all():
-      if(int(host.status) == Host.OPERATIONAL):
-        template = 'tftpboot/localboot.cfg'
-      elif(int(host.status) == Host.PROVISIONING or
-          int(host.status) == Host.INSTALLING):
+      if(int(host.status) == Host.PROVISIONING):
         template = 'tftpboot/install.cfg'
+      else:
+        template = 'tftpboot/localboot.cfg'
 
       mac = host.interface_set.filter(primary=True).get().ipv4Lease.MAC
       filename = os.path.join(location, "01-%s" % mac.replace(':', '-'))

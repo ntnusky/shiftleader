@@ -34,6 +34,7 @@ def preseed(request, id):
   context = {} 
 
   context['host'] = get_object_or_404(Host, pk=id)
+  key, context['dashboardURL'] = parser.items("hosts")[0]
   context['diskname'] = '/dev/sda'
 
   auth = authorize(request, context['host'])
@@ -55,10 +56,24 @@ def tftp(request, id):
   if not authorize(request, context['host']):
     return HttpResponseForbidden()
 
-  if(int(context['host'].status) == Host.OPERATIONAL):
-    template = 'tftpboot/localboot.cfg'
-  elif(int(context['host'].status) == Host.PROVISIONING or
-      int(context['host'].status) == Host.INSTALLING):
+  if(int(host.status) == Host.PROVISIONING):
     template = 'tftpboot/install.cfg'
+  else:
+    template = 'tftpboot/localboot.cfg'
 
   return render(request, template, context)
+
+def postinstall(request, id):
+  context = {} 
+
+  context['host'] = get_object_or_404(Host, pk=id)
+
+  auth = authorize(request, context['host'])
+  if auth == NONE:
+    return HttpResponseForbidden()
+
+  if auth == IP:
+    context['host'].status = Host.OPERATIONAL
+    context['host'].save()
+
+  return render(request, 'postinstall/postinstall.sh', context)

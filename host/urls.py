@@ -15,4 +15,5 @@ urlpatterns = [
   # TFTP Boot URL's
   url(r'^([0-9]+)/tftp$', main.tftp, name="hostTftp"),
   url(r'^([0-9]+)/preseed$', main.preseed, name="hostPreseed"),
+  url(r'^([0-9]+)/postinstall\.sh$', main.postinstall, name="hostPostinstall"),
 ]

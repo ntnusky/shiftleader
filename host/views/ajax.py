@@ -119,6 +119,7 @@ def new(request):
   dhcpservers.configureLease(lease.IP, lease.MAC, lease.present, str(host))
 
   host.updateDNS()
+  host.generatePassword()
     
   response['message'] = "The host %s is created." % host
   response['status'] = 'success'

@@ -1,3 +1,6 @@
+import string
+from random import sample, choice
+
 from django.db import models
 
 from dhcp.models import Lease
@@ -16,6 +19,7 @@ class Host(models.Model):
   INSTALLING = 2
 
   name = models.CharField(max_length=64)
+  password = models.CharField(max_length=64, null=True)
   domain = models.ForeignKey(Domain)
   environment = models.ForeignKey(Environment)
   status = models.CharField(max_length=1, choices=STATUSES)
@@ -61,6 +65,11 @@ class Host(models.Model):
             interface.ipv4Lease.IP)
       except AttributeError:
         pass
+
+  def generatePassword(self):
+    chars = string.ascii_letters + string.digits
+    self.password = ''.join(choice(chars) for _ in range(16))
+    self.save()
 
   class Meta:
     ordering = ['domain', 'name']
