@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exit $(/opt/machineadmin/manage.py puppet_enc $1)
+/opt/machineadmin/manage.py puppet_enc $1
