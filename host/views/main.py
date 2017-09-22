@@ -73,7 +73,7 @@ def postinstall(request, id):
     return HttpResponseForbidden()
 
   if auth == IP:
-    context['host'].status = Host.OPERATIONAL
+    context['host'].status = Host.PUPPETSIGN
     context['host'].save()
 
   return render(request, 'postinstall/postinstall.sh', context)

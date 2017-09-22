@@ -13,11 +13,15 @@ class Host(models.Model):
     (0, "Operational"),
     (1, "Provisioning"),
     (2, "Installing"),
+    (3, "Puppet-Sign"),
+    (4, "Puppet-run"),
   )
 
   OPERATIONAL = 0
   PROVISIONING = 1
   INSTALLING = 2
+  PUPPETSIGN = 3
+  PUPPETRUN = 4
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
