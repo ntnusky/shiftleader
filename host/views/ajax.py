@@ -11,7 +11,7 @@ from dhcp.models import Subnet
 from dhcp.omapi import Servers 
 from host.models import Host, Interface
 from nameserver.models import Domain
-from puppet.models import Environment
+from puppet.models import Environment, Role
 
 @user_passes_test(requireSuperuser)
 def form(request):
@@ -26,6 +26,20 @@ def table(request):
   context = {}
   context['hosts'] = Host.objects.all()
   return render(request, 'ajax/hostTable.html', context)
+
+@user_passes_test(requireSuperuser)
+def roleList(request, name):
+  context = {}
+  environment = Environment.objects.get(name=name)
+  context['roles'] = environment.role_set.all()
+  return render(request, 'ajax/roleSelect.html', context)
+
+@user_passes_test(requireSuperuser)
+def roleMenu(request, id):
+  context = {}
+  environment = Environment.objects.get(pk=id)
+  context['roles'] = environment.role_set.all()
+  return render(request, 'ajax/roleMenu.html', context)
 
 @user_passes_test(requireSuperuser)
 @csrf_exempt
@@ -62,6 +76,71 @@ def environment(request):
   response['status'] = 'success'
   response['message'] = 'Changed the environment of "%s" to %s.' % \
       (', '.join(names), environment.name)
+  return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def role(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest("B")
+
+  try:
+    role = Role.objects.get(
+        pk=int(request.POST.get('role')))
+  except Exception as e:
+    return HttpResponseBadRequest(str(e))
+
+  names = []
+  for host in hosts:
+    names.append(host.name)
+    host.role = role
+    host.save()
+
+  response['status'] = 'success'
+  response['message'] = 'Changed the environment of "%s" to %s.' % \
+      (', '.join(names), role.name)
+  return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def noprovision(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest()
+
+  for host in hosts:
+    host.status = Host.OPERATIONAL
+    host.save()
+
+  response['status'] = 'success'
+  response['message'] = 'Cancelled reinstall of hosts.'
   return JsonResponse(response)
 
 @user_passes_test(requireSuperuser)
@@ -123,8 +202,14 @@ def remove(request):
 def new(request):
   response = {}
 
-  domain = Domain.objects.get(name=request.POST['domain'])
-  environment = Environment.objects.get(name=request.POST['environment'])
+  try:
+    domain = Domain.objects.get(name=request.POST['domain'])
+    environment = Environment.objects.get(name=request.POST['environment'])
+    role = environment.role_set.get(name=request.POST['role'])
+  except Exception as e:
+    response['status'] = "danger"
+    response['message'] = "The domain, role or environment was not found. %s" \
+        % str(e)
 
   if(not environment.active):
     response['status'] = "danger"
@@ -199,9 +284,10 @@ def new(request):
     response['message'] = "Could not create IP address lease"
     response['status'] = "danger"
     return JsonResponse(response)
+
   
   host = Host(name=request.POST['hostname'], domain=domain,
-      environment=environment, status = Host.PROVISIONING)
+      environment=environment, status = Host.PROVISIONING, role=role)
   host.save()
   interface = Interface(ifname=request.POST['ifname'],
       name=request.POST['ifdesc'], mac=mac, domain=domain, host=host,

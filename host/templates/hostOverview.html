@@ -21,7 +21,17 @@
           {% endfor %}
         </ul>
       </div>
+      <div class="btn-group">
+        <button type="button"
+            class="btn btn-success disabled dropdown-toggle updateRoles" 
+            data-toggle="dropdown">
+          Update role<span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-role" role="menu"> 
+        </ul>
+      </div>
       <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
+      <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
       <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
     </div>
     <p class="tablemessage"></p>
@@ -35,36 +45,143 @@
   </div>
 
   <script>
+    function initializeButtons() {
+      $(".updateEvironment").click(function() {
+        var data = {'environment': this.id};
+        data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+        if (confirm('Are you sure you want to update these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostEnvironment' %}',
+            data        : data,
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".deleteHost").click(function() {
+        var selected = $('input[name="selectHost"]:checked').serialize()
+        if (confirm('Are you sure you want to delete these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostDelete' %}',
+            data        : {'selected':selected},
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".rebuild").click(function() {
+        var selected = $('input[name="selectHost"]:checked').serialize()
+
+        if (confirm('Are you sure you want to reinstall these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostProvision' %}',
+            data        : {'selected':selected},
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".norebuild").click(function() {
+        var selected = $('input[name="selectHost"]:checked').serialize()
+
+        if (confirm('Are you sure you want to cancel the reinstall of these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostNoProvision' %}',
+            data        : {'selected':selected},
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+    }
     function reloadTable() {
       $( ".hosttable" ).load( "{% url 'hostAjaxTable' %}", function() {
         // Select all hosts if the "selectAllHosts" checkbox is clicked on
         $(".selectAllHosts").change(function() {
           $(".selectHost").attr('checked', this.checked);
         });
-        
         // Enable/disable buttons based on how many hosts are selected
         $(".selectHost").change(function() {
           var antall = $('.selectHost:checked').length;
           if(antall == 0) {
-            $(".addInterface").toggleClass('disabled', true);
-            $(".updateEnv").toggleClass('disabled', true);
-            $(".rebuild").toggleClass('disabled', true);
-            $(".deleteHost").toggleClass('disabled', true);
-          } else if (antall == 1) {
-            $(".addInterface").toggleClass('disabled', false);
-            $(".updateEnv").toggleClass('disabled', false);
-            $(".rebuild").toggleClass('disabled', false);
-            $(".deleteHost").toggleClass('disabled', false);
+            var buttone = true;
           } else {
-            $(".addInterface").toggleClass('disabled', true);
-            $(".updateEnv").toggleClass('disabled', false);
-            $(".rebuild").toggleClass('disabled', false);
-            $(".deleteHost").toggleClass('disabled', false);
+            var buttone = false;
           }
+
+          var environment = "UNDEFINED";
+          var different = false;
+          $('.selectHost:checked').each(function() {
+            var myenv = $(this).attr("env");
+            if(environment == "UNDEFINED") {
+              environment = myenv;
+            }
+            if(myenv != environment) {
+              different = true; 
+            }
+          });
+
+          if(! buttone && ! different) {
+            $(".updateRoles").toggleClass('disabled', false);
+            reloadRoleButton(environment);
+          } else {
+            $(".updateRoles").toggleClass('disabled', true);
+          }
+
+          $(".updateEnv").toggleClass('disabled', buttone);
+          $(".rebuild").toggleClass('disabled', buttone);
+          $(".norebuild").toggleClass('disabled', buttone);
+          $(".deleteHost").toggleClass('disabled', buttone);
         });
-        
-        $(".updateEvironment").click(function() {
-          var data = {'environment': this.id};
+      });
+    }
+
+    function reloadRoleButton(env) {
+      $('.dropdown-role').load( "{% url 'hostIndex' %}menu/role/" + env + "/",
+          function() {
+        $(".updateRole").click(function() {
+          var data = {'role': this.id};
           data['selected'] = $('input[name="selectHost"]:checked').serialize();
 
           if (confirm('Are you sure you want to update these hosts?')) {
@@ -72,51 +189,8 @@
                 "Request sent to the server</div>");
             $.ajax({
               type        : 'POST',
-              url         : '{% url 'hostEnvironment' %}',
+              url         : '{% url 'hostRole' %}',
               data        : data,
-              dataType    : 'json',
-            }).done(function(response) {
-              $(".tablemessage").html("<div class='alert alert-" +
-                  response['status'] + "'>" +
-                  response['message'] + "</div>");
-
-              if(response['status'] == 'success') {
-                reloadTable();
-              }
-            });
-          }
-        });
-        $(".deleteHost").click(function() {
-          var selected = $('input[name="selectHost"]:checked').serialize()
-          if (confirm('Are you sure you want to delete these hosts?')) {
-            $(".tablemessage").html("<div class='alert alert-info'>" +
-                "Request sent to the server</div>");
-            $.ajax({
-              type        : 'POST',
-              url         : '{% url 'hostDelete' %}',
-              data        : {'selected':selected},
-              dataType    : 'json',
-            }).done(function(response) {
-              $(".tablemessage").html("<div class='alert alert-" +
-                  response['status'] + "'>" +
-                  response['message'] + "</div>");
-
-              if(response['status'] == 'success') {
-                reloadTable();
-              }
-            });
-          }
-        });
-        $(".rebuild").click(function() {
-          var selected = $('input[name="selectHost"]:checked').serialize()
-
-          if (confirm('Are you sure you want to reinstall these hosts?')) {
-            $(".tablemessage").html("<div class='alert alert-info'>" +
-                "Request sent to the server</div>");
-            $.ajax({
-              type        : 'POST',
-              url         : '{% url 'hostProvision' %}',
-              data        : {'selected':selected},
               dataType    : 'json',
             }).done(function(response) {
               $(".tablemessage").html("<div class='alert alert-" +
@@ -140,6 +214,7 @@
             'hostname'            : $('input[id=hostname]').val(),
             'domain'              : $('#domain option:selected').text(),
             'environment'         : $('#environment option:selected').text(), 
+            'role'                : $('#role option:selected').text(), 
             'ifname'              : $('input[id=ifname]').val(),
             'ifdesc'              : $('input[id=ifdesc]').val(),
             'mac'                 : $('input[id=mac]').val(),
@@ -148,10 +223,10 @@
           };
 
           var fields = ["hostname", "domain", "environment", "ifname", 
-              "ifdesc", "mac", "subnet"];
+              "ifdesc", "mac", "subnet", "role"];
           var descriptions = ["Hostname", "Domain", "Evironment", 
               "Interface description", "Interface name", "MAC Address",
-              "Subnet"]
+              "Subnet", "Role"]
           var missing = ""
 
           for(f in fields) {
@@ -189,6 +264,7 @@
     $(document).ready(function(){
       reloadTable();
       reloadForm();
+      initializeButtons();
     });
   </script>
 {% endblock page-content %}

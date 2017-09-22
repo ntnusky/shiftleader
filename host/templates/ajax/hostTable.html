@@ -3,15 +3,24 @@
     <th><input type="checkbox" class="selectAllHosts"></th>
     <th colspan="2">Hostname</th>
     <th>Environment</th>
+    <th>Role</th>
     <th>Status</th>
-    <th># Interfaces</th>
+    <th># if</th>
     <th>Actions</th>
   </tr>
   {% for h in hosts %}
     <tr>
-      <td><input type="checkbox" name="selectHost" class="selectHost" value="{{h.id}}"></td>
+      <td>
+        <input type="checkbox" name="selectHost" 
+            class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
+      </td>
       <td colspan="2">{{h.name}}.{{h.domain.name}}</td>
       <td>{{h.environment.name}}</td>
+      {% if h.role %}
+        <td>{{h.role.name}}</td>
+      {% else %}
+        <td></td>
+      {% endif %}
       <td>{{h.getStatusText}}</td>
       <td>{{h.interface_set.count}}</td>
       <td>

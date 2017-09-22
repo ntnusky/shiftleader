@@ -8,11 +8,15 @@ urlpatterns = [
   # AJAX URL's
   url(r'^table/$', ajax.table, name='hostAjaxTable'),
   url(r'^form/$', ajax.form, name='hostAjaxForm'),
+  url(r'^form/role/([0-9a-zA-Z:]+)/$', ajax.roleList, name='hostAjaxRole'),
+  url(r'^menu/role/([0-9]+)/$', ajax.roleMenu, name='hostMenuRole'),
 
   # AJAX JSON URL's
   url(r'^new/$', ajax.new, name='hostNew'),
   url(r'^provision/$', ajax.provision, name='hostProvision'),
+  url(r'^noprovision/$', ajax.noprovision, name='hostNoProvision'),
   url(r'^envrionment/$', ajax.environment, name='hostEnvironment'),
+  url(r'^role/$', ajax.role, name='hostRole'),
   url(r'^remove/$', ajax.remove, name='hostDelete'),
 
   # TFTP Boot URL's

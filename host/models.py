@@ -6,7 +6,7 @@ from django.db import models
 from dhcp.models import Lease
 from dhcp.omapi import Servers
 from nameserver.models import Domain
-from puppet.models import Environment
+from puppet.models import Environment, Role
 
 class Host(models.Model):
   STATUSES = (
@@ -23,6 +23,7 @@ class Host(models.Model):
   password = models.CharField(max_length=64, null=True)
   domain = models.ForeignKey(Domain)
   environment = models.ForeignKey(Environment)
+  role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
 
   def __str__(self):

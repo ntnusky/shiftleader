@@ -43,3 +43,9 @@ code {
   color: #AAAAAA;
   text-decoration: line-through;
 }
+
+.rightText {
+  font-weight: bold;
+  text-align: right;
+  padding-right: 10px;
+}

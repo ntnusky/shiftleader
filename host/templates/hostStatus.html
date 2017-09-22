@@ -1,4 +1,51 @@
 {% extends "base/main.html" %}
 
 {% block page-content %}
+  <div class="col-lg-6">
+    <h2>General information</h2>
+    <table>
+      <tr>
+        <td class="rightText">Hostname:</td>
+        <td>{{host.name}}</td>
+      </tr>
+      <tr>
+        <td class="rightText">Domain:</td>
+        <td>{{host.domain.name}}</td>
+      </tr>
+      <tr>
+        <td class="rightText">Status:</td>
+        <td>{{host.getStatusText}}</td>
+      </tr>
+      <tr>
+        <td class="rightText">Environment:</td>
+        <td>{{host.environment.name}}</td>
+      </tr>
+      <tr>
+        <td class="rightText">Role:</td>
+        <td>{{host.role.name}}</td>
+      </tr>
+      <tr>
+        <td class="rightText">Password:</td>
+        <td>{{host.password}}</td>
+      </tr>
+    </table>
+  </div>
+  <div class="col-lg-6">
+    <h2>Interfaces</h2>
+    <ul>
+      {% for i in host.interface_set.all %}
+        {% if i.primary %}
+          <li><b>{{i.name}}</b></li>
+        {% else %}
+          <li>{{i.name}}</li>
+        {% endif %}
+        <ul>
+          <li>DNS-Name: {{i.name}}.{{i.host}}</li>
+          <li>IPv4: {{i.ipv4Lease.IP}}</li>
+          <li>IPv6: {{i.ipv6}}</li>
+          <li>MAC: {{i.ipv4Lease.MAC}}</li>
+        </ul>
+      {% endfor %}
+    </ul>
+  </div>
 {% endblock page-content %}
