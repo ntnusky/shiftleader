@@ -7,7 +7,7 @@ echo "" >> $logfile
 
 # Allow password-based root-login
 echo "Permitting root login" >> $logfile
-sed -i 's/^PermitRootLogin\ .*$/PermitRootLogin\ Yes/'
+sed -i 's/^PermitRootLogin\ .*$/PermitRootLogin\ Yes/' /etc/ssh/sshd_config
 systemctl restart sshd
 
 # Install updates
