@@ -263,6 +263,9 @@
 
     $(document).ready(function(){
       reloadTable();
+      setInterval(function(){
+            reloadTable();
+      }, 10000);
       reloadForm();
       initializeButtons();
     });
