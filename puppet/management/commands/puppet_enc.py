@@ -31,4 +31,4 @@ class Command(BaseCommand):
     self.stdout.write("---")
     self.stdout.write("environment: %s" % host.environment.name)
     self.stdout.write("classes:")
-    self.stdout.write(" - %s" % host.role.name)
+    self.stdout.write(" - role::%s" % host.role.name)
