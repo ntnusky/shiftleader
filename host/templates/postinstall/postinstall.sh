@@ -25,7 +25,7 @@ rm puppet5-release-xenial.deb
 echo "[agent]" >> /etc/puppetlabs/puppet/puppet.conf
 echo "server = bootstrap.sky.rothaugane.com" >> /etc/puppetlabs/puppet/puppet.conf 
 export PATH="$PATH:/opt/puppetlabs/bin"
-puppet agent --test
+systemctl enable  puppet
 
 echo "Post install completed on $(date)" >> $logfile 
 
