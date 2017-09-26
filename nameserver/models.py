@@ -76,3 +76,33 @@ class Domain(models.Model):
 
   class Meta:
     ordering = ['name']
+
+class StaticRecord(models.Model):
+  name = models.CharField(max_length=200)
+  domain = models.ForeignKey(Domain)
+  ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True)
+  ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
+  active = models.BooleanField(default=True)
+
+  def __str__(self):
+    if(self.ipv4 and self.ipv6):
+      return "%s.%s - %s %s" % (self.name, self.domain.name, 
+          self.ipv4, self.ipv6)
+    elif(self.ipv4):
+      return "%s.%s - %s" % (self.name, self.domain.name, self.ipv4)
+    elif(self.ipv6):
+      return "%s.%s - %s" % (self.name, self.domain.name, self.ipv6)
+    else:
+      return "%s.%s - NO ADDRESSES CONFIGURED" % (self.name, self.domain.name)
+
+  def configure(self):
+    if(self.ipv4):
+      self.domain.configureA(self.name, self.ipv4)
+
+  def deactivate(self):
+    self.active = False
+    self.domain.deleteDomain(self.name)
+    self.save()
+
+  class Meta:
+    ordering = ['domain','name']

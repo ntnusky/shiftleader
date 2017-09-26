@@ -1,0 +1,19 @@
+<table class="table table-hover table-condensed">
+  <tr>
+    <th>DNS Name</th>
+    <th>A-Record</th>
+    <th>AAAA-Record</th>
+    <th></th>
+  </tr>
+  {% for r in records %}
+    <tr>
+      <td>{{r.name}}.{{r.domain.name}}</td>
+      <td>{{r.ipv4}}</td>
+      <td>{{r.ipv6}}</td>
+      <td>
+        <a href="{% url 'dnsEdit' r.id %}" class="btn btn-warning btn-sm" id="{{r.id}}">Edit</a>
+        <a class="btn btn-danger btn-sm deleteRecord" id="{{r.id}}">Delete</a>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
