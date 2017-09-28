@@ -60,17 +60,16 @@ class Host(models.Model):
       # If this is the primary interface, add an A record with the machine's
       # hostname.
       if(interface.primary):
-        try:
-          self.domain.configureA(self.name, interface.ipv4Lease.IP)
-        except AttributeError:
-          pass
+        if(interface.ipv4Lease):
+          self.domain.configure(self.name, interface.ipv4Lease.IP)
+        if(interface.ipv6):
+          self.domain.configure(self.name, interface.ipv6)
 
-      # Add DNS record for each interface
-      try:
-        interface.domain.configureA("%s.%s" % (interface.name, self.name), 
-            interface.ipv4Lease.IP)
-      except AttributeError:
-        pass
+      ifname = "%s.%s" % (interface.name, self.name)
+      if(interface.ipv4Lease):
+        self.domain.configure(ifname, interface.ipv4Lease.IP)
+      if(interface.ipv6):
+        self.domain.configure(ifname, interface.ipv6)
 
   def generatePassword(self):
     chars = string.ascii_letters + string.digits

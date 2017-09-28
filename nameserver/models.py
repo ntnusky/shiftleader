@@ -1,9 +1,10 @@
 import dns.query
 import dns.update
 import dns.rdatatype
+import dns.tsigkeyring
+import ipaddress
 import random
 import string
-
 
 from django.db import models
 
@@ -15,6 +16,96 @@ class Server(models.Model):
   def __str__(self):
     return "%s (%s)" % (self.name, self.address)
 
+  def createConnection(self, domain):
+    if(self.key):
+      keyring = dns.tsigkeyring.from_text({ 'update' : self.key })
+      keyname = 'update'
+    else:
+      keyring = None
+      keyname = None
+    
+    return dns.update.Update(domain, keyring=keyring, keyname=keyname)
+
+  def detectRecordType(name):
+    try:
+      ip = ipaddress.ip_address(name)
+    except ValueError:
+      return 'cname'
+    else:
+      if ip.version == 4:
+        return 'a'
+      elif ip.version == 6:
+        return 'aaaa'
+      else:
+        raise ValueError
+
+  def query(self, domain, rdtype):
+    qname = dns.name.from_text(domain)
+    rtype = dns.rdatatype.from_text(rdtype)
+
+    q = dns.message.make_query(qname, rtype)
+    r = dns.query.udp(q, self.address)
+    try:
+      data = []
+      ns_rrset = r.find_rrset(r.answer, qname, dns.rdataclass.IN, rtype)
+      for rr in ns_rrset:
+        data.append(rr.to_text())
+      return data
+    except:
+      return None
+
+  def configureRecord(self, domain, record, destination, exclusive=True, present=True, ttl=300):
+    rtype = Server.detectRecordType(destination)
+
+    # Make sure destination is a fqdn
+    if(rtype == 'cname' and not destination.endswith('.')):
+      destination = "%s.%s." % (destination, domain)
+
+    # Query for existing records
+    existing = self.query("%s.%s" % (record, domain), rtype)
+
+    # If there exists destination which should not be there; remove them
+    if(exclusive and existing and 
+          (destination not in existing or len(existing) > 1)):
+      try:
+        existing.remove(destination)
+      except ValueError: # If destination is not in existing
+        pass
+
+      for dest in existing:
+        update = self.createConnection(domain)
+        update.delete(record, rtype, dest)
+        dns.query.tcp(update, self.address)
+
+    # If the record should be present, but is not; create it:
+    if(present and (not existing or destination not in existing)):
+      update = self.createConnection(domain)
+      update.add(record, ttl, rtype, destination)
+      dns.query.tcp(update, self.address)
+
+    # It the record is present, but should not be: remove it
+    if(not present and existing and destination in existing):
+      update = self.createConnection(domain)
+      update.delete(record, rtype, destination)
+      dns.query.tcp(update, self.address)
+  
+  def clearName(self, domain, name):
+    update = self.createConnection(domain)
+    update.delete(name)
+    dns.query.tcp(update, self.address)
+
+  def testConnection(self, domain):
+    dnsName = ''.join(random.choice(string.ascii_lowercase) for i in range(20))
+    try:
+      update = self.createConnection(domain)
+      update.add(dnsName, 300, 'a', '127.0.0.1')
+      response = dns.query.tcp(update, self.address)
+      update.delete(dnsName)
+      response = dns.query.tcp(update, self.address)
+      return True
+    except Exception as e:
+      return False
+
 class Domain(models.Model):
   name = models.CharField(max_length=200)
   server = models.ForeignKey(Server)
@@ -22,57 +113,15 @@ class Domain(models.Model):
   def __str__(self):
     return "%s" % self.name
 
-  def query(self, name, rtype=dns.rdatatype.A):
-    qname = dns.name.from_text("%s.%s" % (name, self.name))
-    q = dns.message.make_query(qname, rtype)
-    r = dns.query.udp(q, self.server.address)
-    try:
-      data = []
-      ns_rrset = r.find_rrset(r.answer, qname, dns.rdataclass.IN, rtype)
-      for rr in ns_rrset:
-        data.append(rr)
-      return data
-    except:
-      return None
-
   def deleteDomain(self, name):
-    update = dns.update.Update(self.name)
-    update.delete(name)
-    dns.query.tcp(update, self.server.address)
+    self.server.clearName(self.name, name)
 
-  def configureA(self, name, address):
-    qname = dns.name.from_text("%s.%s" % (name, self.name))
-    response = self.query(name)
-
-    try:
-      # If a response is received, and it is correct, return true.
-      if(response[0].address == address):
-        return True
-      # If it is wrong, delete it.
-      else:
-        update = dns.update.Update(self.name)
-        update.delete(name)
-        dns.query.tcp(update, self.server.address)
-    except (TypeError, IndexError):
-      pass
-
-    # Create the new record
-    update = dns.update.Update(self.name)
-    update.add(name, 300, 'a', address)
-    dns.query.tcp(update, self.server.address)
-    return True
+  def configure(self, record, destination, exclusive=True, present=True, ttl=300):
+    self.server.configureRecord(self.name, record, destination, exclusive,
+        present, ttl)
 
   def testConnection(self):
-    dnsName = ''.join(random.choice(string.ascii_lowercase) for i in range(20))
-    try:
-      update = dns.update.Update(self.name)
-      update.add(dnsName, 300, 'a', '127.0.0.1')
-      response = dns.query.tcp(update, self.server.address)
-      update.delete(dnsName)
-      response = dns.query.tcp(update, self.server.address)
-      return True
-    except:
-      return False
+    return self.server.testConnection(self.name)
 
   class Meta:
     ordering = ['name']
@@ -97,7 +146,14 @@ class StaticRecord(models.Model):
 
   def configure(self):
     if(self.ipv4):
-      self.domain.configureA(self.name, self.ipv4)
+      self.domain.configure(self.name, self.ipv4)
+    else:
+      self.domain.configure(self.name, "198.51.100.218", present=False)
+
+    if(self.ipv6):
+      self.domain.configure(self.name, self.ipv6)
+    else:
+      self.domain.configure(self.name, "2001:db8::1", present=False)
 
   def deactivate(self):
     self.active = False
