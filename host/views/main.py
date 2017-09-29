@@ -102,7 +102,7 @@ def interface(request, hid, iid = 0):
           pass
       context['interface'].ipv6 = ipv6Text
       change = True
-    else:
+    elif(len(ipv6Text) == 0):
       context['interface'].ipv6 = None
       ipv6Text = None
     
