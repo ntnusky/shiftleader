@@ -174,8 +174,14 @@ def interface(request, hid, iid = 0):
 
       host.updateDNS()
       dhcpservers = Servers()
+
+      if(context['interface'].primary):
+        hostname = str(host)
+      else:
+        hostname = None
+
       dhcpservers.configureLease(context['lease'].IP, context['lease'].MAC, 
-          context['lease'].present, "%s.%s" % (newName, host))
+          context['lease'].present, hostname)
       return redirect('singleHost', host.id)
 
   return render(request, 'hostInterface.html', context)

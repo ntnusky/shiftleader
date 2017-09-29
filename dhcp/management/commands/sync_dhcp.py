@@ -19,11 +19,13 @@ class Command(BaseCommand):
 
       # For each lease in the database
       for lease in Lease.objects.all():
+        name = None
         try:
-          name = "%s.%s.%s" % (lease.interface.name, lease.interface.host.name,
-              lease.interface.host.domain.name)
+          if(lease.interface.primary):
+            name = "%s.%s" % (lease.interface.host.name, 
+                lease.interface.host.domain.name)
         except Interface.DoesNotExist:
-          name = None
+          pass
 
         status = servers.configureLease(lease.IP, lease.MAC, lease.present, name)
 
