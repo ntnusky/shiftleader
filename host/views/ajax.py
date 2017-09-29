@@ -227,7 +227,7 @@ def new(request):
     return JsonResponse(response)
 
   pattern = re.compile(r'^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
-  macMatch = pattern.match(request.POST['mac'])
+  macMatch = pattern.match(request.POST['mac'].lower())
 
   if macMatch:
     mac = macMatch.group(0)

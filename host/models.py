@@ -51,7 +51,7 @@ class Host(models.Model):
 
       # Delete the interface-specific A record
       try:
-        interface.domain.deleteDomain("%s.%s" % (interface.name, self.name))
+        self.domain.deleteDomain("%s.%s" % (interface.name, self.name))
       except AttributeError:
         pass
 
@@ -98,7 +98,6 @@ class Interface(models.Model):
   ifname = models.CharField(max_length=20)
   name = models.CharField(max_length=64)
   mac = models.CharField(max_length=64)
-  domain = models.ForeignKey(Domain)
   host = models.ForeignKey(Host)
   primary = models.BooleanField(default=False)
   ipv4Lease = models.OneToOneField(Lease, null=True)

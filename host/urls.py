@@ -4,6 +4,8 @@ from host.views import main, ajax
 urlpatterns = [
   url(r'^$', main.index, name="hostIndex"),
   url(r'^([0-9]+)/$', main.single, name="singleHost"),
+  url(r'^([0-9]+)/interface/$', main.interface, name="hostNewInterface"),
+  url(r'^([0-9]+)/interface/([0-9]+)/$', main.interface, name="hostInterface"),
 
   # AJAX URL's
   url(r'^table/$', ajax.table, name='hostAjaxTable'),
