@@ -206,7 +206,7 @@ def tftp(request, id):
   if not authorize(request, context['host']):
     return HttpResponseForbidden()
 
-  if(int(host.status) == Host.PROVISIONING):
+  if(int(context['host'].status) == Host.PROVISIONING):
     template = 'tftpboot/install.cfg'
   else:
     template = 'tftpboot/localboot.cfg'
