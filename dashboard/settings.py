@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from configparser import ConfigParser
+from configparser import ConfigParser,NoOptionError
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -107,7 +107,7 @@ else:
   dbtype = 'sqlite'                                                              
   try:                                                                           
     n = parser.get('database', 'name')                                           
-  except configparser.NoOptionError:                                             
+  except NoOptionError:                                             
     n = 'db.sqlite3'                                                             
                                                                                  
   if(n[0] == '/'):                                                               
@@ -130,7 +130,10 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = parser.get('general', 'staticpath')
+try:
+  STATIC_ROOT = parser.get('general', 'staticpath')
+except NoOptionError:
+  STATIV_ROOT = None
 LOGIN_URL = '/login/'
 
 # The URL of the LDAP server.
