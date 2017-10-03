@@ -65,11 +65,10 @@ class Host(models.Model):
         if(interface.ipv6):
           self.domain.configure(self.name, interface.ipv6)
 
-      ifname = "%s.%s" % (interface.name, self.name)
       if(interface.ipv4Lease):
-        self.domain.configure(ifname, interface.ipv4Lease.IP)
-      if(interface.ipv6):
-        self.domain.configure(ifname, interface.ipv6)
+        interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv4Lease.IP)
+        if(interface.ipv6):
+          interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv6)
 
   def generatePassword(self):
     chars = string.ascii_letters + string.digits
@@ -96,7 +95,6 @@ class Host(models.Model):
 
 class Interface(models.Model):
   ifname = models.CharField(max_length=20)
-  name = models.CharField(max_length=64)
   mac = models.CharField(max_length=64)
   host = models.ForeignKey(Host)
   primary = models.BooleanField(default=False)
@@ -104,4 +102,4 @@ class Interface(models.Model):
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
 
   def __str__(self):
-    return "%s on %s" % (self.name, self.host)
+    return "%s on %s" % (self.ifname, self.host)

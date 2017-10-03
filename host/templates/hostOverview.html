@@ -216,16 +216,15 @@
             'environment'         : $('#environment option:selected').text(), 
             'role'                : $('#role option:selected').text(), 
             'ifname'              : $('input[id=ifname]').val(),
-            'ifdesc'              : $('input[id=ifdesc]').val(),
             'mac'                 : $('input[id=mac]').val(),
             'subnet'              : $('#subnet option:selected').text(),
             'ipv4'                : $('input[id=ipv4]').val(),
           };
 
           var fields = ["hostname", "domain", "environment", "ifname", 
-              "ifdesc", "mac", "subnet", "role"];
+              "mac", "subnet", "role"];
           var descriptions = ["Hostname", "Domain", "Evironment", 
-              "Interface description", "Interface name", "MAC Address",
+              "Interface name", "MAC Address",
               "Subnet", "Role"]
           var missing = ""
 
