@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from dashboard.settings import parser
 from dhcp.models import Subnet
+from nameserver.models import Domain
 
 class Command(BaseCommand):
   help = "Reads the configuration-file and loads relevand dhcp configuration" \
@@ -23,10 +24,18 @@ class Command(BaseCommand):
         network = parser.get('DHCP', '%sNetwork' % pool)
         netmask = parser.get('DHCP', '%sNetmask' % pool)
         gateway = parser.get('DHCP', '%sGateway' % pool) 
+        domainName = parser.get('DHCP', '%sDomain' % pool) 
       except NoOptionError as e:
         self.stderr.write(
             " - Missing parameter in configfile. Subnet is ignored")
         self.stderr.write(" - %s" % str(e))
+        continue
+
+      try:
+        domain = Domain.objects.get(name=domainName)
+      except Domain.DoesNotExist:
+        self.stderr.write(" - The domain %s is not found. Subnet is ignored" % \
+            domainName)
         continue
 
       toSave = False
@@ -34,8 +43,12 @@ class Command(BaseCommand):
         subnet = Subnet.objects.get(name=pool)
         if(subnet.setSubnet(network, netmask)):
           self.stdout.write(" - Updating the pool with new net-id and mask")
+        if(subnet.domain != domain):
+          subnet.domain = domain
+          subnet.save()
+          self.stdout.write(" - Updating the pool with a new domain name")
       except Subnet.DoesNotExist:
-        subnet = Subnet(name=pool, active=True)
+        subnet = Subnet(name=pool, active=True, domain=domain)
         subnet.setSubnet(network, netmask)
         self.stdout.write(" - The pool is new.")
     

@@ -4,10 +4,12 @@ from configparser import NoOptionError
 from django.db import models
 
 from dashboard.settings import parser
+from nameserver.models import Domain
 
 class Subnet(models.Model):
   name = models.CharField(max_length=64)
   active = models.BooleanField()
+  domain = models.ForeignKey(Domain, null=True)
   prefix = models.GenericIPAddressField()
   mask = models.IntegerField()
   free = models.IntegerField(default = -1)
