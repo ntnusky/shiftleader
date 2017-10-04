@@ -289,8 +289,7 @@ def new(request):
   host = Host(name=request.POST['hostname'], domain=domain,
       environment=environment, status = Host.PROVISIONING, role=role)
   host.save()
-  interface = Interface(ifname=request.POST['ifname'],
-      name=request.POST['ifdesc'], mac=mac, host=host,
+  interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
       primary=True, ipv4Lease=lease)
   interface.save()
 

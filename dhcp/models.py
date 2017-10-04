@@ -28,7 +28,9 @@ class Subnet(models.Model):
     try:
       reserved = parser.get("DHCP", "%sReserved" % self.name)
       for address in reserved.split(','):
-        if('-' in address):
+        if(len(address) == 0):
+          continue
+        elif('-' in address):
           first = ipaddress.ip_address(address.split('-')[0])
           last = ipaddress.ip_address(address.split('-')[1])
           for ip in range(int(first), int(last)+1):

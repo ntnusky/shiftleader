@@ -106,17 +106,6 @@ def interface(request, hid, iid = 0):
       context['interface'].ipv6 = None
       ipv6Text = None
     
-    oldName = context['interface'].name
-    newName = request.POST.get('name')
-    if(context['interface'].name != newName):
-      change = True
-      try:
-        i = host.interface_set.get(name=newName)
-        errors.append("The host already have an interface with this name")
-      except Interface.DoesNotExist:
-        pass
-      context['interface'].name = newName
-
     oldIFName = context['interface'].ifname
     newIFName = request.POST.get('ifname')
     if(context['interface'].ifname != newIFName):
@@ -160,8 +149,6 @@ def interface(request, hid, iid = 0):
       else:
         context['lease'] = subnet.createLease(newMAC, ip)
 
-      if newName != oldName:
-        context['interface'].name = newName
       if newIFName != oldIFName:
         context['interface'].ifname = newIFName
       if ipv6Text != context['interface'].ipv6:
