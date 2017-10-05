@@ -55,12 +55,14 @@ class Command(BaseCommand):
         environment.save()
       environments.append(environment)
 
-      lastVersion = environment.environmentversion_set.last()
+      lastVersion = environment.environmentversion_set.filter(server=server).\
+          last()
       if(lastVersion.status == EnvironmentVersion.STATUS_SCHEDULED):
         environment.environmentversion_set.create(server=server, signature="",
             started="", finished="", success=False,
             status=EnvironmentVersion.STATUS_DEPLOYING)
-        lastVersion = environment.environmentversion_set.last()
+        lastVersion = environment.environmentversion_set.filter(server=server
+            ).last()
         self.stdout.write("Deploying environment %s" % environment.name)
         logfile=open("/tmp/r10k-%s.log" % environment.name, "w")
         result = subprocess.run(
