@@ -4,6 +4,36 @@
   <p>This page is merley a status page to show what is reported about the puppet
   environment by the puppet master(s).</p>
 
+  <h2>Servers</h2>
+
+  <table class="table table-condensed table-striped table-hover">
+    <tr><th>Servername</th><th>Status</th><th>Environments</th></tr>
+    {% for s in servers %}
+      <tr>
+        <td>{{s.name}}</td>
+        <td>{{s.getStatusText}}</td>
+        <td><table class="table table-condensed">
+          {% for v in s.latest_envs %}
+          <tr>
+            <td>{{v.environment.name}}</td>
+            <td>{{v.getShortSignature}}</td>
+            {% if v.getStatusText != 'Deployed' %}
+              <td>{{v.getStatusText}}</td>
+            {% else %}
+              <td>
+                <a class="btn-sm btn-success" 
+                    href="{% url 'puppetDeploy' s.id v.environment.id %}">
+                  Deploy
+                </a>
+              </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </table></td>
+      </tr>
+    {% endfor %}
+  </table>
+
   <h2>Environments:</h2>
 
   <p>The following environments exists:</p>
