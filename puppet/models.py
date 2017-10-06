@@ -71,15 +71,15 @@ class Server(models.Model):
 
 class EnvironmentVersion(models.Model):
   STATUS = (
-    ('-1', 'Unavailable'),
     ('0', 'Deploying'),
     ('1', 'Deployed'),
     ('2', 'Scheduled'),
+    ('3', 'Unavailable'),
   )
-  STATUS_UNAVAILABLE = '-1'
   STATUS_DEPLOYING = '0'
   STATUS_DEPLOYED = '1'
   STATUS_SCHEDULED = '2'
+  STATUS_UNAVAILABLE = '3'
 
   environment = models.ForeignKey(Environment)
   server = models.ForeignKey(Server)
