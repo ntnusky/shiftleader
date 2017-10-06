@@ -68,7 +68,7 @@ class Command(BaseCommand):
         self.stdout.write("Deploying environment %s" % environment.name)
         logfile=open("/tmp/r10k-%s.log" % environment.name, "w")
         result = subprocess.run(
-            "/usr/local/bin/r10k deploy environment %s -pv" % environment.name,
+            "/usr/bin/r10k deploy environment %s -pv" % environment.name,
             stdout=logfile, stderr=logfile, shell=True)
         self.stdout.write("Deployed environment %s" % environment.name)
         lastVersion.status = EnvironmentVersion.STATUS_DEPLOYED
