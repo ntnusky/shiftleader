@@ -28,7 +28,7 @@ class Command(BaseCommand):
     
     try:
       FNULL = open(os.devnull, "w")
-      result = subprocess.run("/usr/local/bin/r10k deploy display",
+      result = subprocess.run("/usr/bin/r10k deploy display",
           stdout=subprocess.PIPE, stderr=FNULL, shell=True)
       r10kenv = yaml.load(result.stdout)[':sources'][0][':environments']
     except:
