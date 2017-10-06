@@ -17,15 +17,15 @@
           <tr>
             <td>{{v.environment.name}}</td>
             <td>{{v.getShortSignature}}</td>
-            {% if v.getStatusText != 'Deployed' %}
-              <td>{{v.getStatusText}}</td>
-            {% else %}
+            {% if v.deployable %}
               <td>
                 <a class="btn-sm btn-success" 
                     href="{% url 'puppetDeploy' s.id v.environment.id %}">
                   Deploy
                 </a>
               </td>
+            {% else %}
+              <td>{{v.getStatusText}}</td>
             {% endif %}
           </tr>
           {% endfor %}

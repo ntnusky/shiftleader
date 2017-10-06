@@ -71,10 +71,12 @@ class Server(models.Model):
 
 class EnvironmentVersion(models.Model):
   STATUS = (
+    ('-1', 'Unavailable'),
     ('0', 'Deploying'),
     ('1', 'Deployed'),
     ('2', 'Scheduled'),
   )
+  STATUS_UNAVAILABLE = '-1'
   STATUS_DEPLOYING = '0'
   STATUS_DEPLOYED = '1'
   STATUS_SCHEDULED = '2'
@@ -86,10 +88,14 @@ class EnvironmentVersion(models.Model):
   finished = models.CharField(max_length=64)
   success = models.BooleanField()
   status = models.CharField(max_length=1, choices=STATUS,
-      default=STATUS_SCHEDULED)
+      default=STATUS_UNAVAILABLE)
 
   def __str__(self):
     return "%s (rev: %s)" % (self.environment, self.signature[0:7])
+
+  def deployable(self):
+    return (self.status == self.STATUS_DEPLOYED) or \
+        (self.status == self.STATUS_UNAVAILABLE)
 
   def getShortSignature(self):
     return self.signature[0:7]
