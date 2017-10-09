@@ -7,8 +7,9 @@ import yaml
 
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
+from django.utils.timezone import now
 
-from puppet.models import Server, Environment, EnvironmentVersion, Role
+from puppet.models import Server, Environment, Version, Role
 
 class Command(BaseCommand):
   def add_arguments(self, parser):
@@ -24,105 +25,80 @@ class Command(BaseCommand):
       server = Server.objects.get(name=fqdn)
     except Server.DoesNotExist:
       server = Server(name=fqdn)
-    server.checkin(Server.STATUS_START)
+    server.checkin(Server.STATUS_STARTED)
     
     try:
       FNULL = open(os.devnull, "w")
+      # First, deploy production to make sure that we get a list over all
+      # available environments.
       result = subprocess.run("/usr/bin/r10k deploy environment production",
-          stdout=subprocess.PIPE, stderr=FNULL, shell=True)
+          stdout=FNULL, stderr=FNULL, shell=True)
+      # Grab a list over current environments
       result = subprocess.run("/usr/bin/r10k deploy display",
           stdout=subprocess.PIPE, stderr=FNULL, shell=True)
       r10kenv = yaml.load(result.stdout)[':sources'][0][':environments']
-    except:
+    except Exception as e: 
+      self.stderr.write("An error occurred: %s" % str(e))
       server.checkin(Server.STATUS_ERR)
       return
 
     # Parse all current environments
     path = '/etc/puppetlabs/code/environments/'
-    available = os.listdir(path)
     levelInPath = len(path.rstrip('/').split('/'))
     environments = []
     for environmentName in r10kenv:
-      server.checkin(Server.STATUS_RUN)
+      server.checkin(Server.STATUS_RUNNING)
       try:
         environment = Environment.objects.get(name=environmentName)
       except Environment.DoesNotExist:
-        environment = Environment(name=environmentName, active=True)
-        environment.save()
+        environment = Environment(name=environmentName)
         self.stdout.write("Creating environment %s" % environmentName)
 
-      if(not environment.active):
-        self.stdout.write("Enabling environment %s" % environmentName)
-        environment.active = True
-        environment.save()
+      environment.last_deployed = now()
+      environment.save()
+
       environments.append(environment)
 
-      lastVersion = environment.environmentversion_set.filter(server=server).\
-          last()
-      if(lastVersion.status == EnvironmentVersion.STATUS_SCHEDULED):
-        environment.environmentversion_set.create(server=server, signature="",
-            started="", finished="", success=False,
-            status=EnvironmentVersion.STATUS_DEPLOYING)
-        lastVersion = environment.environmentversion_set.filter(server=server
-            ).last()
+      lastVersion = server.getLatestVersion(environment)
+      if(lastVersion and lastVersion.status == Version.STATUS_SCHEDULED):
+        lastVersion.status = Version.STATUS_DEPLOYING
+        lastVersion.save()
+
+        # Deploy r10k environment
         self.stdout.write("Deploying environment %s" % environment.name)
         logfile=open("/tmp/r10k-%s.log" % environment.name, "w")
         result = subprocess.run(
             "/usr/bin/r10k deploy environment %s -pv" % environment.name,
             stdout=logfile, stderr=logfile, shell=True)
         self.stdout.write("Deployed environment %s" % environment.name)
-        lastVersion.status = EnvironmentVersion.STATUS_DEPLOYED
+
+        # Grab the signature after the deployment.
+        try:
+          envinfo = json.load(open(os.path.join(path, environmentName, 
+              '.r10k-deploy.json'), "r"))
+        except FileNotFoundError:
+          self.stderr.write(\
+              "Environment %s is not deployed yet" % environmentName)
+          continue
+
+        # Save the version-object
+        lastVersion.signature=envinfo['signature']
+        lastVersion.status = Version.STATUS_DEPLOYED
         lastVersion.save()
-      elif(lastVersion.status == EnvironmentVersion.STATUS_DEPLOYING):
-        self.stderr.write("Environment %s is alredy deploying" % \
-            environmentName)
-        continue
 
-      try:
-        envinfo = json.load(open(os.path.join(path, environmentName, 
-            '.r10k-deploy.json'), "r"))
-      except FileNotFoundError:
-        self.stderr.write(\
-            "Environment %s is not deployed yet" % environmentName)
-        continue
+        for current, dirs, files in os.walk(os.path.join(path, environmentName, 
+            "modules/role/manifests")):
+          for f in files:
+            dirnames = current.split('/')[levelInPath+4:]
+            classname = f.replace('.pp', '')
+            dirnames.append(classname)
+            fullname = "::".join(dirnames) 
 
-      lastVersion.signature=envinfo['signature']
-      lastVersion.started=envinfo['started_at']
-      lastVersion.finished=envinfo['finished_at']
-      lastVersion.success=envinfo['deploy_success']
-      lastVersion.save()
-
-      roles = []
-      for current, dirs, files in os.walk(os.path.join(path, environmentName, 
-          "modules/role/manifests")):
-        for f in files:
-          dirnames = current.split('/')[levelInPath+4:]
-          classname = f.replace('.pp', '')
-          dirnames.append(classname)
-          fullname = "::".join(dirnames) 
-
-          try:
-            role = environment.role_set.get(name=fullname)
-          except Role.DoesNotExist:
-            role = environment.role_set.create(name=fullname, active=True)
-            self.stdout.write("Creating role %s-%s" % (environmentName, role))
-
-          if not role.active:
-            self.stdout.write("Enabling role %s-%s" % (environmentName, role))
-            role.active = True
+            try:
+              role = environment.role_set.get(name=fullname)
+            except Role.DoesNotExist:
+              role = environment.role_set.create(name=fullname)
+              self.stdout.write("Creating role %s-%s" % (environmentName, role))
+            role.last_deployed = now()
             role.save()
-          roles.append(role)
-
-      for role in environment.role_set.all():
-        if role.active and role not in roles:
-          role.active = False
-          role.save()
-          self.stdout.write("Disabling role %s-%s" % (environmentName, role))
-
-    for env in Environment.objects.all():
-      if env.active and env not in environments:
-        env.active = False
-        env.save()
-        self.stdout.write("Disabled environment %s" % env.name)
     server.checkin(Server.STATUS_OK) 
-

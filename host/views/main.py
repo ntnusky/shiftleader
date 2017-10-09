@@ -21,7 +21,7 @@ def index(request):
   context['header'] = "Host status"
   context['hosts'] = Host.objects.all()
   context['domains'] = Domain.objects.all()
-  context['environments'] = Environment.objects.filter(active=True).all()
+  context['environments'] = Environment.objects.all()
 
   return render(request, 'hostOverview.html', context)
 

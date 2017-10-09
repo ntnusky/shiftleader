@@ -23,7 +23,9 @@
     <div class="col-sm-8">
       <select class="form-control" id="environment">
         {% for environment in environments %}
-          <option>{{environment.name}}</option>
+          {% if environment.is_active %}
+            <option>{{environment.name}}</option>
+          {% endif %}
         {% endfor %}
       </select>
     </div>

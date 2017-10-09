@@ -17,7 +17,7 @@ from puppet.models import Environment, Role
 def form(request):
   context = {}
   context['domains'] = Domain.objects.all()
-  context['environments'] = Environment.objects.filter(active=True).all()
+  context['environments'] = Environment.objects.all()
   context['subnets'] = Subnet.objects.all()
   return render(request, 'ajax/hostForm.html', context)
 

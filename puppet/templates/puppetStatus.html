@@ -1,64 +1,48 @@
 {% extends "base/main.html" %}
 
 {% block page-content %}
-  <p>This page is merley a status page to show what is reported about the puppet
-  environment by the puppet master(s).</p>
+  <p>This status-page shows you your puppetmasters, and which environments are
+  deployed at which versions on each of them.</p>
 
-  <h2>Servers</h2>
-
+  <h2>Puppet environments</h2>
   <table class="table table-condensed table-striped table-hover">
-    <tr><th>Servername</th><th>Status</th><th>Environments</th></tr>
-    {% for s in servers %}
       <tr>
-        <td>{{s.name}}</td>
-        <td>{{s.getStatusText}}</td>
-        <td><table class="table table-condensed">
-          {% for v in s.latest_envs %}
-          <tr>
-            <td>{{v.environment.name}}</td>
-            <td>{{v.getShortSignature}}</td>
-            {% if v.deployable %}
-              <td>
-                <a class="btn-sm btn-success" 
-                    href="{% url 'puppetDeploy' s.id v.environment.id %}">
-                  Deploy
-                </a>
-              </td>
-            {% else %}
-              <td>{{v.getStatusText}}</td>
-            {% endif %}
-          </tr>
-          {% endfor %}
-        </table></td>
+        <th>Environment</th>
+        {% for s in servers %}
+          <th colspan="2">{{s.name}}</th>
+        {% endfor %}
+        <th>ALL</th>
       </tr>
-    {% endfor %}
-  </table>
-
-  <h2>Environments:</h2>
-
-  <p>The following environments exists:</p>
-
-  {% if environments %}
-    <div class="row">
-      {% for e in environments %}
-        <div class="col-sm-6 col-12 col-md-4 col-lg-2">
-        {% if e.active %}
-          <h3>{{ e.name }}</h3>
-          <p>The environment "{{ e.name }}" contains the following roles:</p>
-          <ul>
-            {% for r in e.role_set.all %}
-              {% if r.active %}
-                <li>{{r.name}}</li>
+      {% for env in serverenvs %}
+        <tr>
+          <td>{{env.environment.name}}</td>
+          {% for server in env.servers %}
+            <td>
+            {% if server.latest %}
+              {% if server.latest.is_deployable %}
+                {{server.latest.getShortSignature}}</td><td> 
+                <a class="btn-sm btn-success" 
+                  href="{% url 'puppetDeploy' env.environment.id server.server.id %}">
+                  Deploy</a>
               {% else %}
-                <li class="inactive">{{r.name}}</li>
+                </td><td>{{server.latest.getStatusText}}
               {% endif %}
-            {% endfor %}
-          </ul>
-        {% else  %}
-          <h3 class="inactive">{{ e.name }}</h3>
-        {% endif %}
-        </div>
+            {% else %}
+              None</td><td><a class="btn-sm btn-success" 
+                href="{% url 'puppetDeploy' env.environment.id server.server.id %}">
+                Deploy
+              </a>
+            {% endif %}
+            </td>
+          {% endfor %}
+          <td>
+            <a class="btn-sm btn-success" 
+                href="{% url 'puppetDeployAll' env.environment.id %}">
+                Deploy all
+            </a>
+          </td>
+        </tr>
       {% endfor %}
-    </div>
-  {% endif %}
+    </tr>
+  </table>
 {% endblock page-content %}

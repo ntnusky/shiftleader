@@ -1,45 +1,61 @@
-import datetime
+from datetime import datetime
 
 from django.db import models
 from django.utils import timezone
 
 class Environment(models.Model):
   name = models.CharField(max_length=64)
-  active = models.BooleanField()
+  last_deployed = models.DateTimeField(null=True)
 
   def __str__(self):
-    return "%s (%s)" % (self.name, "Active" if self.active else "In-Active")
+    return "%s (%s)" % (self.name, "Active" if self.is_active else "In-Active")
+
+  def getLatestVersion(self):
+    return self.version_set.order_by('-created').first()
+
+  def is_active(self):
+    if self.version_set.count() == 0:
+      return False
+
+    last_version = self.getLatestVersion()
+    last_server_deploy = last_version.server.getLatestVersion()
+    
+    invalid = last_version.created.timestamp() + 900
+    lastServer = last_server_deploy.created.timestamp()
+    if lastServer > invalid:
+      return False
+    
+    return True
 
   class Meta:
-    ordering = ['-active', 'name']
+    ordering = ['name']
 
 class Server(models.Model):
   STATUSES = (
     ('0', 'Ok'),
     ('1', 'Checkin started'),
-    ('2', 'r10k running'),
-    ('3', 'r10k error'),
+    ('2', 'r10k is running'),
+    ('3', 'r10k failed'),
     ('4', 'Timeout')
   )
 
   STATUS_OK = '0'
-  STATUS_START = '1'
-  STATUS_RUN = '2'
-  STATUS_ERR = '3'
-  STATUS_TIME = '4'
+  STATUS_STARTED = '1'
+  STATUS_RUNNING = '2'
+  STATUS_ERROR = '3'
+  STATUS_TIMEOUT = '4'
 
   name = models.CharField(max_length=64)
-  todeploy = models.ManyToManyField(Environment)
-  last_checkin = models.DateTimeField()
   status = models.CharField(max_length=1, choices=STATUSES)
+  last_checkin = models.DateTimeField(null=True)
 
   def __str__(self):
     return "%s (%s)" % (self.name, self.getStatusText())
 
   def getStatusText(self):
-    invalid = datetime.datetime.fromtimestamp(self.last_checkin.timestamp()+360)
+    invalid = datetime.fromtimestamp(self.last_checkin.timestamp()+360)
     if(timezone.now() > timezone.make_aware(invalid)):
-      self.status = self.STATUS_TIME
+      self.status = self.STATUS_TIMEOUT
       self.save()
 
     for key, value in self.STATUSES:
@@ -52,69 +68,90 @@ class Server(models.Model):
     self.status = status
     self.save()
 
-  def deploy(self, env):
-    if(env not in self.todeploy.all()):
-      self.todeploy.add(env)
-      return True
-    return False
+  def getLatestVersion(self, env=None):
+    if(type(env) == str):
+      try:
+        environment = Environment.objects.get(name=env)
+      except Environment.DoesNotExist: 
+        return None
+    elif(type(env) == Environment):
+      environment = env
+    elif(env == None):
+      return self.version_set.order_by('-created').first()
+    else:
+      raise ValueError("This function needs a string or an environment")
+    
+    return self.version_set.order_by('-created').filter(
+        environment=environment).first()
 
-  def latest_envs(self):
-    envs = []
-    for env in Environment.objects.all():
-      last = self.environmentversion_set.filter(environment=env).last()
-      if(not last):
-        last = self.environmentversion_set.create(environment=env,
-            signature="", started="", finished="", success=False)
-      envs.append(last)
-    return envs
-      
+  def getLatestVersions(self):
+    versions = []
+    for environment in Environment.objects.all():
+      if environment.is_active():
+        version = self.getLatestVersion(environment)
+        if version:
+          versions.append(version)
+    return versions
 
-class EnvironmentVersion(models.Model):
+  class Meta:
+    ordering = ['name']
+
+class Version(models.Model):
   STATUS = (
-    ('0', 'Deploying'),
-    ('1', 'Deployed'),
-    ('2', 'Scheduled'),
-    ('3', 'Unavailable'),
+    ('0', 'Scheduled'),
+    ('1', 'Deploying'),
+    ('2', 'Deployed'),
+    ('3', 'Error'),
   )
-  STATUS_DEPLOYING = '0'
-  STATUS_DEPLOYED = '1'
-  STATUS_SCHEDULED = '2'
-  STATUS_UNAVAILABLE = '3'
+  STATUS_SCHEDULED = '0'
+  STATUS_DEPLOYING = '1'
+  STATUS_DEPLOYED = '2'
+  STATUS_ERROR = '3'
 
   environment = models.ForeignKey(Environment)
   server = models.ForeignKey(Server)
   signature = models.CharField(max_length=64)
-  started = models.CharField(max_length=64)
-  finished = models.CharField(max_length=64)
-  success = models.BooleanField()
   status = models.CharField(max_length=1, choices=STATUS,
-      default=STATUS_UNAVAILABLE)
+      default=STATUS_SCHEDULED)
+  created = models.DateTimeField(auto_now_add=True, null=True)
+  deployed = models.DateTimeField(auto_now=True, null=True)
 
   def __str__(self):
-    return "%s (rev: %s)" % (self.environment, self.signature[0:7])
+    return "%s (rev: %s)" % (self.environment, self.getShortSignature())
 
-  def deployable(self):
+  def is_deployable(self):
     return (self.status == self.STATUS_DEPLOYED) or \
-        (self.status == self.STATUS_UNAVAILABLE)
+        (self.status == self.STATUS_ERROR)
 
-  def getShortSignature(self):
-    return self.signature[0:7]
+  def getShortSignature(self, length = 7):
+    return self.signature[0:length]
 
   def getStatusText(self):
-    for key, val in EnvironmentVersion.STATUS:
+    for key, val in Version.STATUS:
       if(key == self.status):
         return val
-    return ""
+    return None
 
 class Role(models.Model):
   name = models.CharField(max_length=64)
   environment = models.ForeignKey(Environment)
-  active = models.BooleanField()
+  last_deployed = models.DateTimeField(null=True)
 
   def __str__(self):
-    return "%s in %s (%s)" % (self.name, self.environment.name, 
-        "Active" if self.active else "In-Active")
+    if(self.last_deployed):
+      return "%s in %s (%s)" % (self.name, self.environment.name, 
+          "Active" if self.is_active() else "In-Active")
+    else:
+      return "%s in %s" % (self.name, self.environment.name) 
+
+  def is_active(self):
+    invalid = self.last_deployed.timestamp() + 900
+    env = self.environment.last_deployed.timestamp()
+
+    if env > invalid:
+      return False
+    else:
+      return True
 
   class Meta:
-    ordering = ['-active', 'name']
-
+    ordering = ['name']
