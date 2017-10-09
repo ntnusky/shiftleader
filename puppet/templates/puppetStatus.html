@@ -25,7 +25,8 @@
                   href="{% url 'puppetDeploy' env.environment.id server.server.id %}">
                   Deploy</a>
               {% else %}
-                </td><td>{{server.latest.getStatusText}}
+                {{server.latest.getShortSignature}}</td>
+                <td>{{server.latest.getStatusText}}
               {% endif %}
             {% else %}
               None</td><td><a class="btn-sm btn-success" 
