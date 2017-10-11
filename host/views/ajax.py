@@ -211,7 +211,7 @@ def new(request):
     response['message'] = "The domain, role or environment was not found. %s" \
         % str(e)
 
-  if(not environment.active):
+  if(not environment.is_active()):
     response['status'] = "danger"
     response['message'] = "The environment is disabled."
     return JsonResponse(response)
