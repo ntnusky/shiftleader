@@ -19,6 +19,18 @@
   </div>
 
   <div class="form-group">
+    <label class="control-label col-sm-4" for="partition">Partition-scheme</label>
+    <div class="col-sm-8">
+      <select class="form-control" id="partition">
+        <option>Default</option>
+        {% for p in partitionschemes %}
+          <option>{{p.name}}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
     <label class="control-label col-sm-4" for="environment">Environment</label>
     <div class="col-sm-8">
       <select class="form-control" id="environment">

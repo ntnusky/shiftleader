@@ -9,7 +9,7 @@ from dashboard.utils import createContext, requireSuperuser, get_client_ip
 from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
-from host.models import Host, Interface
+from host.models import Host, Interface, PartitionScheme
 from host.utils import authorize, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment
@@ -22,6 +22,7 @@ def index(request):
   context['hosts'] = Host.objects.all()
   context['domains'] = Domain.objects.all()
   context['environments'] = Environment.objects.all()
+  context['partitionschemes'] = PartitionScheme.objects.all()
 
   return render(request, 'hostOverview.html', context)
 
@@ -188,7 +189,11 @@ def preseed(request, id):
     context['host'].status = Host.INSTALLING
     context['host'].save()
 
-  return render(request, 'preseed/default.cfg', context)
+
+  if(context['host'].partition):
+    return render(request, 'preseed/partitionSet.cfg', context)
+  else:
+    return render(request, 'preseed/default.cfg', context)
 
 def tftp(request, id):
   context = {} 
@@ -220,3 +225,40 @@ def postinstall(request, id):
     context['host'].save()
 
   return render(request, 'postinstall/postinstall.sh', context)
+
+def pform(request, pid=0):
+  context = createContext(request)
+
+  if(pid == 0):
+    scheme = None
+    context['header'] = "Create a new partitioning-scheme"
+    context['buttonText'] = "Create new scheme"
+  else:
+    scheme = get_object_or_404(PartitionScheme, pk=pid)
+    context['partitionscheme'] = scheme
+    context['header'] = "Update the scheme %s" % scheme.name
+    context['buttonText'] = "Update scheme"
+
+  if(request.POST.get('csrfmiddlewaretoken')):
+    if(scheme == None):
+      scheme = PartitionScheme()
+
+    toSave = False
+    if(scheme.name != request.POST.get('name')):
+      scheme.name = request.POST.get('name')
+      toSave = True
+    if(scheme.description != request.POST.get('description')):
+      scheme.description = request.POST.get('description')
+      toSave = True
+    if(scheme.content != request.POST.get('scheme')):
+      scheme.content = request.POST.get('scheme')
+      toSave = True
+
+    if(len(scheme.name) == 0 or len(scheme.content) ==0):
+      context['message'] = "You need to fill in name and scheme!"
+      toSave = False
+
+    if(toSave):
+      scheme.save()
+      return redirect('hostIndex')
+  return render(request, 'hostPartitionForm.html', context)

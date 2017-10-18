@@ -6,6 +6,8 @@ urlpatterns = [
   url(r'^([0-9]+)/$', main.single, name="singleHost"),
   url(r'^([0-9]+)/interface/$', main.interface, name="hostNewInterface"),
   url(r'^([0-9]+)/interface/([0-9]+)/$', main.interface, name="hostInterface"),
+  url(r'^partition/$', main.pform, name="hostPartitionNew"),
+  url(r'^partition/([0-9]+)/$', main.pform, name="hostPartitionEdit"),
 
   # AJAX URL's
   url(r'^table/$', ajax.table, name='hostAjaxTable'),

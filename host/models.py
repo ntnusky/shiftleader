@@ -8,6 +8,21 @@ from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment, Role
 
+class PartitionScheme(models.Model):
+  name = models.CharField(max_length=64)
+  description = models.TextField()
+  content = models.TextField()
+
+  def __str__(self):
+    maxLength = 30
+    if(len(self.description) > maxLength):
+      return "%s (%s...)" % (self.name, self.getShortDescription(maxLength))
+    else:
+      return "%s (%s)" % (self.name, self.description)
+
+  def getShortDescription(self, length=30):
+    return self.description[0:length]
+
 class Host(models.Model):
   STATUSES = (
     (0, "Operational"),
@@ -27,6 +42,7 @@ class Host(models.Model):
   password = models.CharField(max_length=64, null=True)
   domain = models.ForeignKey(Domain)
   environment = models.ForeignKey(Environment)
+  partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
 

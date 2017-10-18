@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dashboard.utils import requireSuperuser
 from dhcp.models import Subnet
 from dhcp.omapi import Servers 
-from host.models import Host, Interface
+from host.models import Host, Interface, PartitionScheme
 from nameserver.models import Domain
 from puppet.models import Environment, Role
 
@@ -19,6 +19,7 @@ def form(request):
   context['domains'] = Domain.objects.all()
   context['environments'] = Environment.objects.all()
   context['subnets'] = Subnet.objects.all()
+  context['partitionschemes'] = PartitionScheme.objects.all()
   return render(request, 'ajax/hostForm.html', context)
 
 @user_passes_test(requireSuperuser)
@@ -202,6 +203,15 @@ def remove(request):
 def new(request):
   response = {}
 
+  if(request.POST['partition'] == 'Default'):
+    partition = None
+  else:
+    try:
+      partition = PartitionScheme.objects.get(name=request.POST['partition'])
+    except PartitionScheme.DoesNotExist:
+      response['status'] = "danger"
+      response['message'] = "Partition-scheme not found."
+
   try:
     domain = Domain.objects.get(name=request.POST['domain'])
     environment = Environment.objects.get(name=request.POST['environment'])
@@ -287,7 +297,8 @@ def new(request):
 
   
   host = Host(name=request.POST['hostname'], domain=domain,
-      environment=environment, status = Host.PROVISIONING, role=role)
+      environment=environment, status = Host.PROVISIONING, role=role,
+      partition=partition)
   host.save()
   interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
       primary=True, ipv4Lease=lease)
