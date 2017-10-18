@@ -215,6 +215,8 @@ def postinstall(request, id):
   context = {} 
 
   context['host'] = get_object_or_404(Host, pk=id)
+  context['puppetserver'] = parser.get('puppet', 'server')
+  context['puppetca'] = parser.get('puppet', 'caserver')
 
   auth = authorize(request, context['host'])
   if auth == NONE:

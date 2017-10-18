@@ -23,7 +23,8 @@ apt-get update
 apt-get -y install puppet-agent
 rm puppet5-release-xenial.deb
 echo "[agent]" >> /etc/puppetlabs/puppet/puppet.conf
-echo "server = bootstrap.sky.rothaugane.com" >> /etc/puppetlabs/puppet/puppet.conf 
+echo "server = {{puppetserver}}" >> /etc/puppetlabs/puppet/puppet.conf 
+echo "ca_server = {{puppetca}}" >> /etc/puppetlabs/puppet/puppet.conf 
 export PATH="$PATH:/opt/puppetlabs/bin"
 systemctl enable  puppet
 
