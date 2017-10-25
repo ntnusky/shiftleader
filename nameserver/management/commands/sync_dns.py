@@ -10,7 +10,7 @@ class Command(BaseCommand):
   help = ""
 
   def handle(self, *args, **options):
-    for host in Host.objects.all():
-      host.updateDNS()
     for sr in StaticRecord.objects.filter(active=True).all():
       sr.configure()
+    for host in Host.objects.all():
+      host.updateDNS()
