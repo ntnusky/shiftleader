@@ -26,11 +26,14 @@ class Server(models.Model):
     
     return dns.update.Update(domain, keyring=keyring, keyname=keyname)
 
-  def detectRecordType(name):
+  def detectRecordType(name, domain=None):
     try:
       ip = ipaddress.ip_address(name)
     except ValueError:
-      return 'cname'
+      if(domain and ("ip6.arpa" in domain or "in-addr.arpa" in domain)):
+        return 'ptr'
+      else:
+        return 'cname'
     else:
       if ip.version == 4:
         return 'a'
@@ -55,11 +58,13 @@ class Server(models.Model):
       return None
 
   def configureRecord(self, domain, record, destination, exclusive=True, present=True, ttl=300):
-    rtype = Server.detectRecordType(destination)
+    rtype = Server.detectRecordType(destination, domain)
 
     # Make sure destination is a fqdn
-    if(rtype == 'cname' and not destination.endswith('.')):
+    if((rtype == 'cname') and not destination.endswith('.')):
       destination = "%s.%s." % (destination, domain)
+    if((rtype == 'ptr') and not destination.endswith('.')):
+      destination = "%s." % destination
 
     # Query for existing records
     existing = self.query("%s.%s" % (record, domain), rtype)
@@ -147,6 +152,16 @@ class StaticRecord(models.Model):
   def configure(self):
     if(self.ipv4):
       self.domain.configure(self.name, self.ipv4)
+
+      # If we manage the reverse-zone, configure a reverse name for this
+      # interface.
+      ip = self.ipv4.split('.')
+      try:
+        reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
+        domain = Domain.objects.get(name=reverseDomain)
+        domain.configure(ip[3], "%s.%s." % (self.name, self.domain))
+      except Domain.DoesNotExist:
+        pass
     else:
       self.domain.configure(self.name, "198.51.100.218", present=False)
 

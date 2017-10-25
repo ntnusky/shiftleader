@@ -16,7 +16,15 @@ from puppet.models import Environment, Role
 @user_passes_test(requireSuperuser)
 def form(request):
   context = {}
-  context['domains'] = Domain.objects.all()
+  context['domains'] = []
+
+  for domain in Domain.objects.all():
+    if('in-addr.arpa' in domain.name):
+      continue
+    if('ip6.arpa' in domain.name):
+      continue
+    context['domains'].append(domain)
+
   context['environments'] = Environment.objects.all()
   context['subnets'] = Subnet.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()

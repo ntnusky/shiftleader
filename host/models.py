@@ -74,15 +74,27 @@ class Host(models.Model):
   def updateDNS(self):
     for interface in self.interface_set.all():
       # If this is the primary interface, add an A record with the machine's
-      # hostname.
+      # hostname (Unless the host have the same domain as the primary interface)
       if(interface.primary):
-        if(interface.ipv4Lease):
+        if(interface.ipv4Lease and 
+            self.domain != interface.ipv4Lease.subnet.domain):
           self.domain.configure(self.name, interface.ipv4Lease.IP)
         if(interface.ipv6):
           self.domain.configure(self.name, interface.ipv6)
 
       if(interface.ipv4Lease):
         interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv4Lease.IP)
+
+        # If we manage the reverse-zone, configure a reverse name for this
+        # interface.
+        ip = interface.ipv4Lease.IP.split('.')
+        try:
+          reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
+          domain = Domain.objects.get(name=reverseDomain)
+          domain.configure(ip[3], "%s.%s." % (self.name, self.domain))
+        except Domain.DoesNotExist:
+          pass
+
         if(interface.ipv6):
           interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv6)
 
