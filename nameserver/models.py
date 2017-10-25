@@ -159,10 +159,7 @@ class StaticRecord(models.Model):
       try:
         reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
         domain = Domain.objects.get(name=reverseDomain)
-        try:
-          lease = Lease.objects.get(IP=ip)
-        except Lease.DoesNotExist:
-          domain.configure(ip[3], "%s.%s." % (self.name, self.domain))
+        domain.configure(ip[3], "%s.%s." % (self.name, self.domain))
       except Domain.DoesNotExist:
         pass
     else:
