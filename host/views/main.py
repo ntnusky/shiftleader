@@ -169,7 +169,7 @@ def interface(request, hid, iid = 0):
         hostname = None
 
       dhcpservers.configureLease(context['lease'].IP, context['lease'].MAC, 
-          context['lease'].present, hostname)
+          context['lease'].present)
       return redirect('singleHost', host.id)
 
   return render(request, 'hostInterface.html', context)
