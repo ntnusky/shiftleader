@@ -178,7 +178,11 @@ def preseed(request, id):
   context = {} 
 
   context['host'] = get_object_or_404(Host, pk=id)
-  key, context['dashboardURL'] = parser.items("hosts")[0]
+  items = parser.items("hosts")
+  if('ipv4' in items):
+    context['dashboardURL'] = items['ipv4']
+  else:
+    context['dashboardURL'] = items['main']
   context['diskname'] = '/dev/sda'
 
   auth = authorize(request, context['host'])
@@ -198,7 +202,11 @@ def preseed(request, id):
 def tftp(request, id):
   context = {} 
 
-  key, context['dashboardURL'] = parser.items("hosts")[0]
+  items = parser.items("hosts")
+  if('ipv4' in items):
+    context['dashboardURL'] = items['ipv4']
+  else:
+    context['dashboardURL'] = items['main']
   context['host'] = get_object_or_404(Host, pk=id)
 
   if not authorize(request, context['host']):
