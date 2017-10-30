@@ -2,7 +2,7 @@ import ipaddress
 import re
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 
 from dashboard.utils import createContext, requireSuperuser, get_client_ip
@@ -178,12 +178,14 @@ def preseed(request, id):
   context = {} 
 
   context['host'] = get_object_or_404(Host, pk=id)
-  items = parser.items("hosts")
-  if('ipv4' in items):
-    context['dashboardURL'] = items['ipv4']
-  else:
-    context['dashboardURL'] = items['main']
   context['diskname'] = '/dev/sda'
+  context['dashboardURL'] = None
+  for key, item in parser.items("hosts")
+    if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
+      context['dashboardURL'] = item
+
+  if context['dashboardURL'] == None:
+    return HttpResponseServerError()
 
   auth = authorize(request, context['host'])
   if auth == NONE:
@@ -193,7 +195,6 @@ def preseed(request, id):
     context['host'].status = Host.INSTALLING
     context['host'].save()
 
-
   if(context['host'].partition):
     return render(request, 'preseed/partitionSet.cfg', context)
   else:
@@ -202,11 +203,10 @@ def preseed(request, id):
 def tftp(request, id):
   context = {} 
 
-  items = parser.items("hosts")
-  if('ipv4' in items):
-    context['dashboardURL'] = items['ipv4']
-  else:
-    context['dashboardURL'] = items['main']
+  context['dashboardURL'] = None
+  for key, item in parser.items("hosts")
+    if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
+      context['dashboardURL'] = item
   context['host'] = get_object_or_404(Host, pk=id)
 
   if not authorize(request, context['host']):
