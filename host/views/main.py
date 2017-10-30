@@ -228,6 +228,7 @@ def postinstall(request, id):
 
   return render(request, 'postinstall/postinstall.sh', context)
 
+@user_passes_test(requireSuperuser)
 def pform(request, pid=0):
   context = createContext(request)
 
