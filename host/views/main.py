@@ -180,7 +180,7 @@ def preseed(request, id):
   context['host'] = get_object_or_404(Host, pk=id)
   context['diskname'] = '/dev/sda'
   context['dashboardURL'] = None
-  for key, item in parser.items("hosts")
+  for key, item in parser.items("hosts"):
     if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
       context['dashboardURL'] = item
 
@@ -204,7 +204,7 @@ def tftp(request, id):
   context = {} 
 
   context['dashboardURL'] = None
-  for key, item in parser.items("hosts")
+  for key, item in parser.items("hosts"):
     if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
       context['dashboardURL'] = item
   context['host'] = get_object_or_404(Host, pk=id)
