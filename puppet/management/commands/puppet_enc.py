@@ -13,7 +13,7 @@ class Command(BaseCommand):
 
   def handle(self, *args, **options):
     fqdn = options['fqdn']
-    pattern = re.compile(r'^([a-zA-Z0-9]+)\.([a-zA-Z0-9\.]+)$')
+    pattern = re.compile(r'^([a-zA-Z0-9\-]+)\.([a-zA-Z0-9\.]+)$')
     match = pattern.match(fqdn)
 
     if(not match):
