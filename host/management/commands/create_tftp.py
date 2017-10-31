@@ -12,7 +12,10 @@ class Command(BaseCommand):
   def handle(self, *args, **options):
     data = {}
     location = os.path.join(parser.get("TFTP", "rootdir"), 'pxelinux.cfg')
-    key, data['dashboardURL'] = url = parser.items("hosts")[0]
+    data['dashboardURL'] = None
+    for key, item in parser.items("hosts"):
+      if(key == 'ipv4' or (data['dashboardURL'] == None and key == 'main')):
+        data['dashboardURL'] = item
 
     if not os.path.exists(location):
       os.makedirs(location)
