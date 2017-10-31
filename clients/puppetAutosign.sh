@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exit $(/opt/machineadmin/manage.py puppet_autosign $1)
+exit $(/opt/shiftleader/manage.py puppet_autosign $1)

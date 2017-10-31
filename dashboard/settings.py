@@ -18,7 +18,7 @@ from configparser import ConfigParser,NoOptionError
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 parser = ConfigParser()
-parser.read(['/etc/machineadmin/settings.ini', os.path.join(BASE_DIR, 'settings.ini')])
+parser.read(['/etc/shiftleader/settings.ini', os.path.join(BASE_DIR, 'settings.ini')])
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/

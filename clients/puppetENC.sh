@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/opt/machineadmin/manage.py puppet_enc $1
+/opt/shiftleader/manage.py puppet_enc $1
