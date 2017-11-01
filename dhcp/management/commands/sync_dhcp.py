@@ -12,13 +12,14 @@ class Command(BaseCommand):
 
     # For each subnet we ar handling DHCP
     for subnet in Subnet.objects.filter(active=True).all():
+      self.stdout.write("Subnet %s" % subnet.name)
       # Initialize a counter over free adressess and a list over reserved
       # addresses.
       free = subnet.getSubnet().num_addresses
       free -= len(subnet.getReservedAddresses())
 
       # For each lease in the database
-      for lease in Lease.objects.all():
+      for lease in Lease.objects.filter(subnet=subnet).order_by('id').all():
         name = None
         try:
           if(lease.interface.primary):
