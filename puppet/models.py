@@ -6,26 +6,16 @@ from django.utils import timezone
 class Environment(models.Model):
   name = models.CharField(max_length=64)
   last_deployed = models.DateTimeField(null=True)
+  active = models.BooleanField(default=False)
 
   def __str__(self):
-    return "%s (%s)" % (self.name, "Active" if self.is_active else "In-Active")
+    return "%s (%s)" % (self.name, "Active" if self.is_active() else "In-Active")
 
   def getLatestVersion(self):
     return self.version_set.order_by('-created').first()
 
   def is_active(self):
-    if self.version_set.count() == 0:
-      return False
-
-    last_version = self.getLatestVersion()
-    last_server_deploy = last_version.server.getLatestVersion()
-    
-    invalid = last_version.created.timestamp() + 900
-    lastServer = last_server_deploy.created.timestamp()
-    if lastServer > invalid:
-      return False
-    
-    return True
+    return self.active
 
   class Meta:
     ordering = ['name']
@@ -155,3 +145,83 @@ class Role(models.Model):
 
   class Meta:
     ordering = ['name']
+
+class Report(models.Model):
+  STATUSES = (
+    (0, 'Unchanged'),
+    (1, 'Changed'),
+    (2, 'Failed'),
+  )
+  STATUS_UNCHANGED = 0
+  STATUS_CHANGED = 1
+  STATUS_FAILED = 2
+
+  host = models.ForeignKey('host.Host')
+  environment = models.ForeignKey(Environment)
+  noop = models.BooleanField()
+  noop_pending = models.BooleanField()
+  configuration_version = models.CharField(max_length=32)
+  puppet_version = models.CharField(max_length=12)
+  status = models.IntegerField(choices=STATUSES)
+  time = models.DateTimeField()
+
+  def __str__(self):
+    return "%s - %s" % (self.host, self.time)
+
+class ReportMetric(models.Model):
+  TYPES = (
+    (0, 'Time'),
+    (1, 'Resource'),
+    (2, 'Event'),
+    (3, 'Change'),
+  )
+  TYPE_TIME = 0
+  TYPE_RESOURCE = 1
+  TYPE_EVENT = 2
+  TYPE_CHANGE = 3
+
+  report = models.ForeignKey(Report)
+  metricType = models.IntegerField(choices=TYPES)
+  name = models.CharField(max_length=32)
+  value = models.CharField(max_length=64)
+
+  def __str__(self):
+    return "%s: %s-%s" % (self.TYPES[self.metricType][1], self.name, self.value)
+
+class ReportTag(models.Model):
+  name = models.CharField(max_length=64)
+
+  def __str__(self):
+    return self.name
+
+class ReportLog(models.Model):
+  LEVELS = (
+    (0, 'Crit'),
+    (1, 'Emerg'),
+    (2, 'Alert'),
+    (3, 'Err'),
+    (4, 'Warning'),
+    (5, 'Notice'),
+    (6, 'Info'),
+    (7, 'Debug'),
+  )
+  LEVEL_CRITICAL = 0
+  LEVEL_EMERGENCY = 1
+  LEVEL_ALERT = 2
+  LEVEL_ERROR = 3
+  LEVEL_WARNING = 4
+  LEVEL_NOTICE = 5
+  LEVEL_INFO = 6
+  LEVEL_DEBUG = 7
+
+  report = models.ForeignKey(Report)
+  level = models.IntegerField(choices=LEVELS)
+  message = models.TextField()
+  source = models.TextField()
+  line = models.IntegerField(null=True)
+  file = models.CharField(max_length=128, null=True)
+  tags = models.ManyToManyField(ReportTag, related_name='entries')
+  time = models.DateTimeField()
+
+  def __str__(self):
+    return "%s, %s" % (self.LEVELS[self.level][1], self.message)

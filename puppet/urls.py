@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 
-from puppet.views import main, json
+from puppet.views import main, json, report
 
 urlpatterns = [
   url(r'^$', main.index, name="puppetIndex"),
   url(r'^deploy/([0-9]+)$', main.deploy, name="puppetDeployAll"),
   url(r'^deploy/([0-9]+)/([0-9]+)$', main.deploy, name="puppetDeploy"),
   url(r'^status$', json.status, name="puppetJsonStatus"),
+  url(r'^report/$', report.main, name="puppetReport")
 ]

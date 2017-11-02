@@ -54,6 +54,9 @@ class Command(BaseCommand):
         environment = Environment(name=environmentName)
         self.stdout.write("Creating environment %s" % environmentName)
 
+      if(not environment.active):
+        environment.active = True
+
       environment.last_deployed = now()
       environment.save()
 
@@ -101,4 +104,10 @@ class Command(BaseCommand):
               self.stdout.write("Creating role %s-%s" % (environmentName, role))
             role.last_deployed = now()
             role.save()
+
+    for e in Environment.objects.exclude(name__in=r10kenv).filter(active=True).\
+        all():
+      e.active = False
+      e.save()
+
     server.checkin(Server.STATUS_OK) 
