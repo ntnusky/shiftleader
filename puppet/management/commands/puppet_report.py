@@ -54,9 +54,6 @@ class Command(BaseCommand):
         environment = Environment(name=environmentName)
         self.stdout.write("Creating environment %s" % environmentName)
 
-      if(not environment.active):
-        environment.active = True
-
       environment.last_deployed = now()
       environment.save()
 
@@ -64,6 +61,10 @@ class Command(BaseCommand):
 
       lastVersion = server.getLatestVersion(environment)
       if(lastVersion and lastVersion.status == Version.STATUS_SCHEDULED):
+        if(not environment.active):
+          environment.active = True
+          environment.save()
+
         lastVersion.status = Version.STATUS_DEPLOYING
         lastVersion.save()
 
