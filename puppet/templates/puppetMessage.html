@@ -1,0 +1,35 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+<p>All the details about a particular report message:</p>
+<table class="table table-hover table-condensed">
+  <tr>
+    <td>Host:</td>
+    <td>{{log.report.host}}</td>
+  </tr>
+  <tr>
+    <td>Time:</td>
+    <td>{{log.report.time}}</td>
+  </tr>
+  <tr>
+    <td>Level:</td>
+    <td>{{log.getLevelText}}</td>
+  </tr>
+  <tr>
+    <td>Source:</td>
+    <td>{{log.source}}</td>
+  </tr>
+  <tr>
+    <td>Message:</td>
+    <td>{{log.message}}</td>
+  </tr>
+  <tr>
+    <td>File:</td>
+    <td>{{log.file}}</td>
+  </tr>
+  <tr>
+    <td>Line:</td>
+    <td>{{log.line}}</td>
+  </tr>
+</table>
+{% endblock page-content %}

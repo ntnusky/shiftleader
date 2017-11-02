@@ -22,5 +22,6 @@ urlpatterns = [
   url(r'^deploy/([0-9]+)$', main.deploy, name="puppetDeployAll"),
   url(r'^deploy/([0-9]+)/([0-9]+)$', main.deploy, name="puppetDeploy"),
   url(r'^status$', json.status, name="puppetJsonStatus"),
-  url(r'^report/$', report.main, name="puppetReport")
+  url(r'^report/$', report.main, name="puppetReport"),
+  url(r'^message/([0-9]+)$', main.message, name="puppetMessage"),
 ]

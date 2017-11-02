@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
     if(int(host.status) == Host.PUPPETSIGN):
       self.stdout.write("0")
-      host.status = Host.PUPPETRUN
+      host.status = Host.PUPPETREADY
       host.save()
     else:
       self.stdout.write("3")

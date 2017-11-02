@@ -1,12 +1,15 @@
+import re
 import string
 from random import sample, choice
 
 from django.db import models
+from django.utils import timezone
 
+from dashboard.settings import parser
 from dhcp.models import Lease
 from dhcp.omapi import Servers
 from nameserver.models import Domain
-from puppet.models import Environment, Role
+from puppet.models import Environment, Role, Report, ReportMetric
 
 class PartitionScheme(models.Model):
   name = models.CharField(max_length=64)
@@ -29,14 +32,18 @@ class Host(models.Model):
     (1, "Provisioning"),
     (2, "Installing"),
     (3, "Puppet-Sign"),
-    (4, "Puppet-run"),
+    (4, "Puppet-Ready"),
+    (5, "Puppet-Timeout"),
+    (6, "Puppet-Error"),
   )
 
   OPERATIONAL = 0
   PROVISIONING = 1
   INSTALLING = 2
   PUPPETSIGN = 3
-  PUPPETRUN = 4
+  PUPPETREADY = 4
+  TIMEOUT = 5
+  ERROR = 6
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
@@ -49,11 +56,105 @@ class Host(models.Model):
   def __str__(self):
     return "%s.%s" % (self.name, self.domain.name)
 
+  def updatePuppetStatus(self):
+    if(int(self.status) not in [self.OPERATIONAL, self.PUPPETREADY,
+        self.TIMEOUT, self.ERROR]):
+      return self.status
+
+    report = self.report_set.last()
+
+    if not report:
+      self.status = self.PUPPETREADY
+      self.save()
+      return self.status
+
+    delta = timezone.now() - report.time
+    interval = parser.get('puppet', 'runinterval')
+    match = re.match(r'(\d+)([hms])', interval)
+
+    if(match):
+      if(match.group(2) == 'h'):
+        sec = int(match.group(1)) * 60 * 60
+      elif(match.group(2) == 'm'):
+        sec = int(match.group(1)) * 60
+      elif(match.group(2) == 's'):
+        sec = int(match.group(1))
+      else:
+        self.status = self.ERROR
+        self.save()
+        return self.status
+
+    if(delta.seconds > sec * 2):
+      self.status = self.TIMEOUT
+    else:
+      self.status = self.OPERATIONAL
+
+    self.save()
+    return self.status
+
+  def getPuppetStatusIcon(self):
+    status = self.status
+    report = self.report_set.last()
+    if(int(status) in [self.PROVISIONING, self.INSTALLING, self.PUPPETSIGN]):
+      return "glyphicon-hourglass text-info"
+    elif(int(status) in [self.TIMEOUT, self.ERROR]):
+      return "glyphicon-remove-sign text-danger"
+    elif(int(status) == self.PUPPETREADY):
+      return "glyphicon-question-sign text-info"
+    elif(int(status) == self.OPERATIONAL and report):
+      met = report.reportmetric_set.filter(metricType=ReportMetric.TYPE_RESOURCE).all()
+      metrics = {}
+      for metric in met:
+        if(metric.name in ['Changed', 'Failed', 'Skipped']):
+          metrics[metric.name] = metric.value
+
+      try:
+        if(int(metrics['Failed']) > 0 or int(metrics['Skipped']) > 0):
+          return "glyphicon-remove-sign text-danger"
+        else:
+          return "glyphicon-ok-sign text-success"
+      except KeyError:
+        return "glyphicon-question-sign text-info"
+    else:
+      return "glyphicon-question-sign text-info"
+
+  def getTableColor(self):
+    report = self.report_set.last()
+    if report:
+      return report.getTableColor()
+    else:
+      return ""
+
   def getStatusText(self):
+    status = self.status
     for s in self.STATUSES:
-      if s[0] == int(self.status):
-        return s[1]
-    return "N/A"
+      if s[0] == int(status):
+        statusText = s[1]
+
+    report = self.report_set.last()
+    if(statusText == 'Operational' and report):
+      met = report.reportmetric_set.filter(metricType=ReportMetric.TYPE_RESOURCE).all()
+      metrics = {}
+      for metric in met:
+        if(metric.name in ['Changed', 'Failed', 'Skipped']):
+          metrics[metric.name] = metric.value
+
+      try:
+        if(int(metrics['Failed']) > 0):
+          statusText = "%d failed!" % int(metrics['Failed'])
+        elif(int(metrics['Skipped']) > 0):
+          statusText = "%d skipped!" % int(metrics['Skipped'])
+        elif(int(metrics['Changed']) > 0):
+          statusText = "%d changes" % int(metrics['Changed'])
+        else:
+          statusText = "OK"
+      except KeyError:
+        statusText = "MetricsMissing"
+
+    if statusText:
+      return statusText
+    else:
+      return "N/A"
 
   def deleteDNS(self):
     for interface in self.interface_set.all():

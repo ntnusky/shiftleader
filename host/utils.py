@@ -1,4 +1,7 @@
+from django.db import transaction 
+
 from dashboard.utils import get_client_ip
+from host.models import Host
 
 NONE = 0
 IP = 1
@@ -14,3 +17,8 @@ def authorize(request, host):
     return USER
   else:
     return NONE
+
+@transaction.atomic
+def updatePuppetStatus():
+  for host in Host.objects.all():
+    host.updatePuppetStatus()

@@ -168,6 +168,22 @@ class Report(models.Model):
   def __str__(self):
     return "%s - %s" % (self.host, self.time)
 
+  def getStatusIcon(self):
+    icons = [
+      "glyphicon-ok-sign text-success",
+      "glyphicon-ok-sign text-info",
+      "glyphicon-remove-sign text-danger"
+    ]
+    return icons[self.status]
+
+  def getTableColor(self):
+    icons = [
+      "",
+      "",
+      "danger"
+    ]
+    return icons[self.status]
+
 class ReportMetric(models.Model):
   TYPES = (
     (0, 'Time'),
@@ -225,3 +241,18 @@ class ReportLog(models.Model):
 
   def __str__(self):
     return "%s, %s" % (self.LEVELS[self.level][1], self.message)
+
+  def getLevelText(self):
+    return self.LEVELS[self.level][1]
+
+  def getTableColor(self):
+    if(self.level < self.LEVEL_WARNING):
+      return "danger"
+    elif(self.level < self.LEVEL_NOTICE):
+      return "warning"
+    elif(self.level < self.LEVEL_INFO):
+      return "info"
+    elif(self.level < self.LEVEL_DEBUG):
+      return "success"
+    else:
+      return ""

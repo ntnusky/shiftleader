@@ -1,7 +1,7 @@
 {% extends "base/main.html" %}
 
 {% block page-content %}
-  <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+  <div class="col-12 col-sm-6 col-md-6 col-lg-3">
     <h2>General information</h2>
     <table>
       <tr>
@@ -38,7 +38,7 @@
       </tr>
     </table>
   </div>
-  <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+  <div class="col-12 col-sm-6 col-md-6 col-lg-3">
     <h2>Useful links:</h2>
     <p>Misc. resources related to this host:</p>
     <ul>
@@ -49,7 +49,7 @@
       </li>
     </ul>
   </div>
-  <div class="col-12 col-sm-12 col-md-9 col-lg-6">
+  <div class="col-12 col-sm-12 col-md-6 col-lg-6">
     <h2>Interfaces</h2>
     <table class="table table-hover table-condensed">
       <tr>
@@ -79,4 +79,44 @@
       Create new interface
     </a>
   </div>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-12"> 
+  <hr>
+  <h1>Puppet-status:</h1>
+  </div>
+  <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+    <h2>Summary:</h2>
+    <table class="table table-hover table-condensed">
+      <tr>
+        <th>Status</th><th>Time</th><th>Environment</th>
+      </tr>
+      {% for r in reports %}
+        <tr>
+          <td><span class="glyphicon {{report.getStatusIcon}}"></span></td>
+          <td><a href="{% url 'hostPuppetLog' host.id r.id %}">{{r.time}}</a></td>
+          <td>{{r.environment.name}}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-8">
+    <h2>{{reporttype}}</h2>
+    <table class="table table-hover table-condensed">
+      <tr><th>Level</th><th>Source - Message</th></tr>
+      {% for log in report.reportlog_set.all %}
+        <tr class="clickable-row {{log.getTableColor}}"
+            data-href="{% url 'puppetMessage' log.id %}">
+          <td>{{log.getLevelText}}</td>
+          <td>{{log.source}} - {{log.message}}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <script>
+    jQuery(document).ready(function($) {
+      $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+      });
+    });
+  </script>
 {% endblock page-content %}

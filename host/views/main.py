@@ -12,7 +12,7 @@ from dhcp.omapi import Servers
 from host.models import Host, Interface, PartitionScheme
 from host.utils import authorize, NONE, IP, USER
 from nameserver.models import Domain
-from puppet.models import Environment
+from puppet.models import Environment, Report
 
 @user_passes_test(requireSuperuser)
 def index(request):
@@ -27,12 +27,20 @@ def index(request):
   return render(request, 'hostOverview.html', context)
 
 @user_passes_test(requireSuperuser)
-def single(request, id):
+def single(request, id, logid = 0):
   context = createContext(request)
 
   context['host'] = get_object_or_404(Host, pk=id)
   context['header'] = "%s.%s" % (context['host'].name,
       context['host'].domain.name)
+  context['reports'] = context['host'].report_set.order_by('-time').all()[:40]
+  if(logid == 0):
+    context['report'] = context['host'].report_set.order_by('-time').first()
+    context['reporttype'] = "Last report"
+  else:
+    context['report'] = get_object_or_404(Report, pk=logid,
+        host=context['host'])
+    context['reporttype'] = "Puppetrun at %s" % context['report'].time
 
   return render(request, 'hostStatus.html', context)
 

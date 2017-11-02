@@ -10,6 +10,7 @@ from dashboard.utils import requireSuperuser
 from dhcp.models import Subnet
 from dhcp.omapi import Servers 
 from host.models import Host, Interface, PartitionScheme
+from host.utils import updatePuppetStatus
 from nameserver.models import Domain
 from puppet.models import Environment, Role
 
@@ -32,6 +33,7 @@ def form(request):
 
 @user_passes_test(requireSuperuser)
 def table(request):
+  updatePuppetStatus()
   context = {}
   context['hosts'] = Host.objects.all()
   return render(request, 'ajax/hostTable.html', context)

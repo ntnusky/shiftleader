@@ -11,8 +11,8 @@
       <td>{{r.ipv4}}</td>
       <td>{{r.ipv6}}</td>
       <td>
-        <a href="{% url 'dnsEdit' r.id %}" class="btn btn-warning btn-sm" id="{{r.id}}">Edit</a>
-        <a class="btn btn-danger btn-sm deleteRecord" id="{{r.id}}">Delete</a>
+        <a href="{% url 'dnsEdit' r.id %}" class="btn-sm btn-warning" id="{{r.id}}">Edit</a>
+        <a class="btn-sm btn-danger deleteRecord" id="{{r.id}}">Delete</a>
       </td>
     </tr>
   {% endfor %}

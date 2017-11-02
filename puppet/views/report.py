@@ -59,11 +59,13 @@ def main(request):
           source=log['source'], line=log['line'], file=log['file'], time=time)
       entry.save()
 
-      for tag in log['tags']:
-        if(tag not in allTags):
-          allTags[tag] = ReportTag(name=tag)
-          allTags[tag].save()
-        entry.tags.add(allTags[tag])
+      # Removed storing of tags, as this takes too much time... Can be optimized
+      # and enabled later.
+      #for tag in log['tags']:
+      #  if(tag not in allTags):
+      #    allTags[tag] = ReportTag(name=tag)
+      #    allTags[tag].save()
+      #  entry.tags.add(allTags[tag])
 
     for id, name, value in data['metrics']['resources']['values']:
       m = ReportMetric(report=report, metricType=ReportMetric.TYPE_RESOURCE,
