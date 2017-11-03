@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404
 
 from dashboard.utils import createContext, requireSuperuser
 from dhcp.models import Subnet, Lease
+from nameserver.models import StaticRecord
 
 @user_passes_test(requireSuperuser)
 def index(request):
@@ -22,7 +23,15 @@ def subnet(request, id):
   reserved = context['subnet'].getReservedAddresses()
   for address in subnet.hosts():
     if address in reserved:
-      context['addresses'].append({'ip': address, 'text': "Reserved"})
+      sr = StaticRecord.objects.filter(ipv4=str(address)).all()
+      if(len(sr) > 0):
+        names = []
+        for s in sr:
+          names.append("%s.%s" % (s.name, s.domain.name))
+        context['addresses'].append({'ip': address, 'text': "Static: %s" %
+            ",".join(names)})
+      else:
+        context['addresses'].append({'ip': address, 'text': "Reserved"})
     else:
       try:
         ip = str(address)
