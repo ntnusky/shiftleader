@@ -184,6 +184,19 @@ class Report(models.Model):
     ]
     return icons[self.status]
 
+  def getMetrics(self):
+    data = {}
+    interests = ["Total", "Skipped", "Failed", "Changed", "Out of sync"]
+    
+    metrics = self.reportmetric_set.filter( \
+        metricType = ReportMetric.TYPE_RESOURCE).all()
+    for metric in metrics:
+      if(metric.name in interests):
+        data[metric.name.replace(' ', '')] = metric.value
+
+    return data
+
+
 class ReportMetric(models.Model):
   TYPES = (
     (0, 'Time'),

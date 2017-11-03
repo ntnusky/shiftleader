@@ -19,4 +19,5 @@ from dhcp.views import main
 
 urlpatterns = [
   url(r'^$', main.index, name="dhcpIndex"),
+  url(r'^subnet/([0-9]+)/', main.subnet, name="dhcpSubnet"),
 ]
