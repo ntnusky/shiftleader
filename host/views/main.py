@@ -41,7 +41,8 @@ def single(request, id, logid = 0):
     context['report'] = get_object_or_404(Report, pk=logid,
         host=context['host'])
     context['reporttype'] = "Puppetrun at %s" % context['report'].time
-  context['metrics'] = context['report'].getMetrics()
+  if(context['report']):
+    context['metrics'] = context['report'].getMetrics()
 
   return render(request, 'hostStatus.html', context)
 

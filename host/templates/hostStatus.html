@@ -79,52 +79,54 @@
       Create new interface
     </a>
   </div>
-  <div class="col-12 col-sm-12 col-md-12 col-lg-12"> 
-  <hr>
-  <h1>Puppet-status:</h1>
-  </div>
-  <div class="col-12 col-sm-6 col-md-6 col-lg-4">
-    <h2>Summary:</h2>
-    <table class="table table-hover table-condensed">
-      <tr>
-        <th>Status</th><th>Time</th><th>Environment</th>
-      </tr>
-      {% for r in reports %}
+  {% if report %}
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12"> 
+    <hr>
+    <h1>Puppet-status:</h1>
+    </div>
+    <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+      <h2>Summary:</h2>
+      <table class="table table-hover table-condensed">
         <tr>
-          <td><span class="glyphicon {{r.getStatusIcon}}"></span></td>
-          <td><a href="{% url 'hostPuppetLog' host.id r.id %}">{{r.time}}</a></td>
-          <td>{{r.environment.name}}</td>
+          <th>Status</th><th>Time</th><th>Environment</th>
         </tr>
-      {% endfor %}
-    </table>
-  </div>
-  <div class="col-12 col-sm-12 col-md-12 col-lg-8">
-    <h2>{{reporttype}}</h2>
-    <p>The last report:</p>
-    <ul>
-      <li>Handled {{metrics.Total}} resources</li>
-      <li>There were {{metrics.Outofsync}} resources out of sync.</li>
-      <li>Resources Changed: {{metrics.Changed}}</li>
-      <li>Resources Skipped: {{metrics.Skipped}}</li>
-      <li>Resources Failed: {{metrics.Failed}}</li>
-    </ul>
-    <table class="table table-hover table-condensed">
-      <tr><th>Level</th><th>Source - Message</th></tr>
-      {% for log in report.reportlog_set.all %}
-        <tr class="clickable-row {{log.getTableColor}}"
-            data-href="{% url 'puppetMessage' log.id %}">
-          <td>{{log.getLevelText}}</td>
-          <td>{{log.source}} - {{log.message}}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </div>
+        {% for r in reports %}
+          <tr>
+            <td><span class="glyphicon {{r.getStatusIcon}}"></span></td>
+            <td><a href="{% url 'hostPuppetLog' host.id r.id %}">{{r.time}}</a></td>
+            <td>{{r.environment.name}}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-8">
+      <h2>{{reporttype}}</h2>
+      <p>The last report:</p>
+      <ul>
+        <li>Handled {{metrics.Total}} resources</li>
+        <li>There were {{metrics.Outofsync}} resources out of sync.</li>
+        <li>Resources Changed: {{metrics.Changed}}</li>
+        <li>Resources Skipped: {{metrics.Skipped}}</li>
+        <li>Resources Failed: {{metrics.Failed}}</li>
+      </ul>
+      <table class="table table-hover table-condensed">
+        <tr><th>Level</th><th>Source - Message</th></tr>
+        {% for log in report.reportlog_set.all %}
+          <tr class="clickable-row {{log.getTableColor}}"
+              data-href="{% url 'puppetMessage' log.id %}">
+            <td>{{log.getLevelText}}</td>
+            <td>{{log.source}} - {{log.message}}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
 
-  <script>
-    jQuery(document).ready(function($) {
-      $(".clickable-row").click(function() {
-        window.location = $(this).data("href");
+    <script>
+      jQuery(document).ready(function($) {
+        $(".clickable-row").click(function() {
+          window.location = $(this).data("href");
+        });
       });
-    });
-  </script>
+    </script>
+  {% endif %}
 {% endblock page-content %}
