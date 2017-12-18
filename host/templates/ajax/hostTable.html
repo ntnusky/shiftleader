@@ -16,7 +16,7 @@
             class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
       </td>
       <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
-      <td colspan="2">{{h.name}}.{{h.domain.name}}</td>
+      <td colspan="2">{{h.name}}.{{h.getPrimaryIf.ipv4Lease.subnet.domain.name}}</td>
       <td>{{h.environment.name}}</td>
       {% if h.role %}
         <td>{{h.role.name}}</td>

@@ -47,14 +47,20 @@ class Host(models.Model):
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
-  domain = models.ForeignKey(Domain)
   environment = models.ForeignKey(Environment)
   partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
 
   def __str__(self):
-    return "%s.%s" % (self.name, self.domain.name)
+    return "%s.%s" % (self.name, self.interface_set.filter(primary=True).\
+        get().ipv4Lease.subnet.domain.name)
+
+  def getPrimaryIf(self):
+    try:
+      return self.interface_set.filter(primary=True).get()
+    except:
+      return None
 
   def updatePuppetStatus(self):
     if(int(self.status) not in [self.OPERATIONAL, self.PUPPETREADY,
@@ -220,7 +226,7 @@ class Host(models.Model):
     self.delete()
 
   class Meta:
-    ordering = ['domain', 'name']
+    ordering = ['name']
 
 class Interface(models.Model):
   ifname = models.CharField(max_length=20)

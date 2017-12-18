@@ -17,15 +17,6 @@ from puppet.models import Environment, Role
 @user_passes_test(requireSuperuser)
 def form(request):
   context = {}
-  context['domains'] = []
-
-  for domain in Domain.objects.all():
-    if('in-addr.arpa' in domain.name):
-      continue
-    if('ip6.arpa' in domain.name):
-      continue
-    context['domains'].append(domain)
-
   context['environments'] = Environment.objects.all()
   context['subnets'] = Subnet.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()
@@ -223,13 +214,11 @@ def new(request):
       response['message'] = "Partition-scheme not found."
 
   try:
-    domain = Domain.objects.get(name=request.POST['domain'])
     environment = Environment.objects.get(name=request.POST['environment'])
     role = environment.role_set.get(name=request.POST['role'])
   except Exception as e:
     response['status'] = "danger"
-    response['message'] = "The domain, role or environment was not found. %s" \
-        % str(e)
+    response['message'] = "The role or environment was not found. %s" % str(e)
 
   if(not environment.is_active()):
     response['status'] = "danger"
@@ -237,13 +226,13 @@ def new(request):
     return JsonResponse(response)
 
   try:
-    Host.objects.get(name=request.POST['hostname'], domain=domain)
+    Host.objects.get(name=request.POST['hostname'])
   except Host.DoesNotExist:
     pass
   else:
     response['status'] = "danger"
-    response['message'] = "A host with that hostname (%s.%s) currently exists" \
-        % (request.POST['hostname'], domain.name)
+    response['message'] = "A host with that hostname (%s) currently exists" \
+        % (request.POST['hostname'])
     return JsonResponse(response)
 
   pattern = re.compile(r'^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
@@ -306,7 +295,7 @@ def new(request):
     return JsonResponse(response)
 
   
-  host = Host(name=request.POST['hostname'], domain=domain,
+  host = Host(name=request.POST['hostname'], 
       environment=environment, status = Host.PROVISIONING, role=role,
       partition=partition)
   host.save()

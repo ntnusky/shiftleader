@@ -228,7 +228,6 @@
           var formData = { 
             'csrfmiddlewaretoken' : $('input[name=csrfmiddlewaretoken]').val(),
             'hostname'            : $('input[id=hostname]').val(),
-            'domain'              : $('#domain option:selected').text(),
             'partition'           : $('#partition option:selected').text(),
             'environment'         : $('#environment option:selected').text(), 
             'role'                : $('#role option:selected').text(), 
@@ -238,9 +237,9 @@
             'ipv4'                : $('input[id=ipv4]').val(),
           };
 
-          var fields = ["hostname", "domain", "environment", "ifname", 
+          var fields = ["hostname", "environment", "ifname", 
               "mac", "subnet", "role"];
-          var descriptions = ["Hostname", "Domain", "Evironment", 
+          var descriptions = ["Hostname", "Evironment", 
               "Interface name", "MAC Address",
               "Subnet", "Role"]
           var missing = ""

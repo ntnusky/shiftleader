@@ -20,7 +20,6 @@ def index(request):
 
   context['header'] = "Host status"
   context['hosts'] = Host.objects.all()
-  context['domains'] = Domain.objects.all()
   context['environments'] = Environment.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()
 
@@ -32,7 +31,7 @@ def single(request, id, logid = 0):
 
   context['host'] = get_object_or_404(Host, pk=id)
   context['header'] = "%s.%s" % (context['host'].name,
-      context['host'].domain.name)
+      context['host'].getPrimaryIf().ipv4Lease.subnet.domain.name)
   context['reports'] = context['host'].report_set.order_by('-time').all()[:40]
   if(logid == 0):
     context['report'] = context['host'].report_set.order_by('-time').first()
