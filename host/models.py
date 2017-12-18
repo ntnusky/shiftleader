@@ -164,31 +164,14 @@ class Host(models.Model):
 
   def deleteDNS(self):
     for interface in self.interface_set.all():
-      # If this is the primary interface, delete the A record with the machine's
-      # hostname.
-      if(interface.primary):
-        try:
-          self.domain.deleteDomain(self.name)
-        except AttributeError:
-          pass
-
       # Delete the interface-specific A record
       try:
-        self.domain.deleteDomain("%s.%s" % (interface.name, self.name))
+        interface.ipv4Lease.subnet.domain.deleteDomain("%s.%s" % (interface.name, self.name))
       except AttributeError:
         pass
 
   def updateDNS(self):
     for interface in self.interface_set.all():
-      # If this is the primary interface, add an A record with the machine's
-      # hostname (Unless the host have the same domain as the primary interface)
-      if(interface.primary):
-        if(interface.ipv4Lease and 
-            self.domain != interface.ipv4Lease.subnet.domain):
-          self.domain.configure(self.name, interface.ipv4Lease.IP)
-        if(interface.ipv6):
-          self.domain.configure(self.name, interface.ipv6)
-
       if(interface.ipv4Lease):
         interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv4Lease.IP)
 
