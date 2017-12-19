@@ -20,8 +20,7 @@ class Command(BaseCommand):
       return
 
     try:
-      domain = Domain.objects.get(name=match.group(2))
-      host = Host.objects.get(name=match.group(1), domain=domain)
+      host = Host.objects.get(name=match.group(1))
     except:
       return
 
