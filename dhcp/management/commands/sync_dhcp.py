@@ -10,8 +10,8 @@ class Command(BaseCommand):
   def handle(self, *args, **options):
     servers = Servers()
 
-    # For each subnet we ar handling DHCP
-    for subnet in Subnet.objects.filter(active=True).all():
+    # For each subnet we are handling DHCP
+    for subnet in Subnet.objects.filter(active=True, ipversion=4).all():
       self.stdout.write("Subnet %s" % subnet.name)
       # Initialize a counter over free adressess and a list over reserved
       # addresses.
@@ -24,7 +24,7 @@ class Command(BaseCommand):
         try:
           if(lease.interface.primary):
             name = "%s.%s" % (lease.interface.host.name, 
-                lease.interface.host.domain.name)
+                lease.interface.host.getDomain())
         except Interface.DoesNotExist:
           pass
 

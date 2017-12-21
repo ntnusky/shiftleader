@@ -20,8 +20,16 @@ class Command(BaseCommand):
       return
 
     try:
-      host = Host.objects.get(name=match.group(1))
+      domain = Domain.objects.get(name=match.group(2))
     except:
+      return
+
+    host = None
+    for h in Host.objects.filter(name=match.group(1)).all():
+      if h.getDomain() == domain:
+        host = h
+
+    if not host:
       return
 
     host.status = Host.OPERATIONAL

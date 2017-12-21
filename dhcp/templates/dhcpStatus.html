@@ -18,12 +18,18 @@
       <td>{{s.active}}</td>
       <td>{{s.domain}}</td>
       <td>{{s.prefix}}/{{s.mask}}</td>
-      <td>{{s.free}}</td>
       <td>
+      {% if s.ipversion == 4 %}
+        {{s.free}}
+      {% endif %}
+      </td>
+      <td>
+        {% if s.ipversion == 4 %}
         <a class="btn-sm btn-info" 
             href="{% url 'dhcpSubnet' s.id %}">
           Show status
         </a>
+        {% endif %}
       </td>
     </tr>
   {% endfor %}

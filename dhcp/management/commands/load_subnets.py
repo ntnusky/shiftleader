@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from dashboard.settings import parser
 from dhcp.models import Subnet
+from host.models import Network
 from nameserver.models import Domain
 
 class Command(BaseCommand):
@@ -38,9 +39,8 @@ class Command(BaseCommand):
             domainName)
         continue
 
-      toSave = False
       try:
-        subnet = Subnet.objects.get(name=pool)
+        subnet = Subnet.objects.get(name=pool, ipversion=4)
         if(subnet.setSubnet(network, netmask)):
           self.stdout.write(" - Updating the pool with new net-id and mask")
         if(subnet.domain != domain):
@@ -51,6 +51,46 @@ class Command(BaseCommand):
         subnet = Subnet(name=pool, active=True, domain=domain)
         subnet.setSubnet(network, netmask)
         self.stdout.write(" - The pool is new.")
+
+      try:
+        v6prefix = parser.get('DHCP', '%sv6prefix' % pool).split('/')[0]
+      except NoOptionError:
+        v6prefix = None
+
+      if v6prefix:
+        try:
+          v6subnet = Subnet.objects.get(name=pool, ipversion=6)
+          if(v6subnet.setSubnet(v6prefix, 64)):
+            self.stdout.write(" - Updating the v6pool with new net-id and mask")
+          if(v6subnet.domain != domain):
+            v6subnet.domain = domain
+            v6subnet.save()
+            self.stdout.write(" - Updating the v6pool with a new domain name")
+        except Subnet.DoesNotExist:
+          v6subnet = Subnet(name=pool, active=True, ipversion=6, domain=domain)
+          v6subnet.setSubnet(v6prefix, 64)
+      else:
+        v6subnet = None
+
+      try:
+        network = Network.objects.get(name=pool)
+        if(network.domain != domain):
+          network.domain = domain
+          network.save()
+          self.stdout.write(" - Updating the networks domain")
+        if(network.v4subnet != subnet):
+          network.v4subnet = subnet
+          network.save()
+          self.stdout.write(" - Updating the networks v4subnet")
+        if(network.v6subnet != v6subnet):
+          network.v6subnet = v6subnet
+          network.save()
+          self.stdout.write(" - Updating the networks v6subnet")
+      except Network.DoesNotExist:
+        network = Network(name=pool, domain=domain, v4subnet=subnet,
+            v6subnet=v6subnet)
+        network.save()
+        self.stdout.write(" - Created the network %s" % pool)
     
     activeNets = Subnet.objects.filter(active=True). \
         values_list('name', flat=True)

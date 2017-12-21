@@ -19,12 +19,20 @@ class Command(BaseCommand):
     if(not match):
       self.stdout.write("1")
       return
-
+    
     try:
       domain = Domain.objects.get(name=match.group(2))
-      host = Host.objects.get(name=match.group(1), domain=domain)
     except:
       self.stdout.write("2")
+      return
+
+    host = None
+    for h in Host.objects.filter(name=match.group(1)).all():
+      if h.getDomain() == domain:
+        host = h
+
+    if not host:
+      self.stdout.write("4")
       return
 
     if(int(host.status) == Host.PUPPETSIGN):

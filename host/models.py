@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 
 from dashboard.settings import parser
-from dhcp.models import Lease
+from dhcp.models import Lease, Subnet
 from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment, Role, Report, ReportMetric
@@ -53,8 +53,13 @@ class Host(models.Model):
   status = models.CharField(max_length=1, choices=STATUSES)
 
   def __str__(self):
-    return "%s.%s" % (self.name, self.interface_set.filter(primary=True).\
-        get().ipv4Lease.subnet.domain.name)
+    return "%s.%s" % (self.name, self.getDomain()) 
+
+  def getDomain(self):
+    try:
+      return self.interface_set.get(primary=True).network.domain
+    except:
+      return None
 
   def getPrimaryIf(self):
     try:
@@ -211,12 +216,43 @@ class Host(models.Model):
   class Meta:
     ordering = ['name']
 
+class Network(models.Model):
+  name = models.CharField(max_length=64)
+  domain = models.ForeignKey(Domain)
+  v4subnet = models.ForeignKey(Subnet, related_name="v4network", null=True)
+  v6subnet = models.ForeignKey(Subnet, related_name="v6network", null=True)
+
+  def __str__(self):
+    if(self.v4subnet):
+      v4 = str(self.v4subnet)
+    else:
+      v4 = "None"
+
+    if(self.v6subnet):
+      v6 = str(self.v6subnet)
+    else:
+      v6 = "None"
+
+    return "%s - v4:%s - v6:%s" % (self.name, v4, v6)
+
 class Interface(models.Model):
+  V6TYPES = (
+    (0, 'None'),
+    (1, 'EUI-64'),
+    (2, 'Static'),
+  )
+  
+  V6TYPE_NONE = 0
+  V6TYPE_EUI64 = 1
+  V6TYPE_STATIC = 2
+
   ifname = models.CharField(max_length=20)
   mac = models.CharField(max_length=64)
   host = models.ForeignKey(Host)
   primary = models.BooleanField(default=False)
+  network = models.ForeignKey(Network, null=True, default=None)
   ipv4Lease = models.OneToOneField(Lease, null=True)
+  ipv6Type = models.IntegerField(choices=V6TYPES, default=0) 
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
 
   def __str__(self):

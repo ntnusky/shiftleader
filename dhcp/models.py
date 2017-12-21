@@ -13,6 +13,7 @@ class Subnet(models.Model):
   prefix = models.GenericIPAddressField()
   mask = models.IntegerField()
   free = models.IntegerField(default = -1)
+  ipversion = models.IntegerField(default = 4)
 
   def __str__(self):
     return "%s - %s/%d%s" % (self.name, self.prefix, self.mask, 

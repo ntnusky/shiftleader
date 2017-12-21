@@ -81,20 +81,20 @@ class Server:
   def configureLease(self, ip, mac, present=True, hostname=None):
     currentIP = self.getLease(mac)
 
+    # If the lease exists, but contains wrong IP, recreate it.
+    if(present and currentIP and currentIP != ip):
+      self.deleteLease(mac)
+      self.addLease(ip, mac, hostname)
+      return Servers.UPDATED
+
     # If lease does not already exist, but should exist, create it.
-    if(present and not currentIP):
+    elif(present and not currentIP):
       self.addLease(ip, mac, hostname)
       return Servers.CREATED
 
     # If lease exists and should not, delete it
-    elif(not present and currentIP):
+    elif(not present and currentIP and currentIP == ip):
       self.deleteLease(mac)
       return Servers.DELETED
-
-    # If the lease exists, but contains wrong IP, recreate it.
-    elif(present and currentIP != ip):
-      self.deleteLease(mac)
-      self.addLease(ip, mac, hostname)
-      return Servers.UPDATED
 
     return Servers.NO_CHANGE
