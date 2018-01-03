@@ -1,4 +1,5 @@
 import dns.query
+import dns.name
 import dns.update
 import dns.rdatatype
 import dns.tsigkeyring
@@ -12,6 +13,8 @@ class Server(models.Model):
   name = models.CharField(max_length=64)
   address = models.GenericIPAddressField()
   key = models.CharField(max_length=200, null=True)
+  algorithm = models.CharField(max_length=28,
+      default="HMAC-MD5.SIG-ALG.REG.INT")
 
   def __str__(self):
     return "%s (%s)" % (self.name, self.address)
@@ -20,11 +23,11 @@ class Server(models.Model):
     if(self.key):
       keyring = dns.tsigkeyring.from_text({ 'update' : self.key })
       keyname = 'update'
+      algorithm = dns.name.from_text(self.algorithm)
+      return dns.update.Update(domain, keyring=keyring, keyname=keyname,
+          keyalgorithm=algorithm)
     else:
-      keyring = None
-      keyname = None
-    
-    return dns.update.Update(domain, keyring=keyring, keyname=keyname)
+      return dns.update.Update(domain)
 
   def detectRecordType(name, domain=None):
     try:

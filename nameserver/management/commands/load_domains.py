@@ -48,6 +48,17 @@ class Command(BaseCommand):
         s.key = key
         toSave = True
 
+      try:
+        alg = parser.get("DNS", "%sAlgorithm" % server)
+      except NoOptionError:
+        alg = "HMAC-MD5.SIG-ALG.REG.INT"
+
+      if(s.algorithm != alg):
+        self.stdout.write("Updated algorithm for \"%s\". %s->%s" % (server, 
+            s.algorithm, alg))
+        s.algorithm = alg
+        toSave = True
+
       if(toSave):
         s.save()
 
