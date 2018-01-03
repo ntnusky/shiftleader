@@ -299,8 +299,9 @@ def new(request):
       environment=environment, status = Host.PROVISIONING, role=role,
       partition=partition)
   host.save()
+  network = subnet.v4network.get()
   interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
-      primary=True, ipv4Lease=lease)
+      primary=True, ipv4Lease=lease, network=network)
   interface.save()
 
   dhcpservers = Servers()
