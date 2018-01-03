@@ -13,6 +13,7 @@ class Server(models.Model):
   name = models.CharField(max_length=64)
   address = models.GenericIPAddressField()
   key = models.CharField(max_length=200, null=True)
+  keyname = models.CharField(max_length=200, default='update')
   algorithm = models.CharField(max_length=28,
       default="HMAC-MD5.SIG-ALG.REG.INT")
 
@@ -21,10 +22,9 @@ class Server(models.Model):
 
   def createConnection(self, domain):
     if(self.key):
-      keyring = dns.tsigkeyring.from_text({ 'update' : self.key })
-      keyname = 'update'
+      keyring = dns.tsigkeyring.from_text({ self.keyname : self.key })
       algorithm = dns.name.from_text(self.algorithm)
-      return dns.update.Update(domain, keyring=keyring, keyname=keyname,
+      return dns.update.Update(domain, keyring=keyring, keyname=self.keyname,
           keyalgorithm=algorithm)
     else:
       return dns.update.Update(domain)

@@ -49,6 +49,17 @@ class Command(BaseCommand):
         toSave = True
 
       try:
+        keyname = parser.get("DNS", "%sKeyname" % server)
+      except NoOptionError:
+        keyname = 'update'
+
+      if(s.keyname != keyname):
+        self.stdout.write("Updated keyname for \"%s\". %s->%s" % (server, 
+            s.keyname, keyname))
+        s.keyname = keyname
+        toSave = True
+
+      try:
         alg = parser.get("DNS", "%sAlgorithm" % server)
       except NoOptionError:
         alg = "HMAC-MD5.SIG-ALG.REG.INT"
