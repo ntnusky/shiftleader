@@ -18,7 +18,7 @@ from puppet.models import Environment, Role
 def form(request):
   context = {}
   context['environments'] = Environment.objects.all()
-  context['subnets'] = Subnet.objects.all()
+  context['subnets'] = Subnet.objects.filter(ipversion=4).all()
   context['partitionschemes'] = PartitionScheme.objects.all()
   return render(request, 'ajax/hostForm.html', context)
 
@@ -257,7 +257,7 @@ def new(request):
     return JsonResponse(response)
 
   pattern = re.compile(r'\'(.*)\'')
-  subnet = Subnet.objects.get(
+  subnet = Subnet.objects.get(ipversion=4,
       name=pattern.match(request.POST['subnet']).group(1))
   
   if(len(request.POST['ipv4']) > 0):
