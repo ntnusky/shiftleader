@@ -9,7 +9,7 @@ from nameserver.models import StaticRecord
 def index(request):
   context = createContext(request)
   context['header'] = "DHCP status"
-  context['subnets'] = Subnet.objects.all()
+  context['subnets'] = Subnet.objects.oder_by('name', 'ipversion').all()
   return render(request, 'dhcpStatus.html', context)
 
 @user_passes_test(requireSuperuser)
