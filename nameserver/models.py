@@ -60,7 +60,7 @@ class Server(models.Model):
     except:
       return None
 
-  def configureRecord(self, domain, record, destination, exclusive=True, present=True, ttl=300):
+  def configureRecord(self, domain, record, destination, present=True, ttl=300):
     rtype = Server.detectRecordType(destination, domain)
 
     # Make sure destination is a fqdn
@@ -69,34 +69,15 @@ class Server(models.Model):
     if((rtype == 'ptr') and not destination.endswith('.')):
       destination = "%s." % destination
 
-    # Query for existing records
-    existing = self.query("%s.%s" % (record, domain), rtype)
-
-    # If there exists destination which should not be there; remove them
-    if(exclusive and existing and 
-          (destination not in existing or len(existing) > 1)):
-      try:
-        existing.remove(destination)
-      except ValueError: # If destination is not in existing
-        pass
-
-      for dest in existing:
-        update = self.createConnection(domain)
-        update.delete(record, rtype, dest)
-        dns.query.tcp(update, self.address)
-
-    # If the record should be present, but is not; create it:
-    if(present and (not existing or destination not in existing)):
+    if(present):
       update = self.createConnection(domain)
       update.add(record, ttl, rtype, destination)
       dns.query.tcp(update, self.address)
-
-    # It the record is present, but should not be: remove it
-    if(not present and existing and destination in existing):
+    else:
       update = self.createConnection(domain)
       update.delete(record, rtype, destination)
       dns.query.tcp(update, self.address)
-  
+    
   def clearName(self, domain, name):
     update = self.createConnection(domain)
     update.delete(name)
@@ -124,9 +105,8 @@ class Domain(models.Model):
   def deleteDomain(self, name):
     self.server.clearName(self.name, name)
 
-  def configure(self, record, destination, exclusive=True, present=True, ttl=300):
-    self.server.configureRecord(self.name, record, destination, exclusive,
-        present, ttl)
+  def configure(self, record, destination, present=True, ttl=300):
+    self.server.configureRecord(self.name, record, destination, present, ttl)
 
   def testConnection(self):
     return self.server.testConnection(self.name)
@@ -153,6 +133,7 @@ class StaticRecord(models.Model):
       return "%s.%s - NO ADDRESSES CONFIGURED" % (self.name, self.domain.name)
 
   def configure(self):
+    self.domain.deleteDomain(self.name)
     if(self.ipv4):
       self.domain.configure(self.name, self.ipv4)
 
@@ -165,13 +146,9 @@ class StaticRecord(models.Model):
         domain.configure(ip[3], "%s.%s." % (self.name, self.domain))
       except Domain.DoesNotExist:
         pass
-    else:
-      self.domain.configure(self.name, "198.51.100.218", present=False)
 
     if(self.ipv6):
       self.domain.configure(self.name, self.ipv6)
-    else:
-      self.domain.configure(self.name, "2001:db8::1", present=False)
 
   def deactivate(self):
     self.active = False
