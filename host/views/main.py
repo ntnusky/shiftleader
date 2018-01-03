@@ -167,6 +167,9 @@ def interface(request, hid, iid = 0):
         context['interface'].host = host
       if context['interface'].ipv4Lease != context['lease']:
         context['interface'].ipv4Lease = context['lease']
+      network = subnet.v4network.get()
+      if context['interface'].network != network):
+        context['interface'].network = network)
       context['interface'].save()
 
       host.updateDNS()
