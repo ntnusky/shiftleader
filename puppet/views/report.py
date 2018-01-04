@@ -27,7 +27,7 @@ def main(request):
       environment = Environment.objects.get(name=data['environment'])
       domain = Domain.objects.get(name=domainname)
       for h in Host.objects.filter(name=hostname).all():
-        if h.getDomain() == domain
+        if h.getDomain() == domain:
           host = h
     except Exception as e:
       print("Could not find environment, domain and host")
