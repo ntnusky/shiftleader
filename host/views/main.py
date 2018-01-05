@@ -71,7 +71,7 @@ def interface(request, hid, iid = 0):
     # Retrieve subnet, and verify IP if it is supplied
     subnetname = request.POST.get('subnet')
     match = re.match(r'\'([a-zA-Z0-9]+)\'', subnetname)
-    subnet = Subnet.objects.get(name=match.group(1))
+    subnet = Subnet.objects.get(name=match.group(1), ipversion=4)
     
     ipText = request.POST.get('ipv4')
     if(ipText == None):
