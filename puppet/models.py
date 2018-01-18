@@ -83,6 +83,9 @@ class Server(models.Model):
           versions.append(version)
     return versions
 
+  def getHostName(self):
+    return self.name.split('.')[0]
+
   class Meta:
     ordering = ['name']
 

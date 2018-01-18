@@ -9,7 +9,7 @@
       <tr>
         <th>Environment</th>
         {% for s in servers %}
-          <th colspan="2">{{s.name}}</th>
+          <th data-toggle="tooltip" title="{{s.name}}" colspan="2">{{s.getHostName}}</th>
         {% endfor %}
         <th>ALL</th>
       </tr>
