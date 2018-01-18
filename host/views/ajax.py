@@ -44,6 +44,22 @@ def roleMenu(request, id):
   return render(request, 'ajax/roleMenu.html', context)
 
 @user_passes_test(requireSuperuser)
+def ifdelete(request, hid, iid):
+  context = {}
+
+  try:
+    interface = Interface.objects.get(host__id=hid, id=iid)
+  except:
+    context['status'] = 'danger'
+    context['message'] = 'Could not find interface'
+
+  interface.delete()
+  context['status'] = 'success'
+  context['message'] = 'Interface is deleted'
+
+  return JsonResponse(context)
+
+@user_passes_test(requireSuperuser)
 @csrf_exempt
 def environment(request):
   response = {}

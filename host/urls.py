@@ -23,6 +23,8 @@ urlpatterns = [
   url(r'^envrionment/$', ajax.environment, name='hostEnvironment'),
   url(r'^role/$', ajax.role, name='hostRole'),
   url(r'^remove/$', ajax.remove, name='hostDelete'),
+  url(r'^([0-9]+)/interface/([0-9]+)/delete$', ajax.ifdelete,
+      name="hostDelInterface"),
 
   # TFTP Boot URL's
   url(r'^([0-9]+)/tftp$', main.tftp, name="hostTftp"),
