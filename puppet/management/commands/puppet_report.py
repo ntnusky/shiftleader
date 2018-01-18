@@ -3,6 +3,7 @@ import os
 import re
 import socket
 import subprocess
+import time
 import yaml
 
 from django.core.management.base import BaseCommand
@@ -60,7 +61,9 @@ class Command(BaseCommand):
       environments.append(environment)
 
       lastVersion = server.getLatestVersion(environment)
+      self.stdout.write("Should %s be deployed?" % environment)
       if(lastVersion and lastVersion.status == Version.STATUS_SCHEDULED):
+        self.stdout.write("YES")
         if(not environment.active):
           environment.active = True
           environment.save()
@@ -69,12 +72,15 @@ class Command(BaseCommand):
         lastVersion.save()
 
         # Deploy r10k environment
+        timestamp = int(time.time())
         self.stdout.write("Deploying environment %s" % environment.name)
-        logfile=open("/tmp/r10k-%s.log" % environment.name, "w")
+        logfile=open("/tmp/r10k-%s.%s.log" % (environment.name, timestamp), "w")
+        logfile.write("Deploying environment %s\n" % environment.name)
         result = subprocess.run(
             "/usr/bin/r10k deploy environment %s -pv" % environment.name,
             stdout=logfile, stderr=logfile, shell=True)
         self.stdout.write("Deployed environment %s" % environment.name)
+        logfile.write("Deployed environment %s\n" % environment.name)
 
         # Grab the signature after the deployment.
         try:
@@ -83,7 +89,11 @@ class Command(BaseCommand):
         except FileNotFoundError:
           self.stderr.write(\
               "Environment %s is not deployed yet" % environmentName)
+          logfile.write(\
+              "Environment %s is not deployed yet\n" % environmentName)
           continue
+
+        logfile.write("Saving the environment information")
 
         # Save the version-object
         lastVersion.signature=envinfo['signature']
@@ -103,8 +113,10 @@ class Command(BaseCommand):
             except Role.DoesNotExist:
               role = environment.role_set.create(name=fullname)
               self.stdout.write("Creating role %s-%s" % (environmentName, role))
+              logfile.write("Creating role %s-%s\n" % (environmentName, role))
             role.last_deployed = now()
             role.save()
+          logfile.close()
 
     for e in Environment.objects.exclude(name__in=r10kenv).filter(active=True).\
         all():
