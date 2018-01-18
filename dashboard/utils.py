@@ -1,5 +1,7 @@
 from django.core.urlresolvers import reverse
 
+from dashboard.settings import parser
+
 def populateMenu(request):
   menu = []
   
@@ -44,6 +46,12 @@ def populateMenu(request):
 def createContext(request):
   context = {}
   context['menu'] = populateMenu(request)
+
+  try:
+    context['env'] = parser.get("general", "env")
+  except:
+    pass
+
   return context
 
 def requireSuperuser(user):

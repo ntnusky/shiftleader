@@ -10,6 +10,16 @@ body {
   margin-bottom: 60px;
 }
 
+.mainmenu-prod {
+  border-bottom: solid 4px red; 
+}
+.mainmenu-test {
+  border-bottom: solid 4px yellow; 
+}
+.mainmenu-dev {
+  border-bottom: solid 4px green; 
+}
+
 .footer {
   position: absolute;
   bottom: 0;
