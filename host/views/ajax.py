@@ -113,7 +113,7 @@ def role(request):
     host.save()
 
   response['status'] = 'success'
-  response['message'] = 'Changed the environment of "%s" to %s.' % \
+  response['message'] = 'Changed the role of "%s" to %s.' % \
       (', '.join(names), role.name)
   return JsonResponse(response)
 
