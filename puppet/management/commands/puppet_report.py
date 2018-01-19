@@ -98,6 +98,8 @@ class Command(BaseCommand):
         logfile.write("Saving the environment information\n")
 
         try:
+          vid = lastVersion.id
+          lastVersion = Version.objects.get(id=vid) 
           # Save the version-object
           lastVersion.signature=envinfo['signature']
           lastVersion.status = Version.STATUS_DEPLOYED
