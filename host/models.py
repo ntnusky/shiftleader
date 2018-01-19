@@ -47,7 +47,7 @@ class Host(models.Model):
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
-  environment = models.ForeignKey(Environment)
+  environment = models.ForeignKey(Environment, null=True)
   partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
