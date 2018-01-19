@@ -133,11 +133,14 @@ def interface(request, hid, iid = 0):
       oldMAC = None
 
     newMAC = request.POST.get('mac').lower()
-    pattern = re.compile(r'^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
+    pattern = re.compile(r'^.*([0-9a-f]{2}(:[0-9a-f]{2}){5}).*$')
     match = pattern.match(newMAC)
-    if(not match):
+    if(match):
+      newMAC = match.group(1)
+    else:
       errors.append("No valid MAC is supplied")
-    elif(oldMAC != newMAC):
+
+    if(oldMAC != newMAC):
       change = True
       context['lease'].MAC = newMAC
       try:
