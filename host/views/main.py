@@ -140,7 +140,7 @@ def interface(request, hid, iid = 0):
     else:
       errors.append("No valid MAC is supplied")
 
-    if(oldMAC != newMAC):
+    if(match and oldMAC != newMAC):
       change = True
       context['lease'].MAC = newMAC
       try:
