@@ -64,11 +64,14 @@
     <label for="ipv6">IPv6:</label>
     {% if interface.ipv6 %}
       <input type="text" class="form-control" id="ipv6" name="ipv6"
-          aria-describedby="ipv6" placeholder="2001:db8:1337:51::3214"
+          aria-describedby="ipv6" 
+          placeholder="2001:db8:1337:51::3214 (or eui64 for the EUI-64 address)"
           value="{{interface.ipv6}}">
     {% else %}
       <input type="text" class="form-control" id="ipv6" name="ipv6"
-          aria-describedby="ipv6" placeholder="2001:db8:1337:51::3214">
+          aria-describedby="ipv6"
+          placeholder="2001:db8:1337:51::3214 (or eui64 for the EUI-64 address)"
+      >
     {% endif %}
   </div>
   <button type="submit" class="btn btn-primary">{{ buttonText }}</button>

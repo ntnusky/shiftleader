@@ -252,7 +252,6 @@ class Interface(models.Model):
   primary = models.BooleanField(default=False)
   network = models.ForeignKey(Network, null=True, default=None)
   ipv4Lease = models.OneToOneField(Lease, null=True)
-  ipv6Type = models.IntegerField(choices=V6TYPES, default=0) 
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
 
   def __str__(self):
