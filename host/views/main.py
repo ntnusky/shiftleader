@@ -144,7 +144,7 @@ def interface(request, hid, iid = 0):
       change = True
       context['lease'].MAC = newMAC
       try:
-        lease = Lease.objects.get(MAC=newMAC)
+        lease = Lease.objects.get(MAC=newMAC, present=True)
         errors.append("The MAC is already registerd on %s" % lease)
       except Lease.DoesNotExist:
         pass

@@ -53,7 +53,18 @@ def ifdelete(request, hid, iid):
     context['status'] = 'danger'
     context['message'] = 'Could not find interface'
 
+  try:
+    lease = interface.ipv4Lease
+    lease.present = False
+    lease.lease = False
+    lease.save()
+    lease.subnet.free += 1
+    lease.subnet.save()
+  except:
+    pass
+
   interface.delete()
+
   context['status'] = 'success'
   context['message'] = 'Interface is deleted'
 
