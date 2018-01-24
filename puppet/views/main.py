@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import user_passes_test 
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.datastructures import MultiValueDictKeyError
 
@@ -38,6 +38,23 @@ def message(request, id):
   context['log'] = get_object_or_404(ReportLog, pk=id)
   return render(request, 'puppetMessage.html', context)
 
+@user_passes_test(requireSuperuser)
+def delete(request, id):
+  data = {}
+  
+  try:
+    server = Server.objects.get(pk=id)
+  except Server.DoesNotExist:
+    data['status'] = 'danger'
+    data['message'] = 'This server does not exist'
+    return JsonResponse(data)
+
+  server.delete()
+
+  data['status'] = 'success'
+  data['message'] = 'The server is deleted'
+
+  return JsonResponse(data)
 
 @user_passes_test(requireSuperuser)
 def deploy(request, eid, sid = 0):
