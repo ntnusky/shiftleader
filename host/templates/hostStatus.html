@@ -49,6 +49,17 @@
       </li>
     </ul>
   </div>
+  <div class="col-12 col-sm-6 col-md-6 col-lg-3">
+    <h2>Change partitionscheme:</h2>
+    <p>Currently the host uses the 
+    "{% if host.partition %}{{host.partition.name}}{% else %}Default{% endif %}"
+    partitionscheme. Please use one of the following links to change it:</p>
+    <ul>
+      {% for p in partitionSchemes %}
+        <li><a href="{% url 'hostPart' host.id p.id %}">{{p.name}}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
   <div class="col-12 col-sm-12 col-md-6 col-lg-6">
     <h2>Interfaces</h2>
     <div class="Interfacetablemessage"></div>

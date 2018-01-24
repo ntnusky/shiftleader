@@ -2,8 +2,9 @@ import re
 import ipaddress
 
 from django.contrib.auth.decorators import user_passes_test 
+from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponseBadRequest 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt 
 
 from dashboard.utils import requireSuperuser
@@ -42,6 +43,15 @@ def roleMenu(request, id):
   environment = Environment.objects.get(pk=id)
   context['roles'] = environment.role_set.all()
   return render(request, 'ajax/roleMenu.html', context)
+
+@user_passes_test(requireSuperuser)
+def setpartition(request, hid, pid):
+  host = Host.objects.get(pk=hid)
+  part = PartitionScheme.objects.get(pk=pid)
+  host.partition = part
+  host.save()
+
+  return redirect(reverse('singleHost', args=[hid])) 
 
 @user_passes_test(requireSuperuser)
 def ifdelete(request, hid, iid):

@@ -33,6 +33,7 @@ def single(request, id, logid = 0):
   context['header'] = "%s.%s" % (context['host'].name,
       context['host'].getDomain().name)
   context['reports'] = context['host'].report_set.order_by('-time').all()[:40]
+  context['partitionSchemes'] = PartitionScheme.objects.all()
   if(logid == 0):
     context['report'] = context['host'].report_set.order_by('-time').first()
     context['reporttype'] = "Last report"
