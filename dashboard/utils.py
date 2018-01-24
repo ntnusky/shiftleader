@@ -6,12 +6,6 @@ def populateMenu(request):
   menu = []
   
   m = {}
-  m['name'] = 'Home' 
-  m['url'] = reverse('index')
-  m['active'] = request.path == m['url']
-  menu.append(m)
-
-  m = {}
   m['name'] = 'Hosts' 
   m['url'] = reverse('hostIndex')
   m['active'] = request.path.startswith(m['url'])
