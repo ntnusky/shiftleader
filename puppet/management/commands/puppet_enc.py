@@ -36,6 +36,9 @@ class Command(BaseCommand):
       host.save()
       return
 
+    if host.status == Host.PROVISIONING:
+      return
+
     host.status = Host.OPERATIONAL
     host.save()
 
