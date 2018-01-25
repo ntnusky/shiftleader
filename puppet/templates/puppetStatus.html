@@ -10,8 +10,10 @@
       <tr>
         <th>Environment</th>
         {% for s in servers %}
-          <th data-toggle="tooltip" title="{{s.name}}" colspan="2">
+          <th data-toggle="tooltip" title="{{s.name}}">
             {{s.getHostName}}
+          </th>
+          <th>
             <a href="#" class="btn-sm btn-danger deletePuppetServer" 
                 data-url="{% url 'puppetSDelete' s.id %}">
               Delete
