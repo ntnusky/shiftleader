@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseForbidden, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 
-from dashboard.utils import createContext, requireSuperuser, get_client_ip
+from dashboard.utils import createEUI64, createContext, requireSuperuser, get_client_ip
 from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
@@ -33,6 +33,7 @@ def single(request, id, logid = 0):
   context['header'] = "%s.%s" % (context['host'].name,
       context['host'].getDomain().name)
   context['reports'] = context['host'].report_set.order_by('-time').all()[:40]
+  context['partitionSchemes'] = PartitionScheme.objects.all()
   if(logid == 0):
     context['report'] = context['host'].report_set.order_by('-time').first()
     context['reporttype'] = "Last report"
@@ -63,7 +64,7 @@ def interface(request, hid, iid = 0):
     context['interface'] = get_object_or_404(Interface, host=host, pk=iid)
     context['lease'] = context['interface'].ipv4Lease
   
-  context['subnets'] = Subnet.objects.all()
+  context['subnets'] = Subnet.objects.filter(ipversion=4).all()
 
   if(request.POST.get('csrfmiddlewaretoken')):
     errors = []
@@ -97,25 +98,6 @@ def interface(request, hid, iid = 0):
     else:
       ip = None
 
-    ipv6Text = request.POST.get('ipv6')
-    if(len(ipv6Text) > 0 and ipv6Text != context['interface'].ipv6):
-      try:
-        ipv6 = ipaddress.IPv6Address(ipv6Text)
-      except ValueError:
-        errors.append("Invalid IPv6 address")
-      else:
-        try:
-          i = Interface.objects.get(ipv6=ipv6Text)
-          if(i.host != host):
-            errors.append("IPv6 is already assigned to a host")
-        except Interface.DoesNotExist:
-          pass
-      context['interface'].ipv6 = ipv6Text
-      change = True
-    elif(len(ipv6Text) == 0):
-      context['interface'].ipv6 = None
-      ipv6Text = None
-    
     oldIFName = context['interface'].ifname
     newIFName = request.POST.get('ifname')
     if(context['interface'].ifname != newIFName):
@@ -133,18 +115,45 @@ def interface(request, hid, iid = 0):
       oldMAC = None
 
     newMAC = request.POST.get('mac').lower()
-    pattern = re.compile(r'^[0-9a-f]{2}(:[0-9a-f]{2}){5}$')
+    pattern = re.compile(r'^.*([0-9a-f]{2}(:[0-9a-f]{2}){5}).*$')
     match = pattern.match(newMAC)
-    if(not match):
+    if(match):
+      newMAC = match.group(1)
+    else:
       errors.append("No valid MAC is supplied")
-    elif(oldMAC != newMAC):
+
+    if(match and oldMAC != newMAC):
       change = True
       context['lease'].MAC = newMAC
       try:
-        lease = Lease.objects.get(MAC=newMAC)
+        lease = Lease.objects.get(MAC=newMAC, present=True)
         errors.append("The MAC is already registerd on %s" % lease)
       except Lease.DoesNotExist:
         pass
+
+    ipv6Text = request.POST.get('ipv6')
+    if(len(ipv6Text) > 0 and ipv6Text != context['interface'].ipv6):
+      if(re.match(r'[eE][uU][iI]-?6?4?', ipv6Text)):
+        v6subnet = subnet.v4network.get().v6subnet.getSubnet()
+        ipv6Text = str(createEUI64(v6subnet, context['lease'].MAC))
+
+      try:
+        ipv6 = ipaddress.IPv6Address(ipv6Text)
+      except ValueError:
+        errors.append("Invalid IPv6 address")
+      else:
+        try:
+          i = Interface.objects.get(ipv6=ipv6Text)
+          if(i.host != host):
+            errors.append("IPv6 is already assigned to a host")
+        except Interface.DoesNotExist:
+          pass
+      context['interface'].ipv6 = ipv6Text
+      change = True
+    elif(len(ipv6Text) == 0):
+      context['interface'].ipv6 = None
+      ipv6Text = None
+    
 
     if(len(errors) > 0):
       context['message'] = "ERROR: %s" % " and ".join(errors) 

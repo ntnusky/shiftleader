@@ -47,7 +47,7 @@ class Host(models.Model):
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
-  environment = models.ForeignKey(Environment)
+  environment = models.ForeignKey(Environment, null=True)
   partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
@@ -252,7 +252,6 @@ class Interface(models.Model):
   primary = models.BooleanField(default=False)
   network = models.ForeignKey(Network, null=True, default=None)
   ipv4Lease = models.OneToOneField(Lease, null=True)
-  ipv6Type = models.IntegerField(choices=V6TYPES, default=0) 
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
 
   def __str__(self):

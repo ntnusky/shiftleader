@@ -23,6 +23,7 @@ urlpatterns = [
   url(r'^envrionment/$', ajax.environment, name='hostEnvironment'),
   url(r'^role/$', ajax.role, name='hostRole'),
   url(r'^remove/$', ajax.remove, name='hostDelete'),
+  url(r'^([0-9]+)/partition/([0-9]+)/set$', ajax.setpartition, name='hostPart'),
   url(r'^([0-9]+)/interface/([0-9]+)/delete$', ajax.ifdelete,
       name="hostDelInterface"),
 

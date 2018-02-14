@@ -2,11 +2,12 @@ import re
 import ipaddress
 
 from django.contrib.auth.decorators import user_passes_test 
+from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponseBadRequest 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt 
 
-from dashboard.utils import requireSuperuser
+from dashboard.utils import requireSuperuser, createEUI64
 from dhcp.models import Subnet
 from dhcp.omapi import Servers 
 from host.models import Host, Interface, PartitionScheme
@@ -44,6 +45,15 @@ def roleMenu(request, id):
   return render(request, 'ajax/roleMenu.html', context)
 
 @user_passes_test(requireSuperuser)
+def setpartition(request, hid, pid):
+  host = Host.objects.get(pk=hid)
+  part = PartitionScheme.objects.get(pk=pid)
+  host.partition = part
+  host.save()
+
+  return redirect(reverse('singleHost', args=[hid])) 
+
+@user_passes_test(requireSuperuser)
 def ifdelete(request, hid, iid):
   context = {}
 
@@ -53,7 +63,18 @@ def ifdelete(request, hid, iid):
     context['status'] = 'danger'
     context['message'] = 'Could not find interface'
 
+  try:
+    lease = interface.ipv4Lease
+    lease.present = False
+    lease.lease = False
+    lease.save()
+    lease.subnet.free += 1
+    lease.subnet.save()
+  except:
+    pass
+
   interface.delete()
+
   context['status'] = 'success'
   context['message'] = 'Interface is deleted'
 
@@ -276,28 +297,47 @@ def new(request):
   subnet = Subnet.objects.get(ipversion=4,
       name=pattern.match(request.POST['subnet']).group(1))
   
+  if(len(request.POST['ipv6']) > 0):
+    v6subnet = subnet.v4network.get().v6subnet.getSubnet()
+    if(re.match(r'[eE][uU][iI]-?6?4?', request.POST['ipv6'])):
+      ipv6 = createEUI64(v6subnet, mac)
+    else:
+      try:
+        ipv6 = ipaddress.IPv6Address(request.POST['ipv6'])
+      except ValueError:
+        response['status'] = "danger"
+        response['message'] = "The IPv6 address provided is invalid"
+        return JsonResponse(response)
+
+      if(ipv6 not in v6subnet): 
+        response['status'] = "danger"
+        response['message'] = "The IPv6 address provided is not in the selected subnet"
+        return JsonResponse(response)
+  else:
+    ipv6 = None
+
   if(len(request.POST['ipv4']) > 0):
     try:
       ip = ipaddress.IPv4Address(request.POST['ipv4'])
     except ValueError:
       response['status'] = "danger"
-      response['message'] = "The IP address provided is invalid"
+      response['message'] = "The IPv4 address provided is invalid"
       return JsonResponse(response)
 
     if(ip not in subnet.getSubnet()):
       response['status'] = "danger"
-      response['message'] = "The IP address provided is not in the selected subnet"
+      response['message'] = "The IPv4 address provided is not in the selected subnet"
       return JsonResponse(response)
 
     if(ip in subnet.getReservedAddresses()):
       response['status'] = "danger"
-      response['message'] = "The provided IP is reserved"
+      response['message'] = "The provided IPv4 is reserved"
       return JsonResponse(response)
 
     lease = subnet.getLease(str(ip))
     if(lease):
       response['status'] = "danger"
-      response['message'] = "The IP address provided is already in use (%s)" % \
+      response['message'] = "The IPv4 address provided is already in use (%s)" % \
           lease
       return JsonResponse(response)
     ip = str(ip)
@@ -317,7 +357,7 @@ def new(request):
   host.save()
   network = subnet.v4network.get()
   interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
-      primary=True, ipv4Lease=lease, network=network)
+      primary=True, ipv4Lease=lease, network=network, ipv6=str(ipv6))
   interface.save()
 
   dhcpservers = Servers()

@@ -4,6 +4,7 @@ import re
 import socket
 import subprocess
 import time
+import traceback
 import yaml
 
 from django.core.management.base import BaseCommand
@@ -11,6 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.timezone import now
 
 from puppet.models import Server, Environment, Version, Role
+from host.models import Host
 
 class Command(BaseCommand):
   def add_arguments(self, parser):
@@ -93,12 +95,20 @@ class Command(BaseCommand):
               "Environment %s is not deployed yet\n" % environmentName)
           continue
 
-        logfile.write("Saving the environment information")
+        logfile.write("Saving the environment information\n")
 
-        # Save the version-object
-        lastVersion.signature=envinfo['signature']
-        lastVersion.status = Version.STATUS_DEPLOYED
-        lastVersion.save()
+        try:
+          vid = lastVersion.id
+          lastVersion = Version.objects.get(id=vid) 
+          # Save the version-object
+          lastVersion.signature=envinfo['signature']
+          lastVersion.status = Version.STATUS_DEPLOYED
+          lastVersion.save()
+        except Exception as err:
+          logfile.write("Could not save environment information:\n")
+          logfile.write(traceback.print_tb(err.__traceback__))
+
+        logfile.write("Saved the environment information\n")
 
         for current, dirs, files in os.walk(os.path.join(path, environmentName, 
             "modules/role/manifests")):
@@ -118,9 +128,11 @@ class Command(BaseCommand):
             role.save()
         logfile.close()
 
-    for e in Environment.objects.exclude(name__in=r10kenv).filter(active=True).\
-        all():
-      e.active = False
-      e.save()
+    for e in Environment.objects.exclude(name__in=r10kenv).all():
+      for host in Host.objects.filter(environment=e).all():
+        host.environment = None
+        host.save()
+      self.stdout.write("Deleting the environment %s" % e.name)
+      e.delete()
 
     server.checkin(Server.STATUS_OK) 

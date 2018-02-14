@@ -5,11 +5,20 @@
   deployed at which versions on each of them.</p>
 
   <h2>Puppet environments</h2>
+  <div class="puppettablemessage"></div>
   <table class="table table-condensed table-striped table-hover">
       <tr>
         <th>Environment</th>
         {% for s in servers %}
-          <th data-toggle="tooltip" title="{{s.name}}" colspan="2">{{s.getHostName}}</th>
+          <th data-toggle="tooltip" title="{{s.name}}">
+            {{s.getHostName}}
+          </th>
+          <th>
+            <a href="#" class="btn-sm btn-danger deletePuppetServer" 
+                data-url="{% url 'puppetSDelete' s.id %}">
+              Delete
+            </a>
+          </th>
         {% endfor %}
         <th>ALL</th>
       </tr>
@@ -46,4 +55,23 @@
       {% endfor %}
     </tr>
   </table>
+  <script>
+    $(".deletePuppetServer").click(function() {
+      if (confirm('Are you sure you want to delete this puppet-server?')) {
+        var url = $(this).data('url');
+        console.log(url);
+        $.ajax({
+          type : 'GET',
+          url  : url ,
+        }).done(function(response) {
+          $(".puppettablemessage").html("<div class='alert alert-" +
+            response['status'] + "'>" + response['message'] + "</div>");
+          
+          if(response['status']  == "success") {
+            location.reload(true);
+          }
+        });
+      }
+    });
+  </script>
 {% endblock page-content %}

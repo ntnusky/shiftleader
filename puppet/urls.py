@@ -24,4 +24,5 @@ urlpatterns = [
   url(r'^status$', json.status, name="puppetJsonStatus"),
   url(r'^report/$', report.main, name="puppetReport"),
   url(r'^message/([0-9]+)$', main.message, name="puppetMessage"),
+  url(r'^delete/([0-9]+)$', main.delete, name="puppetSDelete"),
 ]
