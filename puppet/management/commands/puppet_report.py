@@ -116,7 +116,7 @@ class Command(BaseCommand):
               logfile.write("Creating role %s-%s\n" % (environmentName, role))
             role.last_deployed = now()
             role.save()
-          logfile.close()
+        logfile.close()
 
     for e in Environment.objects.exclude(name__in=r10kenv).filter(active=True).\
         all():
