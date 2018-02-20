@@ -85,7 +85,13 @@ def form(request, id=0):
 @user_passes_test(requireSuperuser)
 def table(request):
   context = {}
-  context['records'] = StaticRecord.objects.filter(active=True).all()
+  context['domains'] = []
+  
+  for d in Domain.objects.all():
+    records = StaticRecord.objects.filter(domain=d, active=True)
+    if(records.count() > 0):
+      context['domains'].append({'name':d.name, 'records': records.all()})
+
   return render(request, "ajax/dnsTable.html", context)
 
 @user_passes_test(requireSuperuser)
