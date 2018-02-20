@@ -70,20 +70,15 @@ def form(request, id=0):
     except StaticRecord.DoesNotExist:
       pass
 
-    if(len(context['record'].name) <= 0):
-      context['message'] = "No name is supplied"
-      context['status'] = "warning"
-      return render(request, "dnsForm.html", context)
-    else:
-      if(len(context['record'].ipv4) == 0):
-        context['record'].ipv4 = None
-      if(len(context['record'].ipv6) == 0):
-        context['record'].ipv6 = None
+    if(len(context['record'].ipv4) == 0):
+      context['record'].ipv4 = None
+    if(len(context['record'].ipv6) == 0):
+      context['record'].ipv6 = None
 
-      context['record'].save()
-      context['record'].configure()
-      return redirect('dnsIndex')
-  
+    context['record'].save()
+    context['record'].configure()
+    return redirect('dnsIndex')
+
   return render(request, "dnsForm.html", context)
 
 
