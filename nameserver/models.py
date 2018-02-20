@@ -122,19 +122,20 @@ class StaticRecord(models.Model):
   active = models.BooleanField(default=True)
 
   def __str__(self):
-    if(len(self.name) > 0):
-      name = "%s.%s" % (self.name, self.domain.name)
-    else:
-      name = self.domain.name
-
     if(self.ipv4 and self.ipv6):
-      return "%s - %s %s" % (name, self.ipv4, self.ipv6)
+      return "%s - %s %s" % (self.getName(), self.ipv4, self.ipv6)
     elif(self.ipv4):
-      return "%s - %s" % (name, self.ipv4)
+      return "%s - %s" % (self.getName(), self.ipv4)
     elif(self.ipv6):
-      return "%s - %s" % (name, self.ipv6)
+      return "%s - %s" % (self.getName(), self.ipv6)
     else:
-      return "%s - NO ADDRESSES CONFIGURED" % (name)
+      return "%s - NO ADDRESSES CONFIGURED" % (self.getName())
+
+  def getName(self):
+    if(len(self.name) > 0):
+      return "%s.%s" % (self.name, self.domain.name)
+    else:
+      return self.domain.name
 
   def configure(self):
     self.domain.deleteDomain(self.name)
