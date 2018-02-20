@@ -73,6 +73,8 @@ def ifdelete(request, hid, iid):
   except:
     pass
 
+  interface.network.domain.deleteDomain(interface.host.name)
+
   interface.delete()
 
   context['status'] = 'success'

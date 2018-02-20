@@ -171,14 +171,14 @@ class Host(models.Model):
     for interface in self.interface_set.all():
       # Delete the interface-specific A record
       try:
-        interface.ipv4Lease.subnet.domain.deleteDomain("%s.%s" % (interface.name, self.name))
+        interface.network.domain.deleteDomain(self.name)
       except AttributeError:
         pass
 
   def updateDNS(self):
     for interface in self.interface_set.all():
       if(interface.ipv4Lease):
-        interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv4Lease.IP)
+        interface.network.domain.configure(self.name, interface.ipv4Lease.IP)
 
         # If we manage the reverse-zone, configure a reverse name for this
         # interface.
@@ -190,8 +190,8 @@ class Host(models.Model):
         except Domain.DoesNotExist:
           pass
 
-        if(interface.ipv6):
-          interface.ipv4Lease.subnet.domain.configure(self.name, interface.ipv6)
+      if(interface.ipv6):
+        interface.network.domain.configure(self.name, interface.ipv6)
 
   def generatePassword(self):
     chars = string.ascii_letters + string.digits
