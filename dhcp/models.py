@@ -23,8 +23,12 @@ class Subnet(models.Model):
     return ipaddress.ip_network("%s/%s" % (self.prefix, self.mask))
 
   def getReservedAddresses(self):
-    gateway = parser.get("DHCP", "%sGateway" % self.name)
-    reservedAddresses = [ipaddress.ip_address(gateway)]
+    try:
+      gateway = parser.get("DHCP", "%sGateway" % self.name)
+      reservedAddresses = [ipaddress.ip_address(gateway)]
+    except:
+      reservedAddresses = []
+
     free = 0
     try:
       reserved = parser.get("DHCP", "%sReserved" % self.name)
