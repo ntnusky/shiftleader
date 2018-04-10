@@ -186,7 +186,7 @@ class Host(models.Model):
         try:
           reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
           domain = Domain.objects.get(name=reverseDomain)
-          domain.configure(ip[3], "%s.%s." % (self.name, self.getDomain()))
+          domain.configure(ip[3], "%s.%s." % (self.name, interface.domain.name))
         except Domain.DoesNotExist:
           pass
 
