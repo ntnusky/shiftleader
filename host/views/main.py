@@ -294,3 +294,8 @@ def pform(request, pid=0):
       scheme.save()
       return redirect('hostIndex')
   return render(request, 'hostPartitionForm.html', context)
+
+def list(request):
+  context = {}
+  context['hosts'] = Host.objects.all()
+  return render(request, 'hostList.html', context)

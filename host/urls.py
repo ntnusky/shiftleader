@@ -9,6 +9,7 @@ urlpatterns = [
   url(r'^([0-9]+)/puppetlog/([0-9]+)/$', main.single, name="hostPuppetLog"),
   url(r'^partition/$', main.pform, name="hostPartitionNew"),
   url(r'^partition/([0-9]+)/$', main.pform, name="hostPartitionEdit"),
+  url(r'^list/$', main.list, name="hostlist"),
 
   # AJAX URL's
   url(r'^table/$', ajax.table, name='hostAjaxTable'),
