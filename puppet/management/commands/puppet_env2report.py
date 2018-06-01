@@ -39,7 +39,7 @@ class Command(BaseCommand):
           '.r10k-deploy.json'), "r"))
     except FileNotFoundError:
       self.stderr.write(\
-          "Environment %s is not deployed yet" % environmentName)
+          "Environment %s is not deployed yet" % env)
       return
 
     try:
@@ -54,7 +54,7 @@ class Command(BaseCommand):
       sys.stderr.write(traceback.print_tb(err.__traceback__))
       return
 
-    for current, dirs, files in os.walk(os.path.join(path, environmentName, 
+    for current, dirs, files in os.walk(os.path.join(path, env, 
         "modules/role/manifests")):
       for f in files:
         dirnames = current.split('/')[levelInPath+4:]
@@ -66,6 +66,6 @@ class Command(BaseCommand):
           role = environment.role_set.get(name=fullname)
         except Role.DoesNotExist:
           role = environment.role_set.create(name=fullname)
-          self.stdout.write("Creating role %s-%s" % (environmentName, role))
+          self.stdout.write("Creating role %s-%s" % (env, role))
         role.last_deployed = now()
         role.save()
