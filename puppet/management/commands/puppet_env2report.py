@@ -15,6 +15,9 @@ class Command(BaseCommand):
   def handle(self, *args, **options):
     env = options['environment']
 
+    path = '/etc/puppetlabs/code/environments/'
+    levelInPath = len(path.rstrip('/').split('/'))
+
     fqdn = socket.getfqdn()
     try:
       server = Server.objects.get(name=fqdn)
@@ -50,9 +53,6 @@ class Command(BaseCommand):
       sys.stderr.write("Could not save environment information:\n")
       sys.stderr.write(traceback.print_tb(err.__traceback__))
       return
-
-    path = '/etc/puppetlabs/code/environments/'
-    levelInPath = len(path.rstrip('/').split('/'))
 
     for current, dirs, files in os.walk(os.path.join(path, environmentName, 
         "modules/role/manifests")):
