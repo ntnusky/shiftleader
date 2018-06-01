@@ -60,5 +60,7 @@ class Command(BaseCommand):
       if(not environment.active):
         environment.active = True
         environment.save()
+    else:
+      self.stdout.write("0")
     
     server.checkin(Server.STATUS_OK)
