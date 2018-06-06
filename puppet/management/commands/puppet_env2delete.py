@@ -16,10 +16,15 @@ from host.models import Host
 
 class Command(BaseCommand):
   def add_arguments(self, parser):
-    pass
-    #parser.add_argument('fqdn', type=str)
+    parser.add_argument(
+      '--delete',
+      dest='delete',
+      default=False,
+      help='Actually delete the environments',
+    )
 
   def handle(self, *args, **options):
+    
     try:
       FNULL = open(os.devnull, "w")
       # First, deploy production to make sure that we get a list over all
@@ -35,8 +40,12 @@ class Command(BaseCommand):
       return
 
     for e in Environment.objects.exclude(name__in=r10kenv).all():
-      for host in Host.objects.filter(environment=e).all():
-        host.environment = None
-        host.save()
-      self.stdout.write("Deleting the environment %s" % e.name)
-      e.delete()
+      if(options['delete']):
+        for host in Host.objects.filter(environment=e).all():
+          host.environment = None
+          host.save()
+        self.stdout.write("Deleting the environment %s" % e.name)
+        e.delete()
+      else:
+        self.stdout.write("Would delete %s if the --delete option was set" %
+          e.name)
