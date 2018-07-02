@@ -24,7 +24,6 @@ class Command(BaseCommand):
       try:
         network = parser.get('DHCP', '%sNetwork' % pool)
         netmask = parser.get('DHCP', '%sNetmask' % pool)
-        gateway = parser.get('DHCP', '%sGateway' % pool) 
         domainName = parser.get('DHCP', '%sDomain' % pool) 
       except NoOptionError as e:
         self.stderr.write(
