@@ -25,7 +25,7 @@
         <td></td>
       {% endif %}
       <td>{{h.getStatusText}}</td>
-      <td>{{h.report_set.last.time|timesince}}</td>
+      <td>{{h.report_set.last.time|timesince}} ago.</td>
       <td>{{h.interface_set.count}}</td>
       <td>
         <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn-sm btn-info">
