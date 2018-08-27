@@ -24,7 +24,6 @@ class Command(BaseCommand):
     )
 
   def handle(self, *args, **options):
-    
     try:
       FNULL = open(os.devnull, "w")
       # First, deploy production to make sure that we get a list over all
@@ -39,13 +38,30 @@ class Command(BaseCommand):
       self.stderr.write("An error occurred: %s" % str(e))
       return
 
+    # For each environment not found in r10k, try to delete it:
     for e in Environment.objects.exclude(name__in=r10kenv).all():
-      if(options['delete']):
-        for host in Host.objects.filter(environment=e).all():
-          host.environment = None
-          host.save()
+      # If the environment have hosts, it cannot be deleted.
+      if Host.objects.filter(environment=e).count() > 0:
+        self.stderr.write("The environment %s contains hosts." % e.name)
+        self.stderr.write("The environment is thus not deleted for now")
+        continue
+      
+      # If any of the roles in the environment has host, it cannot be deleted.
+      toDelete = True
+      for role in Role.objects.filter(environment=e).all():
+        if role.host_set.count() > 0:
+          self.stderr.write("The role %s contains hosts." % role.name)
+          self.stderr.write("You should probably run the command puppet_env2fix")
+          toDelete = False
+          break
+
+      # Print the correct statusmessage, and delete env if possible.
+      if(options['delete'] and toDelete):
         self.stdout.write("Deleting the environment %s" % e.name)
         e.delete()
+      elif(options['delete']):
+        self.stderr.write("The environment %s should be deleted, but couldn't" %
+          e.name)
       else:
         self.stdout.write("Would delete %s if the --delete option was set" %
           e.name)
