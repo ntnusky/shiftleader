@@ -112,6 +112,11 @@ def environment(request):
   for host in hosts:
     names.append(host.name)
     host.environment = environment
+    try:
+      host.role = Role.objects.get(environment=host.environment,
+          name=host.role.name)
+    except:
+      host.role = None
     host.save()
 
   response['status'] = 'success'
