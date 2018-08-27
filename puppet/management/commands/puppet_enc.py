@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
     if not host:
       return
-    if host.environment == None:
+    if host.environment == None or host.role == None:
       host.status = Host.ERROR
       host.save()
       return
