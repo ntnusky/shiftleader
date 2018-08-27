@@ -1,17 +1,10 @@
-import json
 import os
-import re
-import socket
 import subprocess
-import time
-import traceback
 import yaml
 
 from django.core.management.base import BaseCommand
-from django.template.loader import render_to_string
-from django.utils.timezone import now
 
-from puppet.models import Server, Environment, Version, Role
+from puppet.models import Environment, Role
 from host.models import Host
 
 class Command(BaseCommand):
@@ -19,7 +12,7 @@ class Command(BaseCommand):
     parser.add_argument(
       '--delete',
       dest='delete',
-      default=False,
+      action='store_true',
       help='Actually delete the environments',
     )
 
