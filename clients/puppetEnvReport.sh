@@ -15,6 +15,9 @@ if mkdir $lockdir; then
     if [[ $(/opt/shiftleader/manage.py puppet_env2update $env) -eq '1' ]]; then
       echo "Running r10k to update $env"
       /usr/bin/r10k deploy environment $env -pv
+
+      echo "Regenerating puppet types"
+      /opt/puppetlabs/bin/puppet generate types --environment $env &> /dev/null
   
       echo "Reporting the result of the update"
       /opt/shiftleader/manage.py puppet_env2report $env
