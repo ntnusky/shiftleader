@@ -1,8 +1,13 @@
 import dns.query
 import dns.name
 import dns.update
+import dns.resolver
 import dns.rdatatype
+import dns.rdtypes.ANY.PTR
+import dns.rdtypes.IN.A
+import dns.rdtypes.IN.AAAA
 import dns.tsigkeyring
+import dns.zone
 import ipaddress
 import random
 import string
@@ -95,6 +100,17 @@ class Server(models.Model):
     except Exception as e:
       return False
 
+  def zonetransfer(self, domain):
+    if(self.key):
+      keyring = dns.tsigkeyring.from_text({ self.keyname : self.key })
+      algorithm = dns.name.from_text(self.algorithm)
+      z = dns.zone.from_xfr(dns.query.xfr(self.address, domain, keyring=keyring, 
+          keyname=self.keyname, keyalgorithm=algorithm))
+    else:
+      z = dns.zone.from_xfr(dns.query.xfr(self.address, domain)) 
+
+    return z.nodes
+
 class Domain(models.Model):
   name = models.CharField(max_length=200)
   server = models.ForeignKey(Server)
@@ -110,6 +126,26 @@ class Domain(models.Model):
 
   def testConnection(self):
     return self.server.testConnection(self.name)
+
+  def zonetransfer(self):
+    nodes = self.server.zonetransfer(self.name) 
+    records = {}
+
+    for node in nodes.keys():
+      for dataset in nodes[node].rdatasets:
+        for record in dataset.items:
+          if(type(record) == dns.rdtypes.ANY.PTR.PTR):
+            try:
+              records['%s.%s' % (node, self.name)].append(str(record.target))
+            except KeyError:
+              records['%s.%s' % (node, self.name)] = [str(record.target)]
+          if(type(record) == dns.rdtypes.IN.A.A or
+              type(record) == dns.rdtypes.IN.AAAA.AAAA):
+            try:
+              records['%s.%s' % (node, self.name)].append(str(record.address))
+            except KeyError:
+              records['%s.%s' % (node, self.name)] = [str(record.address)]
+    return records
 
   class Meta:
     ordering = ['name']
