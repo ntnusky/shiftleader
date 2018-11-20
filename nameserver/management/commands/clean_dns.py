@@ -91,7 +91,7 @@ class Command(BaseCommand):
           domain.deleteDomain(hostname)
           if(name in insl):
             self.stdout.write(" - Need to re-add records which should be " + \
-              i  "in place with the deleted name")
+                "in place with the deleted name")
 
             for r in insl[name]:
               self.stdout.write(" --- Adding '%s' -> '%s'" % (name, r))
