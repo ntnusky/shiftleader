@@ -317,6 +317,16 @@ def new(request):
       response['status'] = "danger"
       response['message'] = "Partition-scheme not found."
 
+  if(int(request.POST['os'])):
+    try:
+      os = OperatingSystem.objects.all()[int(request.POST['os'])-1]
+    except:
+      response['status'] = "danger"
+      response['message'] = "Could not find OS %d" % int(request.POST['os'])
+      return JsonResponse(response)
+  else:
+    os = None
+
   try:
     environment = Environment.objects.get(name=request.POST['environment'])
     role = environment.role_set.get(name=request.POST['role'])
@@ -420,7 +430,7 @@ def new(request):
   
   host = Host(name=request.POST['hostname'], 
       environment=environment, status = Host.PROVISIONING, role=role,
-      partition=partition)
+      partition=partition, os=os)
   host.save()
   network = subnet.v4network.get()
   interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
