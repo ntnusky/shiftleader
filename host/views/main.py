@@ -1,4 +1,5 @@
 import ipaddress
+import os
 import re
 
 from django.contrib.auth.decorators import user_passes_test 
@@ -9,7 +10,7 @@ from dashboard.utils import createEUI64, createContext, requireSuperuser, get_cl
 from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
-from host.models import Host, Interface, PartitionScheme
+from host.models import Host, Interface, PartitionScheme, OperatingSystem
 from host.utils import authorize, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment, Report
@@ -22,6 +23,7 @@ def index(request):
   context['hosts'] = Host.objects.all()
   context['environments'] = Environment.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()
+  context['operatingsystems'] = OperatingSystem.objects.all()
 
   return render(request, 'hostOverview.html', context)
 
@@ -233,7 +235,7 @@ def tftp(request, id):
   if not authorize(request, context['host']):
     return HttpResponseForbidden()
 
-  if(int(context['host'].status) == Host.PROVISIONING):
+  if(int(context['host'].status) == Host.PROVISIONING and context['host'].os):
     template = 'tftpboot/install.cfg'
   else:
     template = 'tftpboot/localboot.cfg'
@@ -256,6 +258,51 @@ def postinstall(request, id):
     context['host'].save()
 
   return render(request, 'postinstall/postinstall.sh', context)
+
+@user_passes_test(requireSuperuser)
+def osform(request, pid=0):
+  context = createContext(request)
+
+  if(pid == 0):
+    opsys = None
+    context['header'] = "Add an OS"
+    context['buttonText'] = "Add"
+  else:
+    opsys = get_object_or_404(OperatingSystem, pk=pid)
+    context['os'] = opsys
+    context['header'] = "Update '%s'" % opsys.name
+    context['buttonText'] = "Update"
+  
+  if(request.POST.get('csrfmiddlewaretoken')):
+    if(opsys == None):
+      opsys = OperatingSystem()
+    
+    toSave = False
+    if(opsys.name != request.POST.get('name')):
+      opsys.name = request.POST.get('name')
+      toSave = True
+    if(opsys.shortname != request.POST.get('shortname')):
+      opsys.shortname = request.POST.get('shortname')
+      toSave = True
+    if(opsys.kernelurl != request.POST.get('kernelurl')):
+      opsys.kernelurl = request.POST.get('kernelurl')
+      opsys.kernelname = os.path.basename(opsys.kernelurl)
+      toSave = True
+    if(opsys.initrdurl != request.POST.get('initrdurl')):
+      opsys.initrdurl = request.POST.get('initrdurl')
+      opsys.initrdname = os.path.basename(opsys.initrdurl)
+      toSave = True
+
+    if(len(opsys.name) == 0 or len(opsys.shortname) == 0 or
+        len(opsys.kernelurl) == 0 or len(opsys.initrdurl) == 0):
+      context['message'] = "All fields need a value!"
+      toSave = False
+
+    if(toSave):
+      opsys.save()
+      return redirect('hostIndex')
+
+  return render(request, 'hostOsForm.html', context)
 
 @user_passes_test(requireSuperuser)
 def pform(request, pid=0):

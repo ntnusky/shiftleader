@@ -8,6 +8,18 @@
   </div>
 
   <div class="form-group">
+    <label class="control-label col-sm-4" for="os">Operating System</label>
+    <div class="col-sm-8">
+      <select class="form-control" id="os">
+        <option>No OS installation</option>
+        {% for os in operatingsystems %}
+          <option>{{os.name}}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
     <label class="control-label col-sm-4" for="partition">Partition-scheme</label>
     <div class="col-sm-8">
       <select class="form-control" id="partition">
