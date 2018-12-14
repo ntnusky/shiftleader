@@ -3,6 +3,7 @@
     <th><input type="checkbox" class="selectAllHosts"></th>
     <th></th>
     <th colspan="2">Hostname</th>
+    <th>OS</th>
     <th>Environment</th>
     <th>Role</th>
     <th>Status</th>
@@ -18,6 +19,11 @@
       </td>
       <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
       <td colspan="2">{{h.name}}.{{h.getDomain.name}}</td>
+      {% if h.os %}
+        <td>{{h.os.name}}</td>
+      {% else %}
+        <td>N/A</td>
+      {% endif %}
       <td>{{h.environment.name}}</td>
       {% if h.role %}
         <td>{{h.role.name}}</td>

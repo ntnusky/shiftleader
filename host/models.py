@@ -11,6 +11,21 @@ from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment, Role, Report, ReportMetric
 
+class OperatingSystem(models.Model):
+  name = models.CharField(max_length=64)
+  shortname = models.CharField(max_length=20)
+
+  kernelname = models.CharField(max_length=64)
+  kernelurl = models.CharField(max_length=256)
+  kernelsum = models.CharField(max_length=130, default=None, null=True)
+
+  initrdname = models.CharField(max_length=64)
+  initrdurl = models.CharField(max_length=256)
+  initrdsum = models.CharField(max_length=130, default=None, null=True)
+  
+  def __str__(self):
+    return "%s (%s)" % (self.name, self.shortname)
+
 class PartitionScheme(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -47,6 +62,7 @@ class Host(models.Model):
 
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
+  os = models.ForeignKey(OperatingSystem, null=True)
   environment = models.ForeignKey(Environment, null=True)
   partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)

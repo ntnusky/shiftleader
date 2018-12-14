@@ -3,65 +3,116 @@
 {% block page-content %}
   <p class="ajax"></p>
 
-  <div class="col-12 col-sm-12 col-md-12 col-lg-12">
-    <h2>Existing hosts</h2>
-
-    <p>This table contains the hosts currently configured in the system.</p>
-
-    <div class="btn-group btn-group-justified">
-      <div class="btn-group">
-        <button type="button"
-            class="btn btn-success disabled dropdown-toggle updateEnv" 
-            data-toggle="dropdown">
-          Update Environment <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-          {% for e in environments %}
-            <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
-          {% endfor %}
-        </ul>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-2">
+    <div class="">
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+      <h2>Actions:</h2>
+      <div class="btn-group-vertical">
+        <div class="btn-group">
+          <button type="button"
+              class="btn btn-success disabled dropdown-toggle updateEnv" 
+              data-toggle="dropdown">
+            Update Environment <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu">
+            {% for e in environments %}
+              <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button type="button"
+              class="btn btn-success disabled dropdown-toggle updateRoles" 
+              data-toggle="dropdown">
+            Update role<span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu dropdown-role" role="menu"> 
+          </ul>
+        </div>
+        <div class="btn-group">
+          <button type="button"
+              class="btn btn-success disabled dropdown-toggle updateOs" 
+              data-toggle="dropdown">
+            Change OS<span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu"> 
+            <li><a class="updateOS" id="0">Do not manage OS</a></li>
+            {% for o in operatingsystems %}
+              <li><a class="updateOS" id="{{o.id}}">{{o.name}}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
+        <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
+        <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
       </div>
-      <div class="btn-group">
-        <button type="button"
-            class="btn btn-success disabled dropdown-toggle updateRoles" 
-            data-toggle="dropdown">
-          Update role<span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu dropdown-role" role="menu"> 
-        </ul>
       </div>
-      <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
-      <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
-      <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+      <h2>Operating Systems</h2>
+      <ul>
+      {% for os in operatingsystems %}
+        <li><a href="{% url 'hostOsEdit' os.id %}">{{os.name}}</a></li>
+      {% endfor %}
+      </ul>
+      <a href="{% url 'hostOsNew' %}" class="btn-sm btn-info btn-tiny">
+        Add OS
+      </a>
+      </div>
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+      <h2>Partition-schemes</h2>
+      <table class="table table-hover table-condensed">
+        <tr><th>Name</th><th>Description</th></tr>
+        {% for p in partitionschemes %}
+          <tr>
+            <td><a href="{% url 'hostPartitionEdit' p.id %}">{{p.name}}</a></td>
+            <td>{{p.getShortDescription}}...</td>
+          </tr>
+        {% endfor %}
+      </table>
+      <a href="{% url 'hostPartitionNew' %}" class="btn-sm btn-info btn-tiny">
+        Create new scheme
+      </a>
+      </div>
     </div>
+  </div>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-10">
+    <h2>Existing hosts</h2>
+    <p>These are the hosts currently present in the system</p>
     <p class="tablemessage"></p>
     <div class="hosttable"></div>
-  </div>
-  <div class="col-12 col-sm-12 col-md-8 col-lg-8">
+
     <h2>Add new host</h2>
     <p>Use the following form to create a new host:</p>
     <p class="formMessage"></p>
     <div class="addHostForm"></div>
   </div>
-  <div class="col-12 col-sm-6 col-md-4 col-lg-4">
-    <h2>Partition-schemes</h2>
-    <table class="table table-hover table-condensed">
-      <tr><th>Name</th><th>Description</th></tr>
-      {% for p in partitionschemes %}
-        <tr>
-          <td><a href="{% url 'hostPartitionEdit' p.id %}">{{p.name}}</a></td>
-          <td>{{p.getShortDescription}}...</td>
-        </tr>
-      {% endfor %}
-    </table>
-    <a href="{% url 'hostPartitionNew' %}" class="btn-sm btn-info btn-tiny">
-      Create new scheme
-    </a>
-  </div>
   
 
   <script>
     function initializeButtons() {
+      $(".updateOS").click(function() {
+        var data = {'os': this.id};
+        data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+        if (confirm('Are you sure you want to change the OS image for these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostOs' %}',
+            data        : data,
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
       $(".updateEvironment").click(function() {
         var data = {'environment': this.id};
         data['selected'] = $('input[name="selectHost"]:checked').serialize();
@@ -153,44 +204,52 @@
     }
     function reloadTable() {
       $( ".hosttable" ).load( "{% url 'hostAjaxTable' %}", function() {
-        // Select all hosts if the "selectAllHosts" checkbox is clicked on
+        // Select all hosts if the "selectAllHosts" checkbox is clicked on, and
+        // activate the appropriate buttons.
         $(".selectAllHosts").change(function() {
           $(".selectHost").attr('checked', this.checked);
+          buttonActivation();
         });
-        // Enable/disable buttons based on how many hosts are selected
-        $(".selectHost").change(function() {
-          var antall = $('.selectHost:checked').length;
-          if(antall == 0) {
-            var buttone = true;
-          } else {
-            var buttone = false;
-          }
+        // If a host is selected, or deselected; update the buttons as well.
+        $(".selectHost").change(buttonActivation);
 
-          var environment = "UNDEFINED";
-          var different = false;
-          $('.selectHost:checked').each(function() {
-            var myenv = $(this).attr("env");
-            if(environment == "UNDEFINED") {
-              environment = myenv;
-            }
-            if(myenv != environment) {
-              different = true; 
-            }
-          });
-
-          if(! buttone && ! different) {
-            $(".updateRoles").toggleClass('disabled', false);
-            reloadRoleButton(environment);
-          } else {
-            $(".updateRoles").toggleClass('disabled', true);
-          }
-
-          $(".updateEnv").toggleClass('disabled', buttone);
-          $(".rebuild").toggleClass('disabled', buttone);
-          $(".norebuild").toggleClass('disabled', buttone);
-          $(".deleteHost").toggleClass('disabled', buttone);
-        });
+        // Update the buttons at table-load.
+        buttonActivation();
       });
+    }
+
+    function buttonActivation() {
+      var antall = $('.selectHost:checked').length;
+      if(antall == 0) {
+        var buttone = true;
+      } else {
+        var buttone = false;
+      }
+
+      var environment = "UNDEFINED";
+      var different = false;
+      $('.selectHost:checked').each(function() {
+        var myenv = $(this).attr("env");
+        if(environment == "UNDEFINED") {
+          environment = myenv;
+        }
+        if(myenv != environment) {
+          different = true; 
+        }
+      });
+
+      if(! buttone && ! different) {
+        $(".updateRoles").toggleClass('disabled', false);
+        reloadRoleButton(environment);
+      } else {
+        $(".updateRoles").toggleClass('disabled', true);
+      }
+
+      $(".updateEnv").toggleClass('disabled', buttone);
+      $(".rebuild").toggleClass('disabled', buttone);
+      $(".norebuild").toggleClass('disabled', buttone);
+      $(".deleteHost").toggleClass('disabled', buttone);
+      $(".updateOs").toggleClass('disabled', buttone);
     }
 
     function reloadRoleButton(env) {
@@ -228,6 +287,7 @@
           var formData = { 
             'csrfmiddlewaretoken' : $('input[name=csrfmiddlewaretoken]').val(),
             'hostname'            : $('input[id=hostname]').val(),
+            'os'                  : $('#os option:selected').index(),
             'partition'           : $('#partition option:selected').text(),
             'environment'         : $('#environment option:selected').text(), 
             'role'                : $('#role option:selected').text(), 
