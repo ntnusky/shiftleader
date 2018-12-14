@@ -25,7 +25,7 @@ class Command(BaseCommand):
     open(path, "w").write(render_to_string('tftpboot/localboot.cfg', {}))
 
     for host in Host.objects.all():
-      if(int(host.status) == Host.PROVISIONING and context['host'].os):
+      if(int(host.status) == Host.PROVISIONING and host.os):
         template = 'tftpboot/install.cfg'
       else:
         template = 'tftpboot/localboot.cfg'
