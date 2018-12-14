@@ -1,15 +1,15 @@
 <form  class="form-horizontal">
   {% csrf_token %} 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="hostname">Hostname</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="hostname">Hostname</label>
+    <div class="col-sm-10">
       <input type="text" class="form-control" id="hostname">
     </div>
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="os">Operating System</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="os">Operating System</label>
+    <div class="col-sm-10">
       <select class="form-control" id="os">
         <option>No OS installation</option>
         {% for os in operatingsystems %}
@@ -20,8 +20,8 @@
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="partition">Partition-scheme</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="partition">Partition-scheme</label>
+    <div class="col-sm-10">
       <select class="form-control" id="partition">
         <option>Default</option>
         {% for p in partitionschemes %}
@@ -32,8 +32,8 @@
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="environment">Environment</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="environment">Environment</label>
+    <div class="col-sm-10">
       <select class="form-control" id="environment">
         {% for environment in environments %}
           {% if environment.is_active %}
@@ -45,29 +45,29 @@
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="role">Role</label>
-    <div class="col-sm-8 roleselector">
+    <label class="control-label col-sm-2" for="role">Role</label>
+    <div class="col-sm-10 roleselector">
     </div>
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="ifname">Interface name</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="ifname">Interface name</label>
+    <div class="col-sm-10">
       <input type="text" class="form-control" id="ifname" placeholder="eth0">
     </div>
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="mac">MAC Address</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="mac">MAC Address</label>
+    <div class="col-sm-10">
       <input type="text" class="form-control" id="mac" 
           placeholder="00:53:ac:01:4a:f2">
     </div>
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="subnet">Subnet</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="subnet">Subnet</label>
+    <div class="col-sm-10">
       <select class="form-control" id="subnet">
         {% for subnet in subnets %}
           <option>'{{subnet.name}}' ({{subnet.prefix}}/{{subnet.mask}})
@@ -78,23 +78,23 @@
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="ipv4">IPv4 address</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="ipv4">IPv4 address</label>
+    <div class="col-sm-10">
       <input type="text" class="form-control" id="ipv4"
           placeholder="198.51.100.218 (leave empty for automatic assignment)">
     </div>
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-4" for="ipv6">IPv6 address</label>
-    <div class="col-sm-8">
+    <label class="control-label col-sm-2" for="ipv6">IPv6 address</label>
+    <div class="col-sm-10">
       <input type="text" class="form-control" id="ipv6"
           placeholder="2001:db8:f00:1337::123 (write 'eui64' for EUI-64 address)">
     </div>
   </div>
 
-  <div class="col-sm-4"></div>
-  <div class="col-sm-8">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-10">
     <button class="btn btn-primary newHost" type="button">Add</button>
   </div>
 </form>
