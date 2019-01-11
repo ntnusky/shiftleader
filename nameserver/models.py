@@ -13,6 +13,7 @@ import random
 import string
 
 from django.db import models
+from django.utils import timezone
 
 class Server(models.Model):
   name = models.CharField(max_length=64)
@@ -155,6 +156,7 @@ class StaticRecord(models.Model):
   domain = models.ForeignKey(Domain)
   ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True)
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
+  expire = models.DateField(default=None, null=True)
   active = models.BooleanField(default=True)
 
   def __str__(self):
@@ -172,6 +174,24 @@ class StaticRecord(models.Model):
       return "%s.%s" % (self.name, self.domain.name)
     else:
       return self.domain.name
+  
+  def getExpireDateText(self):
+    if(self.expire):
+      return "%s.%s.%s" % (self.expire.day, self.expire.month, self.expire.year)
+    else:
+      return ""
+
+  def isExpired(self):
+    if(self.expire):
+      expired = (self.expire < timezone.now().date())
+      if(expired and self.active):
+        self.deactivate()
+      return True
+    else:
+      return False
+
+  def isActive(self):
+    return not self.isExpired() and self.active
 
   def configure(self):
     self.domain.deleteDomain(self.name)
@@ -190,6 +210,11 @@ class StaticRecord(models.Model):
 
     if(self.ipv6):
       self.domain.configure(self.name, self.ipv6)
+
+  def activate(self):
+    self.active = True
+    self.configure()
+    self.save()
 
   def deactivate(self):
     self.active = False

@@ -3,15 +3,33 @@
   <table class="table table-hover table-condensed">
     <tr>
       <th>DNS Name</th>
+      <th>Expiry</th>
       <th>A-Record</th>
       <th>AAAA-Record</th>
+      <th>Status</th>
       <th></th>
     </tr>
     {% for r in d.records %}
       <tr>
         <td>{{r.getName}}</td>
+        {% if r.expire %}
+          <td>{{r.expire}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
         <td>{{r.ipv4}}</td>
         <td>{{r.ipv6}}</td>
+        <td>
+          {% if r.isExpired %}
+            <a class="btn-sm btn-default disabled" id="{{r.id}}">Expired</a>
+          {% else %}
+            {% if r.isActive %}
+              <a class="btn-sm btn-success deactivateRecord" id="{{r.id}}">Active</a>
+            {% else %}
+              <a class="btn-sm btn-danger activateRecord" id="{{r.id}}">Disabled</a>
+            {% endif %}
+          {% endif %}
+        </td>
         <td>
           <a href="{% url 'dnsEdit' r.id %}" class="btn-sm btn-warning" id="{{r.id}}">Edit</a>
           <a class="btn-sm btn-danger deleteRecord" id="{{r.id}}">Delete</a>
