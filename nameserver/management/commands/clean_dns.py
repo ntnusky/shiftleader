@@ -18,9 +18,12 @@ class Command(BaseCommand):
     indns = {}
     insl = {}
 
+    # Retrieve domains from DNS
     for domain in Domain.objects.all():
       indns.update(domain.zonetransfer())
     
+    # Collect all names which should be present in DNS because they are
+    # associated with interfaces.
     for interface in Interface.objects.all():
       domain = '%s.%s' % (interface.host.name, interface.network.domain.name)
 
@@ -33,6 +36,8 @@ class Command(BaseCommand):
         insl[domain].append(interface.ipv6)
       
       ip = interface.ipv4Lease.IP.split('.')
+      # If we manage the reverse-domain for the assigned IP, add the PTR record
+      # as well.
       try:
         reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
         d = Domain.objects.get(name=reverseDomain)
@@ -43,7 +48,14 @@ class Command(BaseCommand):
       except Domain.DoesNotExist:
         pass
 
+    # Iterate trough all static DNS records and add these names to the insl list
+    # as well.
     for sr in StaticRecord.objects.all():
+      # If the record is not active, just skip it. This will have the name 
+      # removed from DNS
+      if(not sr.isActive()):
+        continue
+
       if(len(sr.name)):
         domain = '%s.%s' % (sr.name, sr.domain)
       else:
@@ -72,14 +84,18 @@ class Command(BaseCommand):
         except:
           insl[domain] = [sr.ipv6]
     
+    # For each name found in DNS:
     for name in indns:
       for record in indns[name]:
+        # If the record is in shiftleader, just skip to the next record.
         try:
           if record in insl[name]:
             continue
         except KeyError:
           pass
 
+        # If the record is not in shiftleader, delete it, or notify the user if
+        # he has not requested removal.
         self.stdout.write("%s->%s is not in shiftleader" % (name, record)) 
         if(options['delete']):
           domainname = '.'.join(name.split('.')[1:])
