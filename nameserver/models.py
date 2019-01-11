@@ -186,7 +186,7 @@ class StaticRecord(models.Model):
       expired = (self.expire < timezone.now().date())
       if(expired and self.active):
         self.deactivate()
-      return True
+      return expired
     else:
       return False
 
@@ -194,6 +194,10 @@ class StaticRecord(models.Model):
     return not self.isExpired() and self.active
 
   def configure(self):
+    if(not self.isActive()):
+      self.deactivate()
+      return
+
     self.domain.deleteDomain(self.name)
     if(self.ipv4):
       self.domain.configure(self.name, self.ipv4)
