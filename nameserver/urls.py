@@ -9,4 +9,6 @@ urlpatterns = [
   # AJAX
   url(r'^table/$', main.table, name='dnsAjaxTable'),
   url(r'^delete/([0-9]+)/$', main.delete, name='dnsAjaxDelete'),
+  url(r'^activate/([0-9]+)/$', main.activate, name='dnsAjaxActivate'),
+  url(r'^deactivate/([0-9]+)/$', main.deactivate, name='dnsAjaxDeactivate'),
 ]

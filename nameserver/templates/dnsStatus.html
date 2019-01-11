@@ -2,6 +2,7 @@
 
 {% block page-content %}
   <div class="col-lg-9 col-md-12 col-sm-12 col-12">
+    {% csrf_token %}
     <h2>Static domain assignments</h2>
     <p>To facilitate for DNS names to services not residing on a single machine,
     but rather on a virtual IP, this page can create static assignments to IP
@@ -43,8 +44,12 @@
           if (confirm('Are you sure you want to delete this record?')) {
             var id = this.id
             $.ajax({
-              type : 'GET',
+              type : 'POST',
               url  : '{% url 'dnsIndex' %}delete/' + id + '/',
+              data : {
+                'csrfmiddlewaretoken':
+                    $("input[name='csrfmiddlewaretoken']").val(),
+              },
             }).done(function(response) {
               $(".tablemessage").html("<div class='alert alert-" +
                 response['status'] + "'>" + response['message'] + "</div>");
@@ -54,6 +59,42 @@
               }
             });
           }
+        });
+        $(".deactivateRecord").click(function() {
+          var id = this.id
+          $.ajax({
+            type : 'POST',
+            url  : '{% url 'dnsIndex' %}deactivate/' + id + '/',
+            data : {
+              'csrfmiddlewaretoken':
+                  $("input[name='csrfmiddlewaretoken']").val(),
+            },
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+              response['status'] + "'>" + response['message'] + "</div>");
+            
+            if(response['status']  == "success") {
+              reloadTable();
+            }
+          });
+        });
+        $(".activateRecord").click(function() {
+          var id = this.id
+          $.ajax({
+            type : 'POST',
+            url  : '{% url 'dnsIndex' %}activate/' + id + '/',
+            data : {
+              'csrfmiddlewaretoken':
+                  $("input[name='csrfmiddlewaretoken']").val(),
+            },
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+              response['status'] + "'>" + response['message'] + "</div>");
+            
+            if(response['status']  == "success") {
+              reloadTable();
+            }
+          });
         });
       });
     }

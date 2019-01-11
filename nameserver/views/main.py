@@ -1,5 +1,8 @@
+import re
+
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse, HttpResponseBadRequest 
+from django.utils import dateparse
 from django.shortcuts import render, redirect
 
 from django.utils.datastructures import MultiValueDictKeyError
@@ -32,7 +35,7 @@ def form(request, id=0):
     context['header'] = "Edit static DNS record"
     context['buttonText'] = "Update record"
     try:
-      context['record'] = StaticRecord.objects.get(pk=id, active=True)
+      context['record'] = StaticRecord.objects.get(pk=id)
     except StaticRecord.DoesNotExist:
       return HttpResponseBadRequest()
   else:
@@ -58,6 +61,7 @@ def form(request, id=0):
       context['record'].name = request.POST['name']
       context['record'].ipv4 = request.POST['ipv4']
       context['record'].ipv6 = request.POST['ipv6']
+      context['record'].expire = request.POST['expire']
     except MultiValueDictKeyError:
       return HttpResponseBadRequest()
 
@@ -75,6 +79,20 @@ def form(request, id=0):
     if(len(context['record'].ipv6) == 0):
       context['record'].ipv6 = None
 
+    m = re.match(r'([0123]?[0-9])[\.\ \-]?([01]?[0-9])[\.\ \-]?(20[0-9]{2})', 
+            request.POST['expire'])
+
+    if len(request.POST['expire']) == 0:
+      context['record'].expire = None
+    elif not m:
+      context['message'] = "The date is invalid"
+      context['status'] = "warning"
+      return render(request, "dnsForm.html", context)
+    else:
+      context['record'].expire = dateparse.parse_date(
+          "%s-%s-%s" % (m.group(3), m.group(2), m.group(1))
+      )
+    
     context['record'].save()
     context['record'].configure()
     return redirect('dnsIndex')
@@ -88,18 +106,39 @@ def table(request):
   context['domains'] = []
   
   for d in Domain.objects.all():
-    records = StaticRecord.objects.filter(domain=d, active=True)
+    records = StaticRecord.objects.filter(domain=d)
     if(records.count() > 0):
       context['domains'].append({'name':d.name, 'records': records.all()})
 
   return render(request, "ajax/dnsTable.html", context)
 
 @user_passes_test(requireSuperuser)
-def delete(request, id):
+def activate(request, id):
   try:
-    record = StaticRecord.objects.get(pk=id, active=True)
+    record = StaticRecord.objects.get(pk=id)
+  except StaticRecord.DoesNotExist:
+    return JsonResponse({'status': 'danger', 'message':'Record does not exist'})
+
+  record.activate()
+  return JsonResponse({'status': 'success', 'message':'%s is activated' % record})
+
+@user_passes_test(requireSuperuser)
+def deactivate(request, id):
+  try:
+    record = StaticRecord.objects.get(pk=id)
   except StaticRecord.DoesNotExist:
     return JsonResponse({'status': 'danger', 'message':'Record does not exist'})
 
   record.deactivate()
+  return JsonResponse({'status': 'success', 'message':'%s is deactivated' % record})
+
+@user_passes_test(requireSuperuser)
+def delete(request, id):
+  try:
+    record = StaticRecord.objects.get(pk=id)
+  except StaticRecord.DoesNotExist:
+    return JsonResponse({'status': 'danger', 'message':'Record does not exist'})
+
+  record.deactivate()
+  record.delete()
   return JsonResponse({'status': 'success', 'message':'%s is deleted' % record})
