@@ -15,6 +15,12 @@ echo "Installing updates" >> $logfile
 apt-get update
 apt-get -y upgrade
 
+# Configure the kernel a little
+echo "Enable icmp redirects" >> $logfile
+echo "net.ipv4.conf.all.accept_redirects=1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.all.accept_redirects=1" >> /etc/sysctl.conf
+sysctl -p
+
 # Install puppet agent
 echo "Installing puppet" >> $logfile
 wget https://apt.puppet.com/puppet5-release-xenial.deb
