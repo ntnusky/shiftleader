@@ -22,12 +22,13 @@ echo "net.ipv6.conf.all.accept_redirects=1" >> /etc/sysctl.conf
 sysctl -p
 
 # Install puppet agent
+distro=$(lsb_release -c -s)
 echo "Installing puppet" >> $logfile
-wget https://apt.puppet.com/puppet5-release-xenial.deb
-dpkg -i puppet5-release-xenial.deb
+wget https://apt.puppet.com/puppet5-release-${distro}.deb
+dpkg -i puppet5-release-${distro}.deb
 apt-get update
 apt-get -y install puppet-agent
-rm puppet5-release-xenial.deb
+rm puppet5-release-${distro}.deb
 echo "[agent]" >> /etc/puppetlabs/puppet/puppet.conf
 echo "server = {{puppetserver}}" >> /etc/puppetlabs/puppet/puppet.conf 
 echo "ca_server = {{puppetca}}" >> /etc/puppetlabs/puppet/puppet.conf 
