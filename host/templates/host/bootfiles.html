@@ -1,0 +1,368 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+    <p>The following page lets you administer the bootfiles which shiftleader
+    hands to the pxe-installer. These files are called "preseed" when installing
+    a debian-based distro (ubuntu), while RedHat based distros (including
+    CentOS) uses "kickstart" files.</p>
+
+    <p>The logic here is to create multiple fragments, which includes various
+    parts of the base configuration (partitioning, software-mirror,
+    post-installation scripts etc.) and then add them together to a bootfile.
+    This would make it possible to create multiple bootfiles sharing the same
+    software-mirror setup but having differing partition-schemes.</p>
+
+    <p>While creating a bootfile there might be the need to use variables which
+    should be substituted by host-settings in the final files. The following
+    variables are available:</p>
+
+    <ul>
+      <li><b>%ROOTPW%</b> will be substituted with the password the host should
+        be installed with</li>
+      <li><b>%HOSTID%</b> will be substituted with the hosts shiftleader ID</li>
+      <li><b>%DASHBOARD%</b> will be substituted with the shiftleader
+        dashboard's hostname</li>
+    </ul>
+  </div>
+  <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>Bootfiles</h2>
+    <table class="table" id="filetable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>#</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    <button class="btn btn-primary createFileModal">
+      Create new file
+    </button>
+  </div>
+  <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>Fragments</h2>
+
+    <p>These are the fragments available:</p>
+
+    <table class="table" id="fragmenttable">
+      <thead>
+        <th>Name</th>
+        <th>Description</th>
+        <th></th>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <button class="btn btn-primary createFragmentModal">
+      Create new fragment
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div id="fragmentmodal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+  
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Create bootfile-fragment</h4>
+        </div>
+        <div class="modal-body">
+          <form method="post" id="fragmentform">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="id" value="0">
+            <div class="form-group">
+              <label for="name">Display-name:</label>
+              <input type="text" class="form-control" id="name" name="name"
+                  aria-describedby="name" placeholder="Fragment name">
+            </div>
+            <div class="form-group">
+              <label for="comment">Description:</label>
+              <textarea class="form-control" rows="5" name="description"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="comment">Content:</label>
+              <textarea class="form-control" rows="20" cols="100"  name="content"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="fragmentcreate" class="btn btn-primary fragmentcreate">Create</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="filemodal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Modify bootfile</h4>
+        </div>
+        <div class="modal-body">
+          <form method="post" id="fileform">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="id" value="0">
+            <div class="form-group">
+              <label for="name">Display-name:</label>
+              <input type="text" class="form-control" id="name" name="name"
+                  aria-describedby="name" placeholder="Botfile name">
+            </div>
+            <div class="form-group">
+              <label for="comment">Description:</label>
+              <textarea class="form-control" rows="5" name="description"></textarea>
+            </div>
+            <div class="form-group">
+              <label for"fragmentselect">Fragments: (ctrl+click to select multiple)</label>
+              <select class="form-control" name="fragments" id="fragmentselect" multiple>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="filecreate" class="btn btn-primary filecreate">Create</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+function refreshFragmentList() {
+  $('form#fileform').find("select").attr('disabled', 'disabled');
+  $.ajax({
+    dataType: "json",
+    url: "{% url 'bootfragment' %}",
+    success:  function(data) {
+      $('select#fragmentselect').empty();
+      for(id in data['fragments']) {
+        fragment = data['fragments'][id];
+        $('select#fragmentselect').append('<option value="' + fragment['id'] + 
+            '">' + fragment['name'] + '</option>');
+      }
+      $('form#fileform').find("select").removeAttr('disabled');
+    }
+  });
+
+}
+function initializeModals() {
+  $('.createFileModal').click( function() {
+    refreshFragmentList();
+    $('form#fileform').find("input[type=text], textarea").val("");
+    $('form#fileform').find("input[name=id]").val("0");
+    $(".filecreate").html('Save');
+    $('select#fragmentselect').find('option').prop('selected', false)
+    $("#filemodal").modal('show');
+  })
+
+  $('.createFragmentModal').click( function() {
+    $('form#fragmentform').find("input[type=text], textarea").val("");
+    $('form#fragmentform').find("input[name=id]").val("0");
+    $(".fragmentcreate").html('Save');
+    $("#fragmentmodal").modal('show');
+  })
+  
+  $('.filecreate').click( function() {
+    var id = $('form#fileform').find("input[name=id]").val();
+    if(id == '0') {
+      var url = "{% url 'bootfile' %}"
+    } else {
+      var url = "{% url 'bootfile' %}" + id + '/';
+    }
+
+    $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data: $('form#fileform').serialize(),
+      success: function(data) {
+        if(data['status'] == 'success') {
+          $('form#fileform').find("input[type=text], textarea").val("");
+          $('form#fileform').find("input[name=id]").val("0");
+          $("#filemodal").modal('hide');
+          reloadFileTable();
+        }
+      }
+    });
+  });
+
+  $('.fragmentcreate').click( function() {
+    var id = $('form#fragmentform').find("input[name=id]").val();
+    if(id == '0') {
+      var url = "{% url 'bootfragment' %}"
+    } else {
+      var url = "{% url 'bootfragment' %}" + id + '/';
+    }
+
+    $.ajax({
+      url: url,
+      type: 'post',
+      dataType: 'json',
+      data: $('form#fragmentform').serialize(),
+      success: function(data) {
+        if(data['status'] == 'success') {
+          $('form#fragmentform').find("input[type=text], textarea").val("");
+          $('form#fragmentform').find("input[name=id]").val("0");
+          $("#fragmentmodal").modal('hide');
+          reloadFragmentTable();
+        }
+      }
+    });
+  });
+}
+function initializeFileTable() {
+  $('.updateFile').click( function() {
+    $('form#fileform').find("input[type=text], textarea, select").
+        attr('disabled', 'disabled');
+    $("#filemodal").modal('show');
+    var id = this.id;
+    $.ajax({
+      dataType: "json",
+      url: "{% url 'bootfile' %}" + id + '/',
+      success:  function(data) {
+        $('form#fileform').find("input[name=id]").val(data['id']);
+        $('form#fileform').find("input[name=name]").val(data['name']);
+        $('form#fileform').find("textarea[name=description]").val(data['description']);
+        $(".filecreate").html('Update');
+        $('select#fragmentselect').find('option').prop('selected', false)
+
+        for(id in data['fragments']) {
+          var fragment = data['fragments'][id]
+          $('select#fragmentselect').find('option[value=' + fragment + ']').prop('selected', true)
+        }
+
+        $('form#fileform').find("input[type=text], textarea, select").
+            removeAttr('disabled');
+      }
+    });
+  })
+  $('.deleteFile').click( function() {
+    var csrf = $('form#fileform').find("input[name=csrfmiddlewaretoken]").val();
+    var id = this.id;
+
+    if (confirm('Are you sure you want to delete this file?')) {
+      $.ajax({
+        url: "{% url 'bootfile' %}" + id + '/',
+        type: 'DELETE',
+        dataType: 'json',
+        beforeSend: function(xhr) {                                              
+          xhr.setRequestHeader("X-CSRFToken", csrf);                             
+        },   
+        success: function(data) {
+          if(data['status'] == 'success') {
+            reloadFileTable();
+          }
+        }
+      });
+    }
+  });
+}
+function initializeFragmentTable() {
+  $('.updateFragment').click( function() {
+    $('form#fragmentform').find("input[type=text], textarea").
+        attr('disabled', 'disabled');
+    $("#fragmentmodal").modal('show');
+    var id = this.id;
+    $.ajax({
+      dataType: "json",
+      url: "{% url 'bootfragment' %}" + id + '/',
+      success:  function(data) {
+        $('form#fragmentform').find("input[name=id]").val(data['id']);
+        $('form#fragmentform').find("input[name=name]").val(data['name']);
+        $('form#fragmentform').find("textarea[name=description]").val(data['description']);
+        $('form#fragmentform').find("textarea[name=content]").val(data['content']);
+        $(".fragmentcreate").html('Update');
+        $('form#fragmentform').find("input[type=text], textarea").
+            removeAttr('disabled');
+      }
+    });
+  })
+  $('.deleteFragment').click( function() {
+    var csrf = $('form#fragmentform').find("input[name=csrfmiddlewaretoken]").val();
+    var id = this.id;
+
+    if (confirm('Are you sure you want to delete this fragment?')) {
+      $.ajax({
+        url: "{% url 'bootfragment' %}" + id + '/',
+        type: 'DELETE',
+        dataType: 'json',
+        beforeSend: function(xhr) {                                              
+          xhr.setRequestHeader("X-CSRFToken", csrf);                             
+        },   
+        success: function(data) {
+          if(data['status'] == 'success') {
+            reloadFragmentTable();
+          }
+        }
+      });
+    }
+  });
+}
+function reloadFileTable() {
+  $.ajax({
+    url: "{% url 'bootfile' %}",
+    type: 'GET',
+    success: function(data) {
+      $('table#filetable > tbody').empty()
+      console.log(data['files']);
+      for(id in data['files']) {
+        var file = data['files'][id]
+        $('table#filetable > tbody').append('<tr>' +
+          '<td>' + file['name'] + '</td>' +
+          '<td>' + file['description'] + '</td>' +
+          '<td>' + file['fragments'].length + '</td>' +
+          '<td><div class="btn-group" role="group">' +
+            '<button class="btn-sm btn-info updateFile" id="' +
+              file['id'] + '">Update</button>' +
+            '<button class="btn-sm btn-danger deleteFile" id="' +
+              file['id'] + '">Delete</button>' +
+          '</div></td>'+
+        '</tr>');
+      }
+      initializeFileTable();
+    },
+  });
+}
+function reloadFragmentTable() {
+  refreshFragmentList();
+  $.ajax({
+    url: "{% url 'bootfragment' %}",
+    type: 'GET',
+    success: function(data) {
+      $('table#fragmenttable > tbody').empty()
+      for(id in data['fragments']) {
+        var fragment = data['fragments'][id]
+        $('table#fragmenttable > tbody').append('<tr>' +
+          '<td>' + fragment['name'] + '</td>' +
+          '<td>' + fragment['description'] + '</td>' +
+          '<td><div class="btn-group" role="group">' +
+            '<button class="btn-sm btn-info updateFragment" id="' +
+              fragment['id'] + '">Update</button>' +
+            '<button class="btn-sm btn-danger deleteFragment" id="' +
+              fragment['id'] + '">Delete</button>' +
+          '</div></td>'+
+        '</tr>');
+      }
+      initializeFragmentTable();
+    },
+  });
+}
+$(document).ready(function(){
+  initializeModals();
+  refreshFragmentList();
+
+  reloadFragmentTable();
+  reloadFileTable();
+});
+</script>
+{% endblock page-content %}

@@ -3,14 +3,15 @@ import os
 import re
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.http import HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponse, Http404, HttpResponseForbidden, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 
 from dashboard.utils import createEUI64, createContext, requireSuperuser, get_client_ip
 from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
-from host.models import Host, Interface, PartitionScheme, OperatingSystem
+from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
+                        BootFile
 from host.utils import authorize, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment, Report
@@ -24,6 +25,7 @@ def index(request):
   context['environments'] = Environment.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()
   context['operatingsystems'] = OperatingSystem.objects.all()
+  context['bootfiles'] = BootFile.objects.all()
 
   return render(request, 'hostOverview.html', context)
 
@@ -197,31 +199,43 @@ def interface(request, hid, iid = 0):
 
   return render(request, 'hostInterface.html', context)
 
+@user_passes_test(requireSuperuser)
+def bootfiles(request):
+  context = createContext(request)
+  context['header'] = "Bootfiles"
+  
+  return render(request, 'host/bootfiles.html', context)
+
 def preseed(request, id):
-  context = {} 
+  data = {}
 
-  context['host'] = get_object_or_404(Host, pk=id)
-  context['diskname'] = '/dev/sda'
-  context['dashboardURL'] = None
+  host = get_object_or_404(Host, pk=id)
+  data['HOSTID'] = str(host.id)
+  data['ROOTPW'] = host.password
+
+  dashboardURL = None
   for key, item in parser.items("hosts"):
-    if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
-      context['dashboardURL'] = item
+    if(key == 'ipv4' or (dashboardURL == None and key == 'main')):
+      dashboardURL = item
 
-  if context['dashboardURL'] == None:
+  if dashboardURL == None:
     return HttpResponseServerError()
+  else:
+    data['DASHBOARD'] = dashboardURL
 
-  auth = authorize(request, context['host'])
+  auth = authorize(request, host)
   if auth == NONE:
     return HttpResponseForbidden()
 
   if auth == IP:
-    context['host'].status = Host.INSTALLING
-    context['host'].save()
-
-  if(context['host'].partition):
-    return render(request, 'preseed/partitionSet.cfg', context)
-  else:
-    return render(request, 'preseed/default.cfg', context)
+    host.status = Host.INSTALLING
+    host.save()
+  
+  return HttpResponse(host.bootfile.getContent(data)) 
+  try:
+    return HttpResponse(host.bootfile.getContent(data)) 
+  except:
+    raise Http404
 
 def tftp(request, id):
   context = {} 

@@ -13,12 +13,22 @@
         <td>{{host.getDomain.name}}</td>
       </tr>
       <tr>
-        <td class="rightText">PartitionScheme:</td>
-        {% if host.partition %}
-          <td>{{host.partition.name}}</td>
+        <td class="rightText">Bootfile:</td>
+        {% if host.bootfile %}
+          <td><a href="{% url 'hostPreseed' host.id %}">{{host.bootfile.name}}</a></td>
         {% else %}
-          <td>Default</td>
+          <td>N/A</td>
         {% endif %}
+      </tr>
+      <tr>
+        <td class="rightText">TFTP-Config:</td>
+        <td><a href="{% url 'hostTftp' host.id %}">TFTP config</a></td>
+      </tr>
+      <tr>
+        <td class="rightText">Postinstall-script:</td>
+        <td>
+          <a href="{% url 'hostPostinstall' host.id %}">Postinstall-script</a>
+        </td>
       </tr>
       <tr>
         <td class="rightText">Status:</td>
@@ -37,28 +47,6 @@
         <td>{{host.password}}</td>
       </tr>
     </table>
-  </div>
-  <div class="col-12 col-sm-6 col-md-6 col-lg-3">
-    <h2>Useful links:</h2>
-    <p>Misc. resources related to this host:</p>
-    <ul>
-      <li><a href="{% url 'hostTftp' host.id %}">TFTP config</a></li>
-      <li><a href="{% url 'hostPreseed' host.id %}">Preseed-file</a></li>
-      <li>
-        <a href="{% url 'hostPostinstall' host.id %}">Postinstall-script</a>
-      </li>
-    </ul>
-  </div>
-  <div class="col-12 col-sm-6 col-md-6 col-lg-3">
-    <h2>Change partitionscheme:</h2>
-    <p>Currently the host uses the 
-    "{% if host.partition %}{{host.partition.name}}{% else %}Default{% endif %}"
-    partitionscheme. Please use one of the following links to change it:</p>
-    <ul>
-      {% for p in partitionSchemes %}
-        <li><a href="{% url 'hostPart' host.id p.id %}">{{p.name}}</a></li>
-      {% endfor %}
-    </ul>
   </div>
   <div class="col-12 col-sm-12 col-md-6 col-lg-6">
     <h2>Interfaces</h2>

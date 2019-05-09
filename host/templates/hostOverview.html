@@ -42,6 +42,19 @@
             {% endfor %}
           </ul>
         </div>
+        <div class="btn-group">
+          <button type="button"
+              class="btn btn-success disabled dropdown-toggle updateBootFile" 
+              data-toggle="dropdown">
+            Change BootFile<span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu"> 
+            <li><a class="updateBF" id="0">No bootfile</a></li>
+            {% for bf in bootfiles %}
+              <li><a class="updateBF" id="{{bf.id}}">{{bf.name}}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
         <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
         <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
         <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
@@ -59,18 +72,10 @@
       </a>
       </div>
       <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-      <h2>Partition-schemes</h2>
-      <table class="table table-hover table-condensed">
-        <tr><th>Name</th><th>Description</th></tr>
-        {% for p in partitionschemes %}
-          <tr>
-            <td><a href="{% url 'hostPartitionEdit' p.id %}">{{p.name}}</a></td>
-            <td>{{p.getShortDescription}}...</td>
-          </tr>
-        {% endfor %}
-      </table>
-      <a href="{% url 'hostPartitionNew' %}" class="btn-sm btn-info btn-tiny">
-        Create new scheme
+
+      <h2>Bootfiles</h2>
+      <a href="{% url 'bootfiles' %}" class="btn-sm btn-info btn-tiny">
+        Manage bootfiles
       </a>
       </div>
     </div>
@@ -100,6 +105,29 @@
           $.ajax({
             type        : 'POST',
             url         : '{% url 'hostOs' %}',
+            data        : data,
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".updateBF").click(function() {
+        var data = {'bf': this.id};
+        data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+        if (confirm('Are you sure you want to change the bootfile for these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostBF' %}',
             data        : data,
             dataType    : 'json',
           }).done(function(response) {
@@ -250,6 +278,7 @@
       $(".norebuild").toggleClass('disabled', buttone);
       $(".deleteHost").toggleClass('disabled', buttone);
       $(".updateOs").toggleClass('disabled', buttone);
+      $(".updateBootFile").toggleClass('disabled', buttone);
     }
 
     function reloadRoleButton(env) {
@@ -288,7 +317,7 @@
             'csrfmiddlewaretoken' : $('input[name=csrfmiddlewaretoken]').val(),
             'hostname'            : $('input[id=hostname]').val(),
             'os'                  : $('#os option:selected').index(),
-            'partition'           : $('#partition option:selected').text(),
+            'bootfile'            : $('#bootfile option:selected').val(),
             'environment'         : $('#environment option:selected').text(), 
             'role'                : $('#role option:selected').text(), 
             'ifname'              : $('input[id=ifname]').val(),

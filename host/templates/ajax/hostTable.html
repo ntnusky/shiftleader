@@ -4,6 +4,7 @@
     <th></th>
     <th colspan="2">Hostname</th>
     <th>OS</th>
+    <th>Bootfile</th>
     <th>Environment</th>
     <th>Role</th>
     <th>Status</th>
@@ -21,6 +22,11 @@
       <td colspan="2">{{h.name}}.{{h.getDomain.name}}</td>
       {% if h.os %}
         <td>{{h.os.name}}</td>
+      {% else %}
+        <td>N/A</td>
+      {% endif %}
+      {% if h.bootfile %}
+        <td>{{h.bootfile.name}}</td>
       {% else %}
         <td>N/A</td>
       {% endif %}
