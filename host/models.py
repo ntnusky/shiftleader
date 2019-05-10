@@ -63,8 +63,8 @@ class Host(models.Model):
   name = models.CharField(max_length=64)
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
+  bootfile = models.ForeignKey('BootFile', null=True)
   environment = models.ForeignKey(Environment, null=True)
-  partition = models.ForeignKey(PartitionScheme, null=True, default=None)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
 
@@ -272,3 +272,44 @@ class Interface(models.Model):
 
   def __str__(self):
     return "%s on %s" % (self.ifname, self.host)
+
+class BootFile(models.Model):
+  name = models.CharField(max_length=64)
+  description = models.TextField()
+  
+  class Meta:
+    ordering = ['name']
+
+  def __str__(self):
+    return self.name
+
+  def getContent(self, replaces = {}):
+    content = []
+    for fragment in self.bootfilefragment_set.order_by('order').all():
+      s = fragment.fragment.content
+
+      for key in replaces:
+        s = s.replace('%%%s%%' % key, replaces[key])
+
+      content.append(s)
+
+    return '\n'.join(content) 
+
+class BootFragment(models.Model):
+  name = models.CharField(max_length=64)
+  description = models.TextField()
+  content = models.TextField()
+  
+  class Meta:
+    ordering = ['name']
+
+  def __str__(self):
+    return self.name
+
+class BootFileFragment(models.Model):
+  bootfile = models.ForeignKey(BootFile)
+  fragment = models.ForeignKey(BootFragment)
+  order = models.IntegerField()
+
+  class Meta:
+    ordering = ['order']

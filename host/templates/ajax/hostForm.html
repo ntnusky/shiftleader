@@ -20,12 +20,12 @@
   </div>
 
   <div class="form-group">
-    <label class="control-label col-sm-2" for="partition">Partition-scheme</label>
+    <label class="control-label col-sm-2" for="bootfile">Bootfile</label>
     <div class="col-sm-10">
-      <select class="form-control" id="partition">
-        <option>Default</option>
-        {% for p in partitionschemes %}
-          <option>{{p.name}}</option>
+      <select class="form-control" id="bootfile">
+        <option value="0">None</option>
+        {% for bf in bootfiles %}
+          <option value="{{bf.id}}">{{bf.name}}</option>
         {% endfor %}
       </select>
     </div>
