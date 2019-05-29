@@ -55,6 +55,19 @@
             {% endfor %}
           </ul>
         </div>
+        <div class="btn-group">
+          <button type="button"
+              class="btn btn-success disabled dropdown-toggle updatePIScripts" 
+              data-toggle="dropdown">
+            Change Script<span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu" role="menu"> 
+            <li><a class="updatePIScript" id="0">No script</a></li>
+            {% for bf in bootfiles %}
+              <li><a class="updatePIScript" id="{{bf.id}}">{{bf.name}}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
         <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
         <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
         <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
@@ -82,7 +95,8 @@
   </div>
   <div class="col-12 col-sm-12 col-md-12 col-lg-10">
     <h2>Existing hosts</h2>
-    <p>These are the hosts currently present in the system</p>
+    <p>These are the hosts currently present in the system. Click in a hostname
+    to see more information about the host.</p>
     <p class="tablemessage"></p>
     <div class="hosttable"></div>
 
@@ -128,6 +142,29 @@
           $.ajax({
             type        : 'POST',
             url         : '{% url 'hostBF' %}',
+            data        : data,
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".updatePIScript").click(function() {
+        var data = {'script': this.id};
+        data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+        if (confirm('Are you sure you want to change the postinstallscript for these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostPIScript' %}',
             data        : data,
             dataType    : 'json',
           }).done(function(response) {
@@ -279,6 +316,7 @@
       $(".deleteHost").toggleClass('disabled', buttone);
       $(".updateOs").toggleClass('disabled', buttone);
       $(".updateBootFile").toggleClass('disabled', buttone);
+      $(".updatePIScripts").toggleClass('disabled', buttone);
     }
 
     function reloadRoleButton(env) {

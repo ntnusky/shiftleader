@@ -18,11 +18,12 @@
     variables are available:</p>
 
     <ul>
-      <li><b>%ROOTPW%</b> will be substituted with the password the host should
-        be installed with</li>
-      <li><b>%HOSTID%</b> will be substituted with the hosts shiftleader ID</li>
-      <li><b>%DASHBOARD%</b> will be substituted with the shiftleader
-        dashboard's hostname</li>
+      <li><b>%ROOTPW%</b>: The hosts root password.</li>
+      <li><b>%HOSTID%</b>: The Shiftleader ID of the host.</li>
+      <li><b>%DASHBOARD%</b>: An fqdn for the dashboard.</li>
+      <li><b>%POSTINSTALL%</b>: An url pointing to the postinstall script.</li>
+      <li><b>%PUPPETSERVER%</b>: The fqdn of the puppetserver.</li>
+      <li><b>%PUPPETCA%</b>: The fqdn of the puppetca machine.</li>
     </ul>
   </div>
   <div class="col-12 col-sm-12 col-md-6 col-lg-6">
@@ -322,9 +323,10 @@ function reloadFileTable() {
           '<td>' + file['description'] + '</td>' +
           '<td>' + file['fragments'].length + '</td>' +
           '<td><div class="btn-group" role="group">' +
-            '<button class="btn-sm btn-info updateFile" id="' +
+            '<a href="{% url 'bootfile' %}' + file['id'] + '/download" class="btn btn-sm btn-info">Display</a>'+
+            '<button class="btn btn-sm btn-primary updateFile" id="' +
               file['id'] + '">Update</button>' +
-            '<button class="btn-sm btn-danger deleteFile" id="' +
+            '<button class="btn btn-sm btn-danger deleteFile" id="' +
               file['id'] + '">Delete</button>' +
           '</div></td>'+
         '</tr>');
@@ -346,9 +348,9 @@ function reloadFragmentTable() {
           '<td>' + fragment['name'] + '</td>' +
           '<td>' + fragment['description'] + '</td>' +
           '<td><div class="btn-group" role="group">' +
-            '<button class="btn-sm btn-info updateFragment" id="' +
+            '<button class="btn btn-sm btn-info updateFragment" id="' +
               fragment['id'] + '">Update</button>' +
-            '<button class="btn-sm btn-danger deleteFragment" id="' +
+            '<button class="btn btn-sm btn-danger deleteFragment" id="' +
               fragment['id'] + '">Delete</button>' +
           '</div></td>'+
         '</tr>');

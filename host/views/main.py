@@ -12,7 +12,7 @@ from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
 from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
                         BootFile
-from host.utils import authorize, NONE, IP, USER
+from host.utils import authorize, createReplacements, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment, Report
 
@@ -207,21 +207,8 @@ def bootfiles(request):
   return render(request, 'host/bootfiles.html', context)
 
 def preseed(request, id):
-  data = {}
-
   host = get_object_or_404(Host, pk=id)
-  data['HOSTID'] = str(host.id)
-  data['ROOTPW'] = host.password
-
-  dashboardURL = None
-  for key, item in parser.items("hosts"):
-    if(key == 'ipv4' or (dashboardURL == None and key == 'main')):
-      dashboardURL = item
-
-  if dashboardURL == None:
-    return HttpResponseServerError()
-  else:
-    data['DASHBOARD'] = dashboardURL
+  data = createReplacements(host)
 
   auth = authorize(request, host)
   if auth == NONE:
@@ -231,7 +218,6 @@ def preseed(request, id):
     host.status = Host.INSTALLING
     host.save()
   
-  return HttpResponse(host.bootfile.getContent(data)) 
   try:
     return HttpResponse(host.bootfile.getContent(data)) 
   except:
@@ -257,21 +243,22 @@ def tftp(request, id):
   return render(request, template, context)
 
 def postinstall(request, id):
-  context = {} 
+  host = get_object_or_404(Host, pk=id)
+  data = createReplacements(host)
 
-  context['host'] = get_object_or_404(Host, pk=id)
-  context['puppetserver'] = parser.get('puppet', 'server')
-  context['puppetca'] = parser.get('puppet', 'caserver')
+  auth = authorize(request, host)
 
-  auth = authorize(request, context['host'])
   if auth == NONE:
     return HttpResponseForbidden()
 
   if auth == IP:
-    context['host'].status = Host.PUPPETSIGN
-    context['host'].save()
+    host.status = Host.PUPPETSIGN
+    host.save()
 
-  return render(request, 'postinstall/postinstall.sh', context)
+  try:
+    return HttpResponse(host.postinstallscript.getContent(data)) 
+  except:
+    raise Http404
 
 @user_passes_test(requireSuperuser)
 def osform(request, pid=0):

@@ -64,6 +64,8 @@ class Host(models.Model):
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
   bootfile = models.ForeignKey('BootFile', null=True)
+  postinstallscript = models.ForeignKey('BootFile', null=True,
+      related_name='scripthosts')
   environment = models.ForeignKey(Environment, null=True)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)
@@ -293,7 +295,7 @@ class BootFile(models.Model):
 
       content.append(s)
 
-    return '\n'.join(content) 
+    return re.sub(r'\r\n', '\n', '\n'.join(content)) 
 
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
