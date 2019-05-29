@@ -142,6 +142,55 @@ def bf(request):
   response['status'] = 'success'
 
   return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def piscript(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      return HttpResponseBadRequest()
+
+  if(int(request.POST.get('script'))):
+    try:
+      bf = BootFile.objects.get(
+          pk=int(request.POST.get('script')))
+      bfname = bf.name
+    except:
+      return HttpResponseBadRequest()
+  else:
+    bf = None
+    bfname = "None"
+
+  names = []
+  for host in hosts:
+    names.append(host.name)
+    host.postinstallscript = bf
+    host.save()
+
+  m1 = 'Changed the postinstallscript of "%s" to %s.' % (', '.join(names), bfname)
+  if(bf):
+    m2 = 'The new postinstallscript will be used at the next rebuilding of the host.'
+  else:
+    m2 = 'The host will not get an OS from shiftleader anymore.'
+  
+  response['message'] = '%s %s' % (m1, m2)
+  response['status'] = 'success'
+
+  return JsonResponse(response)
+
 @user_passes_test(requireSuperuser)
 @csrf_exempt
 def os(request):

@@ -5,11 +5,11 @@
     <th colspan="2">Hostname</th>
     <th>OS</th>
     <th>Bootfile</th>
+    <th>Script</th>
     <th>Environment</th>
     <th>Role</th>
     <th>Status</th>
     <th>Last puppet-run</th>
-    <th># if</th>
     <th>Actions</th>
   </tr>
   {% for h in hosts %}
@@ -30,6 +30,11 @@
       {% else %}
         <td>N/A</td>
       {% endif %}
+      {% if h.postinstallscript %}
+        <td>{{h.postinstallscript.name}}</td>
+      {% else %}
+        <td>N/A</td>
+      {% endif %}
       <td>{{h.environment.name}}</td>
       {% if h.role %}
         <td>{{h.role.name}}</td>
@@ -37,8 +42,11 @@
         <td></td>
       {% endif %}
       <td>{{h.getStatusText}}</td>
-      <td>{{h.report_set.last.time|timesince}} ago.</td>
-      <td>{{h.interface_set.count}}</td>
+      {% if h.report_set.last %}
+        <td>{{h.report_set.last.time|timesince}} ago.</td>
+      {% else %}
+        <td></td>
+      {% endif %}
       <td>
         <a href="{% url 'hostIndex' %}{{h.id}}/" class="btn-sm btn-info">
           Show details

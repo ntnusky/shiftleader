@@ -32,6 +32,7 @@ urlpatterns = [
   url(r'^noprovision/$', ajax.noprovision, name='hostNoProvision'),
   url(r'^osupdate/$', ajax.os, name='hostOs'),
   url(r'^bootfiles/update/$', ajax.bf, name='hostBF'),
+  url(r'^piscript/update/$', ajax.piscript, name='hostPIScript'),
   url(r'^envrionment/$', ajax.environment, name='hostEnvironment'),
   url(r'^role/$', ajax.role, name='hostRole'),
   url(r'^remove/$', ajax.remove, name='hostDelete'),

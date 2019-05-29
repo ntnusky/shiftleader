@@ -64,6 +64,8 @@ class Host(models.Model):
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
   bootfile = models.ForeignKey('BootFile', null=True)
+  postinstallscript = models.ForeignKey('BootFile', null=True,
+      related_name='scripthosts')
   environment = models.ForeignKey(Environment, null=True)
   role = models.ForeignKey(Role, null=True)
   status = models.CharField(max_length=1, choices=STATUSES)

@@ -21,6 +21,14 @@
         {% endif %}
       </tr>
       <tr>
+        <td class="rightText">Installscript:</td>
+        {% if host.postinstallscript %}
+          <td><a href="{% url 'hostPostinstall' host.id %}">{{host.postinstallscript.name}}</a></td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
+      </tr>
+      <tr>
         <td class="rightText">TFTP-Config:</td>
         <td><a href="{% url 'hostTftp' host.id %}">TFTP config</a></td>
       </tr>
