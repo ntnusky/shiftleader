@@ -295,7 +295,7 @@ class BootFile(models.Model):
 
       content.append(s)
 
-    return '\n'.join(content) 
+    return re.sub(r'\r\n', '\n', '\n'.join(content)) 
 
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
