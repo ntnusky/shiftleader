@@ -252,8 +252,8 @@ def postinstall(request, id):
     return HttpResponseForbidden()
 
   if auth == IP:
-    context['host'].status = Host.PUPPETSIGN
-    context['host'].save()
+    host.status = Host.PUPPETSIGN
+    host.save()
 
   try:
     return HttpResponse(host.postinstallscript.getContent(data)) 
