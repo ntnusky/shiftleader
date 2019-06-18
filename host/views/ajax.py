@@ -414,6 +414,15 @@ def new(request):
       response['status'] = "danger"
       response['message'] = "Bootfile not found."
 
+  if(request.POST['postinstall'] == '0'):
+    postinstall = None
+  else:
+    try:
+      postinstall = BootFile.objects.get(pk=int(request.POST['postinstall']))
+    except PartitionScheme.DoesNotExist:
+      response['status'] = "danger"
+      response['message'] = "Postinstallscript not found."
+
   if(int(request.POST['os'])):
     try:
       os = OperatingSystem.objects.all()[int(request.POST['os'])-1]
@@ -527,7 +536,7 @@ def new(request):
   
   host = Host(name=request.POST['hostname'], 
       environment=environment, status = Host.PROVISIONING, role=role,
-      bootfile=bootfile, os=os)
+      bootfile=bootfile, postinstallscript=postinstall, os=os)
   host.save()
   network = subnet.v4network.get()
   interface = Interface(ifname=request.POST['ifname'], mac=mac, host=host,
