@@ -33,12 +33,6 @@
         <td><a href="{% url 'hostTftp' host.id %}">TFTP config</a></td>
       </tr>
       <tr>
-        <td class="rightText">Postinstall-script:</td>
-        <td>
-          <a href="{% url 'hostPostinstall' host.id %}">Postinstall-script</a>
-        </td>
-      </tr>
-      <tr>
         <td class="rightText">Status:</td>
         <td>{{host.getStatusText}}</td>
       </tr>
