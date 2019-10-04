@@ -1,0 +1,28 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+<div class="col-lg-12 col-md-12 col-sm-12 col-12">
+  {% if hg.id %}
+    <p>Update the following form to change the OS "{{hg.name}}":</p>
+  {% endif %}
+  
+  <p class="formMessage">{{message}}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="name">Name:</label>
+      {% if hg %}
+        <input type="text" class="form-control" id="name" name="name" 
+            aria-describedby="name" placeholder="Hostgroup-name"
+            value="{{hg.name}}">
+      {% else %}
+        <input type="text" class="form-control" id="name" name="name"
+            aria-describedby="name" placeholder="Hostgroup-name">
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">{{ buttonText }}</button>
+  </form>
+</div>
+
+{% endblock page-content %}
