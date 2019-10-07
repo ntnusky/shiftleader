@@ -11,7 +11,7 @@ from dashboard.utils import requireSuperuser, createEUI64
 from dhcp.models import Subnet
 from dhcp.omapi import Servers 
 from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
-                        BootFile, BootFragment, BootFileFragment
+                        BootFile, BootFragment, BootFileFragment, HostGroup
 from host.utils import updatePuppetStatus
 from nameserver.models import Domain
 from puppet.models import Environment, Role
@@ -22,14 +22,23 @@ def form(request):
   context['environments'] = Environment.objects.all()
   context['subnets'] = Subnet.objects.filter(ipversion=4).all()
   context['operatingsystems'] = OperatingSystem.objects.all()
-  context['bootfiles'] = BootFile.objects.all()
+  context['bootfiles'] = BootFile.objects.filter(
+      filetype__in = [None, BootFile.BOOTFILE]).all()
+  context['installscripts'] = BootFile.objects.filter(
+      filetype__in = [None, BootFile.POSTINSTALLSCRIPT]).all()
   return render(request, 'ajax/hostForm.html', context)
 
 @user_passes_test(requireSuperuser)
 def table(request):
   updatePuppetStatus()
   context = {}
-  context['hosts'] = Host.objects.all()
+
+  context['hosts'] = Host.objects.filter(group = None)
+  context['groups'] = []
+  for hg in HostGroup.objects.order_by('name').all():
+    if(hg.host_set.count()):
+      context['groups'].append((hg, Host.objects.filter(group=hg).all()))
+
   return render(request, 'ajax/hostTable.html', context)
 
 @user_passes_test(requireSuperuser)
@@ -237,6 +246,44 @@ def os(request):
   response['message'] = '%s %s' % (m1, m2)
   response['status'] = 'success'
 
+  return JsonResponse(response)
+
+@user_passes_test(requireSuperuser)
+@csrf_exempt
+def hostgroup(request):
+  response = {}
+  
+  ids = []
+  pattern = re.compile(r'selectHost=([0-9]+)')
+  values = request.POST.get('selected').split('&')
+  for v in values:
+    m = pattern.match(v)
+    if m:
+      ids.append(int(m.group(1)))
+  
+  hosts = []
+  for h in ids:
+    try:
+      hosts.append(Host.objects.get(pk = h))
+    except Host.DoesNotExist:
+      print("Hei")
+      return HttpResponseBadRequest()
+
+  try:
+    group = HostGroup.objects.get(
+        pk=int(request.POST.get('hostgroup')))
+  except Exception as e:
+    return HttpResponseBadRequest()
+
+  names = []
+  for host in hosts:
+    names.append(host.name)
+    host.group = group
+    host.save()
+
+  response['status'] = 'success'
+  response['message'] = 'Changed the group of "%s" to %s.' % \
+      (', '.join(names), group.name)
   return JsonResponse(response)
 
 @user_passes_test(requireSuperuser)

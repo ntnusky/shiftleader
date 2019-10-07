@@ -1,114 +1,230 @@
 {% extends "base/main.html" %}
 
+{% block page-header %}
+{% endblock page-header %}
+
 {% block page-content %}
   <p class="ajax"></p>
 
   <div class="col-12 col-sm-12 col-md-12 col-lg-2">
     <div class="">
       <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-      <h2>Actions:</h2>
-      <div class="btn-group-vertical">
-        <div class="btn-group">
-          <button type="button"
-              class="btn btn-success disabled dropdown-toggle updateEnv" 
-              data-toggle="dropdown">
-            Update Environment <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu">
-            {% for e in environments %}
-              <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
-            {% endfor %}
-          </ul>
+        <h2>Host-Actions:</h2>
+        <div class="btn-group-vertical">
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateGroup" 
+                data-toggle="dropdown">
+              Set Group <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a class="updateAGroup" id="0">No group</a></li>
+              {% for hg in hostgroups %}
+                <li><a class="updateAGroup" id="{{hg.id}}">{{hg.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateEnv" 
+                data-toggle="dropdown">
+              Update Environment <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              {% for e in environments %}
+                <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateRoles" 
+                data-toggle="dropdown">
+              Update role<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-role" role="menu"> 
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateOs" 
+                data-toggle="dropdown">
+              Change OS<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              <li><a class="updateOS" id="0">Do not manage OS</a></li>
+              {% for o in operatingsystems %}
+                <li><a class="updateOS" id="{{o.id}}">{{o.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateBootFile" 
+                data-toggle="dropdown">
+              Change BootFile<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              <li><a class="updateBF" id="0">No bootfile</a></li>
+              {% for bf in bootfiles %}
+                <li><a class="updateBF" id="{{bf.id}}">{{bf.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updatePIScripts" 
+                data-toggle="dropdown">
+              Change Script<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              <li><a class="updatePIScript" id="0">No script</a></li>
+              {% for is in installscripts %}
+                <li><a class="updatePIScript" id="{{is.id}}">{{is.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
+          <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
+          <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
         </div>
-        <div class="btn-group">
-          <button type="button"
-              class="btn btn-success disabled dropdown-toggle updateRoles" 
-              data-toggle="dropdown">
-            Update role<span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu dropdown-role" role="menu"> 
-          </ul>
-        </div>
-        <div class="btn-group">
-          <button type="button"
-              class="btn btn-success disabled dropdown-toggle updateOs" 
-              data-toggle="dropdown">
-            Change OS<span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu"> 
-            <li><a class="updateOS" id="0">Do not manage OS</a></li>
-            {% for o in operatingsystems %}
-              <li><a class="updateOS" id="{{o.id}}">{{o.name}}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="btn-group">
-          <button type="button"
-              class="btn btn-success disabled dropdown-toggle updateBootFile" 
-              data-toggle="dropdown">
-            Change BootFile<span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu"> 
-            <li><a class="updateBF" id="0">No bootfile</a></li>
-            {% for bf in bootfiles %}
-              <li><a class="updateBF" id="{{bf.id}}">{{bf.name}}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="btn-group">
-          <button type="button"
-              class="btn btn-success disabled dropdown-toggle updatePIScripts" 
-              data-toggle="dropdown">
-            Change Script<span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu"> 
-            <li><a class="updatePIScript" id="0">No script</a></li>
-            {% for bf in bootfiles %}
-              <li><a class="updatePIScript" id="{{bf.id}}">{{bf.name}}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-        <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
-        <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
-        <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
-      </div>
       </div>
       <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-      <h2>Operating Systems</h2>
-      <ul>
-      {% for os in operatingsystems %}
-        <li><a href="{% url 'hostOsEdit' os.id %}">{{os.name}}</a></li>
-      {% endfor %}
-      </ul>
-      <a href="{% url 'hostOsNew' %}" class="btn-sm btn-info btn-tiny">
-        Add OS
-      </a>
-      </div>
-      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-
-      <h2>Bootfiles</h2>
-      <a href="{% url 'bootfiles' %}" class="btn-sm btn-info btn-tiny">
-        Manage bootfiles
-      </a>
+        <h2>Management:</h2>
+        <div class="btn-group-vertical">
+          <div class="btn-group">
+            <a href="#" class="btn btn-primary newHostModal">
+              Add new Host
+            </a>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'bootfiles' %}" class="btn btn-primary">
+              Manage bootfiles
+            </a>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'hostGroupNew' %}" class="btn btn-primary">
+              Add HostGroup
+            </a>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-secondary dropdown-toggle" 
+                data-toggle="dropdown">
+              Modify Host-Group <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              {% for hg in hostgroups %}
+                <li><a href="{% url 'hostGroupEdit' hg.id %}">{{hg.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'hostOsNew' %}" class="btn btn-primary">
+              Add OS
+            </a>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-secondary dropdown-toggle" 
+                data-toggle="dropdown">
+              Modify OS <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              {% for os in operatingsystems %}
+                <li><a href="{% url 'hostOsEdit' os.id %}">{{os.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-12 col-sm-12 col-md-12 col-lg-10">
-    <h2>Existing hosts</h2>
-    <p>These are the hosts currently present in the system. Click in a hostname
-    to see more information about the host.</p>
     <p class="tablemessage"></p>
     <div class="hosttable"></div>
-
-    <h2>Add new host</h2>
-    <p>Use the following form to create a new host:</p>
-    <p class="formMessage"></p>
-    <div class="addHostForm"></div>
   </div>
   
+  <div id="hostModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-wide">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close"
+            data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Add host</h4>
+        </div>
+        <div class="modal-body">
+          <p class="formMessage"></p>
+          <div class="addHostForm"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="newHost" 
+              class="btn btn-primary newHost">Create</button>
+          <button type="button" class="btn btn-default"
+              data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     function initializeButtons() {
+      $(".newHostModal").click(function() {
+        $("#hostModal").modal('show');
+      });
+      $(".newHost").click(function() {
+        var formData = { 
+          'csrfmiddlewaretoken' : $('input[name=csrfmiddlewaretoken]').val(),
+          'hostname'            : $('input[id=hostname]').val(),
+          'os'                  : $('#os option:selected').index(),
+          'postinstall'         : $('#postinstall option:selected').val(),
+          'bootfile'            : $('#bootfile option:selected').val(),
+          'environment'         : $('#environment option:selected').text(), 
+          'role'                : $('#role option:selected').text(), 
+          'ifname'              : $('input[id=ifname]').val(),
+          'mac'                 : $('input[id=mac]').val(),
+          'subnet'              : $('#subnet option:selected').text(),
+          'ipv4'                : $('input[id=ipv4]').val(),
+          'ipv6'                : $('input[id=ipv6]').val(),
+        };
+
+        var fields = ["hostname", "environment", "ifname", 
+            "mac", "subnet", "role"];
+        var descriptions = ["Hostname", "Evironment", 
+            "Interface name", "MAC Address",
+            "Subnet", "Role"]
+        var missing = ""
+
+        for(f in fields) {
+          if(! formData[fields[f]]) {
+            missing += "'" + descriptions[f] + "' ";
+          }
+        }
+        if(missing) {
+          $(".formMessage").html("<div class='alert alert-warning'>" +
+              "Missing the fields " + missing + "</div>");
+        } else {
+          $(".formMessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostNew' %}',
+            data        : formData,
+            dataType    : 'json',
+            encode      : true
+          }).done(function(response) {
+            $(".formMessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              $("#hostModal").modal('hide');
+              reloadTable();
+              reloadForm();
+            }
+          });
+        }
+      });
       $(".updateOS").click(function() {
         var data = {'os': this.id};
         data['selected'] = $('input[name="selectHost"]:checked').serialize();
@@ -165,6 +281,29 @@
           $.ajax({
             type        : 'POST',
             url         : '{% url 'hostPIScript' %}',
+            data        : data,
+            dataType    : 'json',
+          }).done(function(response) {
+            $(".tablemessage").html("<div class='alert alert-" +
+                response['status'] + "'>" +
+                response['message'] + "</div>");
+
+            if(response['status'] == 'success') {
+              reloadTable();
+            }
+          });
+        }
+      });
+      $(".updateAGroup").click(function() {
+        var data = {'hostgroup': this.id};
+        data['selected'] = $('input[name="selectHost"]:checked').serialize();
+
+        if (confirm('Are you sure you want to change the group of these hosts?')) {
+          $(".tablemessage").html("<div class='alert alert-info'>" +
+              "Request sent to the server</div>");
+          $.ajax({
+            type        : 'POST',
+            url         : '{% url 'hostGroup' %}',
             data        : data,
             dataType    : 'json',
           }).done(function(response) {
@@ -311,6 +450,7 @@
       }
 
       $(".updateEnv").toggleClass('disabled', buttone);
+      $(".updateGroup").toggleClass('disabled', buttone);
       $(".rebuild").toggleClass('disabled', buttone);
       $(".norebuild").toggleClass('disabled', buttone);
       $(".deleteHost").toggleClass('disabled', buttone);
@@ -349,67 +489,15 @@
     }
 
     function reloadForm() {
-      $( ".addHostForm" ).load( "{% url 'hostAjaxForm' %}", function() {
-        $(".newHost").click(function() {
-          var formData = { 
-            'csrfmiddlewaretoken' : $('input[name=csrfmiddlewaretoken]').val(),
-            'hostname'            : $('input[id=hostname]').val(),
-            'os'                  : $('#os option:selected').index(),
-            'postinstall'         : $('#postinstall option:selected').val(),
-            'bootfile'            : $('#bootfile option:selected').val(),
-            'environment'         : $('#environment option:selected').text(), 
-            'role'                : $('#role option:selected').text(), 
-            'ifname'              : $('input[id=ifname]').val(),
-            'mac'                 : $('input[id=mac]').val(),
-            'subnet'              : $('#subnet option:selected').text(),
-            'ipv4'                : $('input[id=ipv4]').val(),
-            'ipv6'                : $('input[id=ipv6]').val(),
-          };
-
-          var fields = ["hostname", "environment", "ifname", 
-              "mac", "subnet", "role"];
-          var descriptions = ["Hostname", "Evironment", 
-              "Interface name", "MAC Address",
-              "Subnet", "Role"]
-          var missing = ""
-
-          for(f in fields) {
-            if(! formData[fields[f]]) {
-              missing += "'" + descriptions[f] + "' ";
-            }
-          }
-          if(missing) {
-            $(".formMessage").html("<div class='alert alert-warning'>" +
-                "Missing the fields " + missing + "</div>");
-          } else {
-            $(".formMessage").html("<div class='alert alert-info'>" +
-                "Request sent to the server</div>");
-            $.ajax({
-              type        : 'POST',
-              url         : '{% url 'hostNew' %}',
-              data        : formData,
-              dataType    : 'json',
-              encode      : true
-            }).done(function(response) {
-              $(".formMessage").html("<div class='alert alert-" +
-                  response['status'] + "'>" +
-                  response['message'] + "</div>");
-
-              if(response['status'] == 'success') {
-                reloadTable();
-                reloadForm();
-              }
-            });
-          }
-        });
-      });
+      $( ".addHostForm" ).load("{% url 'hostAjaxForm' %}");
+      
     }
 
     $(document).ready(function(){
       reloadTable();
-      setInterval(function(){
-            reloadTable();
-      }, 60000);
+      //setInterval(function(){
+      //      reloadTable();
+      //}, 60000);
       reloadForm();
       initializeButtons();
     });

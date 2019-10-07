@@ -1,53 +1,122 @@
-<table class="table table-hover table-condensed">
-  <tr>
-    <th><input type="checkbox" class="selectAllHosts"></th>
-    <th></th>
-    <th colspan="2">Hostname</th>
-    <th>OS</th>
-    <th>Bootfile</th>
-    <th>Script</th>
-    <th>Environment</th>
-    <th>Role</th>
-    <th>Status</th>
-    <th>Last puppet-run</th>
-  </tr>
-  {% for h in hosts %}
-    <tr class="{{h.getTableColor}}">
-      <td>
-        <input type="checkbox" name="selectHost" 
-            class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
-      </td>
-      <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
-      <td colspan="2"><a href="{% url 'hostIndex' %}{{h.id}}/">
-        {{h.name}}
-      </a></td>
-      {% if h.os %}
-        <td>{{h.os.name}}</td>
-      {% else %}
-        <td>N/A</td>
-      {% endif %}
-      {% if h.bootfile %}
-        <td>{{h.bootfile.name}}</td>
-      {% else %}
-        <td>N/A</td>
-      {% endif %}
-      {% if h.postinstallscript %}
-        <td>{{h.postinstallscript.name}}</td>
-      {% else %}
-        <td>N/A</td>
-      {% endif %}
-      <td>{{h.environment.name}}</td>
-      {% if h.role %}
-        <td>{{h.role.name}}</td>
-      {% else %}
-        <td></td>
-      {% endif %}
-      <td>{{h.getStatusText}}</td>
-      {% if h.report_set.last %}
-        <td>{{h.report_set.last.time|timesince}} ago.</td>
-      {% else %}
-        <td></td>
-      {% endif %}
+{% if hosts.count %}
+  <h2>Uncategorized hosts</h2>
+  <p>The following table contains all uncategorized hosts</p>
+  
+  <table class="table table-hover table-condensed">
+    <tr>
+      <th><input type="checkbox" class="selectAllHosts"></th>
+      <th></th>
+      <th colspan="2">Hostname</th>
+      <th>OS</th>
+      <th>Bootfile</th>
+      <th>Script</th>
+      <th>Environment</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th>Last puppet-run</th>
     </tr>
-  {% endfor %}
-</table>
+    {% for h in hosts.all %}
+      <tr class="{{h.getTableColor}}">
+        <td>
+          <input type="checkbox" name="selectHost" 
+              class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
+        </td>
+        <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
+        <td colspan="2"><a href="{% url 'hostIndex' %}{{h.id}}/">
+          {{h.name}}
+        </a></td>
+        {% if h.os %}
+          <td>{{h.os.name}}</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
+        {% if h.bootfile %}
+          <td>{{h.bootfile.name}}</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
+        {% if h.postinstallscript %}
+          <td>{{h.postinstallscript.name}}</td>
+        {% else %}
+          <td>N/A</td>
+        {% endif %}
+        <td>{{h.environment.name}}</td>
+        {% if h.role %}
+          <td>{{h.role.name}}</td>
+        {% else %}
+          <td></td>
+        {% endif %}
+        <td>{{h.getStatusText}}</td>
+        {% if h.report_set.last %}
+          <td>{{h.report_set.last.time|timesince}} ago.</td>
+        {% else %}
+          <td></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
+<h2>Categorized hosts</h2>
+<p>Click on the category-name to see the hosts within a certain category</p>
+
+{% for hg in groups %}
+  <h3><a data-toggle="collapse" data-target="#table-{{hg.0.id}}">
+    {{hg.0.name}}
+  </a></h3>
+  <div id="table-{{hg.0.id}}" class="collapse">
+    <table class="table table-hover table-condensed">
+      <tr>
+        <th><input type="checkbox" class="selectAllHosts"></th>
+        <th></th>
+        <th colspan="2">Hostname</th>
+        <th>OS</th>
+        <th>Bootfile</th>
+        <th>Script</th>
+        <th>Environment</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Last puppet-run</th>
+      </tr>
+      {% for h in hg.1 %}
+        <tr class="{{h.getTableColor}}">
+          <td>
+            <input type="checkbox" name="selectHost" 
+                class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
+          </td>
+          <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
+          <td colspan="2"><a href="{% url 'hostIndex' %}{{h.id}}/">
+            {{h.name}}
+          </a></td>
+          {% if h.os %}
+            <td>{{h.os.name}}</td>
+          {% else %}
+            <td>N/A</td>
+          {% endif %}
+          {% if h.bootfile %}
+            <td>{{h.bootfile.name}}</td>
+          {% else %}
+            <td>N/A</td>
+          {% endif %}
+          {% if h.postinstallscript %}
+            <td>{{h.postinstallscript.name}}</td>
+          {% else %}
+            <td>N/A</td>
+          {% endif %}
+          <td>{{h.environment.name}}</td>
+          {% if h.role %}
+            <td>{{h.role.name}}</td>
+          {% else %}
+            <td></td>
+          {% endif %}
+          <td>{{h.getStatusText}}</td>
+          {% if h.report_set.last %}
+            <td>{{h.report_set.last.time|timesince}} ago.</td>
+          {% else %}
+            <td></td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endfor %}
