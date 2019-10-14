@@ -4,7 +4,7 @@
   
   <table class="table table-hover table-condensed">
     <tr>
-      <th><input type="checkbox" class="selectAllHosts"></th>
+      <th><input type="checkbox" class="selectAllHosts" id="0"></th>
       <th></th>
       <th colspan="2">Hostname</th>
       <th>OS</th>
@@ -18,7 +18,7 @@
     {% for h in hosts.all %}
       <tr class="{{h.getTableColor}}">
         <td>
-          <input type="checkbox" name="selectHost" 
+          <input type="checkbox" name="selectHost" id="0"
               class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
         </td>
         <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
@@ -67,7 +67,7 @@
   <div id="table-{{hg.0.id}}" class="collapse">
     <table class="table table-hover table-condensed">
       <tr>
-        <th><input type="checkbox" class="selectAllHosts"></th>
+        <th><input type="checkbox" class="selectAllHosts" id="{{hg.0.id}}"></th>
         <th></th>
         <th colspan="2">Hostname</th>
         <th>OS</th>
@@ -81,7 +81,7 @@
       {% for h in hg.1 %}
         <tr class="{{h.getTableColor}}">
           <td>
-            <input type="checkbox" name="selectHost" 
+            <input type="checkbox" name="selectHost" id="{{hg.0.id}}" 
                 class="selectHost" value="{{h.id}}" env="{{h.environment.id}}">
           </td>
           <td><span class="glyphicon {{h.getPuppetStatusIcon}}"></span></td>
