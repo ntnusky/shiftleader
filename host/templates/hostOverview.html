@@ -411,7 +411,7 @@
         // Select all hosts if the "selectAllHosts" checkbox is clicked on, and
         // activate the appropriate buttons.
         $(".selectAllHosts").change(function() {
-          $(".selectHost").attr('checked', this.checked);
+          $(".selectHost").filter("#"+this.id).attr('checked', this.checked);
           buttonActivation();
         });
         // If a host is selected, or deselected; update the buttons as well.
