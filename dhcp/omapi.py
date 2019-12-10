@@ -79,22 +79,25 @@ class Server:
     self.connection.del_host(mac)
 
   def configureLease(self, ip, mac, present=True, hostname=None):
-    currentIP = self.getLease(mac)
+    try:
+      currentIP = self.getLease(mac)
 
-    # If the lease exists, but contains wrong IP, recreate it.
-    if(present and currentIP and currentIP != ip):
-      self.deleteLease(mac)
-      self.addLease(ip, mac, hostname)
-      return Servers.UPDATED
+      # If the lease exists, but contains wrong IP, recreate it.
+      if(present and currentIP and currentIP != ip):
+        self.deleteLease(mac)
+        self.addLease(ip, mac, hostname)
+        return Servers.UPDATED
 
-    # If lease does not already exist, but should exist, create it.
-    elif(present and not currentIP):
-      self.addLease(ip, mac, hostname)
-      return Servers.CREATED
+      # If lease does not already exist, but should exist, create it.
+      elif(present and not currentIP):
+        self.addLease(ip, mac, hostname)
+        return Servers.CREATED
 
-    # If lease exists and should not, delete it
-    elif(not present and currentIP and currentIP == ip):
-      self.deleteLease(mac)
-      return Servers.DELETED
+      # If lease exists and should not, delete it
+      elif(not present and currentIP and currentIP == ip):
+        self.deleteLease(mac)
+        return Servers.DELETED
+    except OSError:
+      pass
 
     return Servers.NO_CHANGE
