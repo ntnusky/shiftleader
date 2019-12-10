@@ -30,7 +30,8 @@ class Servers:
         raise OMAPIException('The server %s is missing a parameter.' % server)
 
       s = Server(host, port, keyname, key)
-      self.servers.append(s)
+      if s.active:
+        self.servers.append(s)
 
   def configureLease(self, ip, mac, present=True, hostname=None):
     status = 0
@@ -51,8 +52,12 @@ class Server:
     try:
       self.connection = Omapi(self.host, int(self.port), 
           self.keyname.encode('utf-8'), self.key)
+      self.active = True
     except OmapiErrorNotFound:
+      self.active = False
       raise OMAPIException('Could not connect to OMAPI')
+    except OSError:
+      self.active = False
 
   def getLease(self, mac):
     try:
