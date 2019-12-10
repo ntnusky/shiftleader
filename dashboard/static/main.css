@@ -62,3 +62,7 @@ code {
   text-align: right;
   padding-right: 10px;
 }
+
+.modal-wide {
+  width: 90%;
+}

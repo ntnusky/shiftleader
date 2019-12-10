@@ -8,13 +8,15 @@ from host.models import BootFile, BootFragment, BootFileFragment
 def file(request):
   if(request.method == 'GET'):
     files = []
-    for f in BootFile.objects.all():
+    for f in BootFile.objects.order_by('filetype', 'name').all():
       fragments = []
       for fragment in f.bootfilefragment_set.order_by('fragment__name').all():
         fragments.append(fragment.id)
 
       files.append({
         'id': f.id,
+        'type': f.getType(),
+        'typetxt': f.getTypeTxt(),
         'name': f.name,
         'description': f.description,
         'fragments': fragments,
@@ -27,6 +29,7 @@ def file(request):
     f = BootFile(
       name = request.POST['name'],
       description = request.POST['description'],
+      filetype = request.POST['type']
     )
     f.save()
 
@@ -69,11 +72,14 @@ def singlefile(request, fid):
       'id': f.id,
       'name': f.name,
       'description': f.description,
+      'type': f.getType(),
+      'typetxt': f.getTypeTxt(),
       'fragments': fragments,
     })
   elif(request.method == 'POST'):
     f.name = request.POST['name']
     f.description = request.POST['description']
+    f.filetype = request.POST['type']
     f.save()
     
     f.bootfilefragment_set.all().delete()

@@ -32,6 +32,7 @@
       <thead>
         <tr>
           <th>Name</th>
+          <th>Type</th>
           <th>Description</th>
           <th>#</th>
           <th></th>
@@ -120,6 +121,14 @@
                   aria-describedby="name" placeholder="Botfile name">
             </div>
             <div class="form-group">
+              <label for="type">Filetype:</label>
+              <select class="form-control" id="type" name="type">
+                {% for ft in filetypes %}
+                  <option value={{ft.0}}>{{ft.1}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
               <label for="comment">Description:</label>
               <textarea class="form-control" rows="5" name="description"></textarea>
             </div>
@@ -160,6 +169,7 @@ function initializeModals() {
   $('.createFileModal').click( function() {
     refreshFragmentList();
     $('form#fileform').find("input[type=text], textarea").val("");
+    $('form#fileform').find("select[name=type]").val("0");
     $('form#fileform').find("input[name=id]").val("0");
     $(".filecreate").html('Save');
     $('select#fragmentselect').find('option').prop('selected', false)
@@ -189,6 +199,7 @@ function initializeModals() {
       success: function(data) {
         if(data['status'] == 'success') {
           $('form#fileform').find("input[type=text], textarea").val("");
+          $('form#fileform').find("select[name=type]").val("0");
           $('form#fileform').find("input[name=id]").val("0");
           $("#filemodal").modal('hide');
           reloadFileTable();
@@ -233,6 +244,7 @@ function initializeFileTable() {
       success:  function(data) {
         $('form#fileform').find("input[name=id]").val(data['id']);
         $('form#fileform').find("input[name=name]").val(data['name']);
+        $('form#fileform').find("select[name=type]").val(data['type']);
         $('form#fileform').find("textarea[name=description]").val(data['description']);
         $(".filecreate").html('Update');
         $('select#fragmentselect').find('option').prop('selected', false)
@@ -320,6 +332,7 @@ function reloadFileTable() {
         var file = data['files'][id]
         $('table#filetable > tbody').append('<tr>' +
           '<td>' + file['name'] + '</td>' +
+          '<td>' + file['typetxt'] + '</td>' +
           '<td>' + file['description'] + '</td>' +
           '<td>' + file['fragments'].length + '</td>' +
           '<td><div class="btn-group" role="group">' +

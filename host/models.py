@@ -41,6 +41,12 @@ class PartitionScheme(models.Model):
   def getShortDescription(self, length=30):
     return self.description[0:length]
 
+class HostGroup(models.Model):
+  name = models.CharField(max_length=64)
+
+  def __str__(self):
+    return "%s" % self.name
+
 class Host(models.Model):
   STATUSES = (
     (0, "Operational"),
@@ -61,6 +67,7 @@ class Host(models.Model):
   ERROR = 6
 
   name = models.CharField(max_length=64)
+  group = models.ForeignKey(HostGroup, null=True)
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
   bootfile = models.ForeignKey('BootFile', null=True)
@@ -276,14 +283,37 @@ class Interface(models.Model):
     return "%s on %s" % (self.ifname, self.host)
 
 class BootFile(models.Model):
+  UNSET = 0
+  BOOTFILE = 1
+  POSTINSTALLSCRIPT = 2
+
+  filetypes = (
+    (UNSET, 'Unset'),
+    (BOOTFILE, 'Bootfile'),
+    (POSTINSTALLSCRIPT, 'Postinstall script'),
+  )
+
   name = models.CharField(max_length=64)
   description = models.TextField()
+  filetype = models.IntegerField(choices = filetypes, default = 0)
   
   class Meta:
     ordering = ['name']
 
   def __str__(self):
     return self.name
+
+  def getType(self):
+    for t in self.filetypes:
+      if(t[0] == self.filetype):
+        return t[0]
+    return self.UNSET
+
+  def getTypeTxt(self):
+    for t in self.filetypes:
+      if(t[0] == self.filetype):
+        return t[1]
+    return 'Unset'
 
   def getContent(self, replaces = {}):
     content = []

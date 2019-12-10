@@ -11,7 +11,7 @@ from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
 from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
-                        BootFile
+                        BootFile, HostGroup
 from host.utils import authorize, createReplacements, NONE, IP, USER
 from nameserver.models import Domain
 from puppet.models import Environment, Report
@@ -24,8 +24,12 @@ def index(request):
   context['hosts'] = Host.objects.all()
   context['environments'] = Environment.objects.all()
   context['partitionschemes'] = PartitionScheme.objects.all()
-  context['operatingsystems'] = OperatingSystem.objects.all()
-  context['bootfiles'] = BootFile.objects.all()
+  context['operatingsystems'] = OperatingSystem.objects.order_by('name').all()
+  context['hostgroups'] = HostGroup.objects.order_by('name').all()
+  context['bootfiles'] = BootFile.objects.filter(
+      filetype__in = [None, BootFile.BOOTFILE]).all()
+  context['installscripts'] = BootFile.objects.filter(
+      filetype__in = [None, BootFile.POSTINSTALLSCRIPT]).all()
 
   return render(request, 'hostOverview.html', context)
 
@@ -203,6 +207,7 @@ def interface(request, hid, iid = 0):
 def bootfiles(request):
   context = createContext(request)
   context['header'] = "Bootfiles"
+  context['filetypes'] = BootFile.filetypes
   
   return render(request, 'host/bootfiles.html', context)
 
@@ -304,6 +309,39 @@ def osform(request, pid=0):
       return redirect('hostIndex')
 
   return render(request, 'hostOsForm.html', context)
+
+@user_passes_test(requireSuperuser)
+def hostgroupform(request, pid=0):
+  context = createContext(request)
+
+  if(pid == 0):
+    hg = None
+    context['header'] = "Add a host-group"
+    context['buttonText'] = "Add"
+  else:
+    hg = get_object_or_404(HostGroup, pk=pid)
+    context['hg'] = hg
+    context['header'] = "Update '%s'" % hg.name
+    context['buttonText'] = "Update"
+  
+  if(request.POST.get('csrfmiddlewaretoken')):
+    if(hg == None):
+      hg = HostGroup()
+    
+    toSave = False
+    if(hg.name != request.POST.get('name')):
+      hg.name = request.POST.get('name')
+      toSave = True
+
+    if(len(hg.name) == 0):
+      context['message'] = "All fields need a value!"
+      toSave = False
+
+    if(toSave):
+      hg.save()
+      return redirect('hostIndex')
+
+  return render(request, 'hostGroupForm.html', context)
 
 @user_passes_test(requireSuperuser)
 def pform(request, pid=0):

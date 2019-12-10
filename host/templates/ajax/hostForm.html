@@ -36,8 +36,8 @@
     <div class="col-sm-10">
       <select class="form-control" id="postinstall">
         <option value="0">None</option>
-        {% for bf in bootfiles %}
-          <option value="{{bf.id}}">{{bf.name}}</option>
+        {% for is in installscripts %}
+          <option value="{{is.id}}">{{is.name}}</option>
         {% endfor %}
       </select>
     </div>
@@ -103,11 +103,6 @@
       <input type="text" class="form-control" id="ipv6"
           placeholder="2001:db8:f00:1337::123 (write 'eui64' for EUI-64 address)">
     </div>
-  </div>
-
-  <div class="col-sm-2"></div>
-  <div class="col-sm-10">
-    <button class="btn btn-primary newHost" type="button">Add</button>
   </div>
 </form>
 
