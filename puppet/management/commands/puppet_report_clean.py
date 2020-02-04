@@ -16,5 +16,3 @@ class Command(BaseCommand):
     todelete = Report.objects.filter(time__lt=invalid)
     number = todelete.count()
     todelete.all().delete()
-
-    self.stdout.write("Deleted %d reports" % number)
