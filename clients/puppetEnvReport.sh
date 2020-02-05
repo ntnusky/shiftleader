@@ -2,7 +2,7 @@
 
 # If we are the only instance of this script running; start doing something:
 lockdir="/tmp/r10k.run.lock"
-if mkdir $lockdir; then
+if mkdir $lockdir &> /dev/null; then
   # Run r10k to discover new environments
   /usr/bin/r10k deploy environment production &> /dev/null
 
@@ -30,6 +30,6 @@ if mkdir $lockdir; then
 
 # If other instances of the script runs, simply exit.
 else
-  echo "$0 cannot run, as it is already running" >&2
+  logger "[Puppet-envupdate] $0 cannot run, as it is already running" >&2
   exit 1
 fi
