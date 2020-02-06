@@ -12,7 +12,7 @@ if mkdir $lockdir &> /dev/null; then
   # For each environment shiftleader knows about:
   for env in $(/opt/shiftleader/manage.py puppet_env2list); do
     # If it is tagged for an update:
-    if [[ $(/opt/shiftleader/manage.py puppet_env2update "$env") -eq '1' ]]; then
+    if [[ $(/opt/shiftleader/manage.py puppet_env2update "$env" 2> /dev/null) -eq '1' ]]; then
       logger "[Puppet-envupdate] Running r10k to update $env"
       /usr/bin/r10k deploy environment "$env" -pv
 
