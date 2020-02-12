@@ -44,7 +44,7 @@ class Command(BaseCommand):
       environment = Environment.objects.get(name=env)
     except Environment.DoesNotExist:
       environment = Environment(name=env)
-      self.stderr.write("Creating environment %s" % environmentName)
+      self.stderr.write("Creating environment %s" % env)
 
     environment.last_deployed = now()
     environment.save()
