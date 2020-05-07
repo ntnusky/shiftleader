@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     'dhcp',
     'nameserver',
     'host',
+    'netinstall',
 )
 
 AUTHENTICATION_BACKENDS = ("django_python3_ldap.auth.LDAPBackend",)

@@ -26,4 +26,5 @@ urlpatterns = [
   url(r'^dhcp/', include('dhcp.urls')),
   url(r'^dns/', include('nameserver.urls')),
   url(r'^host/', include('host.urls')),
+  url(r'^netinstall/', include('netinstall.urls')),
 ]
