@@ -4,10 +4,17 @@ class BootTemplate(models.Model):
   name          = models.CharField(max_length=64)
   description   = models.TextField()
 
-  tftpconfig    = models.ForeignKey('ConfigFile', null=True, related_name='bt_tftp')
-  installconfig = models.ForeignKey('ConfigFile', null=True, related_name='bt_inst')
-  postinstall   = models.ForeignKey('ConfigFile', null=True, related_name='bt_postinst')
-  os            = models.ForeignKey('OperatingSystem', null=True)
+  tftpconfig    = models.ForeignKey('ConfigFile', null=True,
+                                      related_name='bt_tftp', 
+                                      on_delete=models.SET_NULL)
+  installconfig = models.ForeignKey('ConfigFile', null=True, 
+                                      related_name='bt_inst',
+                                      on_delete=models.SET_NULL)
+  postinstall   = models.ForeignKey('ConfigFile', null=True, 
+                                      related_name='bt_postinst',
+                                      on_delete=models.SET_NULL)
+  os            = models.ForeignKey('OperatingSystem', null=True,
+                                      on_delete=models.SET_NULL)
   
   def __str__(self):
     return "%s" % self.name
@@ -46,7 +53,8 @@ class ConfigFile(models.Model):
   description = models.TextField()
   content = models.TextField(null=True)
   
-  filetype = models.ForeignKey('ConfigFileType', null=True)
+  filetype = models.ForeignKey('ConfigFileType', null=True,
+                                on_delete=models.SET_NULL)
   
   def __str__(self):
     return "%s" % self.name

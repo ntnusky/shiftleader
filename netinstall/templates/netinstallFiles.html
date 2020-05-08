@@ -10,16 +10,352 @@
   </div>
   
   <div class="row">
-    <div class="col-12 col-sm-12 col-md-6 col-lg-6">
-      <h2>Files:</h2>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <h2>Config-files</h2>
+      <p></p>
     </div>
-    <div class="col-12 col-sm-12 col-md-6 col-lg-6">
-      <h2>File-types</h2>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <p class="ajax" id="files"></p>
+
+      <table id="file-table" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0, 'file-table')">Name</th>
+            <th onclick="sortTable(1, 'file-table')">Description</th>
+            <th onclick="sortTable(2, 'file-table')">Type</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <h3 id=fileform-header>Create file:</h3>
+      <form method="POST" action="{% url 'netinstall_rest_files' %}" id="fileForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Display-name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea class="form-control" name="description" id="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="filetype">File-type:</label>
+          <select disabled class="form-control" id="filetype" name="filetype">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="content">Content:</label>
+          <textarea class="form-control" name="content" id="content" rows=10></textarea>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <h2>Config-file-types</h2>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <p class="ajax" id="filetype"></p>
+      <table id="filetype-table" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0, 'filetype-table')">Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <h3 id=filetypeform-header>Create file-type:</h3>
+      <form method="POST" action="{% url 'netinstall_rest_file_types' %}"
+          id="fileTypeForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Display-name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <script>
+    function resetFileForm(id) {
+      $('form#fileForm').find('select, input, button, textarea').prop('disabled', true);
+      if(id == 0) {
+        $('form#fileForm').attr('method', "POST");
+        $('form#fileForm').find('input#id').val("0");
+        $('form#fileForm').find('input#name').val("");
+        $('form#fileForm').find('textarea').val("");
+        $('form#fileForm').find('input, textarea, button, select').prop('disabled', false);
+      } else {
+        $.ajax({
+          url: '{% url 'netinstall_rest_files' %}' + id + '/',
+          type: 'GET',
+          success: function(result) {
+            $('form#fileForm').attr('method', "PUT");
+            $('form#fileForm').find('input#id').val(result['id']);
+            $('form#fileForm').find('input#name').val(result['name']);
+            $('form#fileForm').find('textarea#description').val(result['description']);
+            $('form#fileForm').find('textarea#content').val(result['content']);
+
+            if(result['filetype']) {
+              $('form#fileForm').find('select#filetype')
+                .val(result['filetype']['id']);
+            }
+            $('form#fileForm').find('input, textarea, button, select').prop('disabled', false);
+          },
+          error: function(result) {
+            $('p.ajax#file').html($('<div>', {
+              class: 'alert alert-danger',
+              text: 'Could not retrieve file to edit!',
+            }));
+          },
+        })
+      }
+    } 
+    function resetFileTypeForm(id) {
+      $('form#fileTypeForm').find('input, button').prop('disabled', true);
+      if(id == 0) {
+        $('form#fileTypeForm').attr('method', "POST");
+        $('form#fileTypeForm').find('input#id').val("0");
+        $('form#fileTypeForm').find('input#name').val("");
+        $('form#fileTypeForm').find('input, button').prop('disabled', false);
+      } else {
+        $.ajax({
+          url: '{% url 'netinstall_rest_file_types' %}' + id + '/',
+          type: 'GET',
+          success: function(result) {
+            $('form#fileTypeForm').attr('method', "PUT");
+            $('form#fileTypeForm').find('input#id').val(result['id']);
+            $('form#fileTypeForm').find('input#name').val(result['name']);
+            $('form#fileTypeForm').find('input, button').prop('disabled', false);
+          },
+          error: function(result) {
+            $('p.ajax#filetype').html($('<div>', {
+              class: 'alert alert-danger',
+              text: 'Could not retrieve file to edit!',
+            }));
+          },
+        })
+      }
+    } 
+    function loadFiles() {
+      $('table#file-table > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_files' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#file-table > tbody').empty()
+          for(var element in result) {
+            $('table#file-table > tbody').append(
+              $('<tr>')
+              .append($('<td>', { text: result[element]['name'] }))
+              .append($('<td>', { text: result[element]['description'] }))
+              .append($('<td>', { text: result[element]['filetype']['name'] }))
+              .append($('<td>')
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateFile',
+                    file: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteFile',
+                    file: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+          }
+          $('button#updateFile').click(function() {
+            var fileID = this.attributes['file'].value;
+            $('h3#fileform-header').text("Update file");
+            resetFileForm(fileID);
+          });
+          $('button#deleteFile').click(function() {
+            var fileID = this.attributes['file'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this" +
+                "file?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_files' %}' + fileID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  $('p.ajax#files').html($('<div>', {
+                    class: 'alert alert-' + data['responseJSON']['status'],
+                    text: data['responseJSON']['message'],
+                  }));
+                },
+                success: function(data) {
+                  $('p.ajax#files').html($('<div>', {
+                    class: 'alert alert-' + data['status'],
+                    text: data['message'],
+                  }));
+                  loadFiles();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#file-table > tbody').empty()
+          $('p.ajax#files').html($('<div>', {
+            class: 'alert alert-danger',
+            text: 'Could not dowinload files!',
+          }));
+        },
+      });
+    }
+    function loadFileTypes() {
+      $('table#filetype-table > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+      $('select#filetype').find('option').remove()
+        .end().prop('disabled', false)
+        .append('<option value="0"> -- none selected -- </option>')
+        .val('0');
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_file_types' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#filetype-table > tbody').empty()
+          for(var element in result) {
+            $('table#filetype-table > tbody').append(
+              $('<tr>')
+              .append($('<td>', { text: result[element]['name'] }))
+              .append($('<td>')
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateFileType',
+                    file: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteFileType',
+                    file: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+            $('select#filetype').append($('<option>', {
+              value: result[element]['id'],
+              text: result[element]['name'],
+            }));
+          }
+          $('button#updateFileType').click(function() {
+            var fileID = this.attributes['file'].value;
+            $('h3#filetypeform-header').text("Update file-type");
+            resetFileTypeForm(fileID);
+          });
+          $('button#deleteFileType').click(function() {
+            var fileID = this.attributes['file'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this" +
+                "filetype?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_file_types' %}' + fileID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  $('p.ajax#filetype').html($('<div>', {
+                    class: 'alert alert-' + data['responseJSON']['status'],
+                    text: data['responseJSON']['message'],
+                  }));
+                },
+                success: function(data) {
+                  $('p.ajax#filetype').html($('<div>', {
+                    class: 'alert alert-' + data['status'],
+                    text: data['message'],
+                  }));
+                  loadFileTypes();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#file-table > tbody').empty()
+          $('p.ajax#files').html($('<div>', {
+            class: 'alert alert-danger',
+            text: 'Could not dowinload files!',
+          }));
+        },
+      });
+    }
     $(document).ready(function(){
+      loadFiles();
+      loadFileTypes();
+      resetFileForm(0);
+      resetFileTypeForm(0);
+
+      $('form').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var csrf = form.find("input[name=csrfmiddlewaretoken]").val();
+
+        $.ajax({
+          type: form.attr('method'),
+          url: form.attr('action'),
+          data: form.serialize(), // serializes the form's elements.
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          },
+          error: function(data) {
+            $('p.ajax#files').html($('<div>', {
+              class: 'alert alert-' + data['responseJSON']['status'],
+              text: data['responseJSON']['message'],
+            }));
+          },
+          success: function(data) {
+            $('p.ajax#-files').html($('<div>', {
+              class: 'alert alert-' + data['status'],
+              text: data['message'],
+            }));
+            loadFiles();
+            loadFileTypes()
+            resetFileForm(0);
+            resetFileTypeForm(0);
+          },
+        });
+      });
     });
   </script>
 {% endblock page-content %}
