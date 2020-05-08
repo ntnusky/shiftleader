@@ -1,0 +1,25 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+    <p>This page lets you administer configfiles. A config-file is a
+    more-or-less static file used in installation of hosts. These files can be
+    used as TFTP-config-files, installer-configuration for the os-installers or
+    as a post-installation script bootstrapping the installation of
+    config-management of our hosts.</p>
+  </div>
+  
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+      <h2>Files:</h2>
+    </div>
+    <div class="col-12 col-sm-12 col-md-6 col-lg-6">
+      <h2>File-types</h2>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function(){
+    });
+  </script>
+{% endblock page-content %}

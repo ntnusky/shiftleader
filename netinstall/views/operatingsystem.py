@@ -9,11 +9,35 @@ from netinstall.models import OperatingSystem
 
 @user_passes_test(requireSuperuser)
 def main(request, shortname = None):
+  """ API View - Add/update/delete operatingsystem 
+
+  This view let you create, update and delete operating-system.
+
+  Possible Parameters:
+    id:           An integer representing the os to update or delete.
+    name:         A string representing the display-name of the os.
+    shortname:    A string representing a unique internal name for the os. 
+    kernelurl:    An url pointing to a net-bootable kernel of the required OS.    
+    kernelsum:    (optional) A checksum verifying the integrity of the kernel.
+    initrdurl:    An url pointing to an initrd-image for booting the kernel.
+    initrdsum:    (optional) A checksum verifying the integrity of the initrd
+                  image.
+  
+  Methods:
+    GET:          If an ID is specified (in the URL) a single os is returned as 
+                  JSON. If no ID is specified a list of all os's are returned.
+    DELETE:       Deletes a specified os. The configfile can either be
+                  specified as an ID in the URL, or as a passed parameter.
+    POST:         Creating a new os. Requires all the listed parameters (except
+                  id) to be set. 
+    PUT:          Updates an existing os. Needs all parameters to be set. The ID
+                  can be set in the url or as a parameter.
+  """ 
   data = {}
 
   if(request.method == 'GET' and not shortname):
     data = []
-    for element in OperatingSystem.objects.all():
+    for element in OperatingSystem.objects.order_by('name').all():
       data.append(element.toJSON())
     return JsonResponse(data, safe=False)
 

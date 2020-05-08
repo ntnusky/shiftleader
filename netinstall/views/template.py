@@ -11,11 +11,37 @@ from netinstall.models import BootTemplate, ConfigFileType, ConfigFile, \
 
 @user_passes_test(requireSuperuser)
 def main(request, tid=None):
+  """ API View - Add/update/delete Boot-templates 
+
+  This view let you create, update and delete boot-templates.
+
+  Possible Parameters:
+    id:             An integer representing the template to update or delete.
+    name:           A string representing the display-name of the template.
+    description:    A textual description of the template.
+    tftpconfig:     An integer representing a config-file to use as
+                    tftp-configuration.
+    installconfig:  An integer representing a config-file which will be passed
+                    to the OS installer. (preseed or kickstart)
+    postinstall:    An integer representing a config-file which will be ran
+                    as a script after the OS installation is finished.
+    os:             An os shortname describing which OS to install.
+  
+  Methods:
+    GET:          If an ID is specified (in the URL) a single os is returned as 
+                  JSON. If no ID is specified a list of all os's are returned.
+    DELETE:       Deletes a specified os. The configfile can either be
+                  specified as an ID in the URL, or as a passed parameter.
+    POST:         Creating a new os. Requires all the listed parameters (except
+                  id) to be set. 
+    PUT:          Updates an existing os. Needs all parameters to be set. The ID
+                  can be set in the url or as a parameter.
+  """ 
   data = {}
 
   if(request.method == 'GET' and not tid):
     data = []
-    for element in BootTemplate.objects.all():
+    for element in BootTemplate.objects.order_by('name').all():
       data.append(element.toJSON())
     return JsonResponse(data, safe=False)
 
@@ -24,10 +50,29 @@ def main(request, tid=None):
       return JsonResponse(BootTemplate.objects.get(id=tid).toJSON())
     except BootTemplate.DoesNotExist:
       return JsonResponse({
-        'status': 'error',
+        'status': 'danger',
         'message': 'Could not find BootTemplate',
       }, status=404)
       
+  elif(request.method == 'DELETE'):
+    if not tid:
+      data = QueryDict(request.body)
+      shortname = data['id']
+
+    try:
+      template = BootTemplate.objects.get(id=tid)
+    except BootTemplate.DoesNotExist:
+      return JsonResponse({
+        'status': 'error',
+        'message': 'Could not find template with id %s' % tid,
+        }, status = 404)
+
+    template.delete()
+    return JsonResponse({
+      'status': 'success',
+      'message': 'Deleted template %s' % template.name,
+    })
+
   elif((request.method == 'POST' and not tid) or request.method == 'PUT'):
     data = QueryDict(request.body)
 
@@ -37,7 +82,7 @@ def main(request, tid=None):
     for f in fields:
       if f not in data:
         return JsonResponse({
-          'status': 'error',
+          'status': 'warning',
           'message': 'Missing parameter (%s)' % f,
         }, status = 400)
 
@@ -58,7 +103,7 @@ def main(request, tid=None):
         message = 'Operating System information updated'
       except (BootTemplate.DoesNotExist, MultiValueDictKeyError):
         return JsonResponse({
-          'status': 'error',
+          'status': 'danger',
           'message': 'Could not find Template',
           }, status = 404)
 
@@ -67,7 +112,7 @@ def main(request, tid=None):
         template.tftpconfig = ConfigFile.objects.get(id=data['tftpconfig'])
       except ConfigFile.DoesNotExist:
         return JsonResponse({
-          'status': 'error',
+          'status': 'warning',
           'message': 'Could not find configfile for TFTP',
           }, status = 404)
     else:
@@ -78,7 +123,7 @@ def main(request, tid=None):
         template.installconfig = ConfigFile.objects.get(id=data['installconfig'])
       except ConfigFile.DoesNotExist:
         return JsonResponse({
-          'status': 'error',
+          'status': 'warning',
           'message': 'Could not find configfile for installation',
           }, status = 404)
     else:
@@ -89,7 +134,7 @@ def main(request, tid=None):
         template.postinstall = ConfigFile.objects.get(id=data['postinstall'])
       except ConfigFile.DoesNotExist:
         return JsonResponse({
-          'status': 'error',
+          'status': 'warning',
           'message': 'Could not find post-installation file',
           }, status = 404)
     else:
@@ -100,11 +145,17 @@ def main(request, tid=None):
         template.os = OperatingSystem.objects.get(shortname=data['os'])
       except ConfigFile.DoesNotExist:
         return JsonResponse({
-          'status': 'error',
+          'status': 'warning',
           'message': 'Could not find OS',
           }, status = 404)
     else:
       template.os = None
+
+    if(len(data['name']) == 0):
+      return JsonResponse({
+        'status': 'warning',
+        'message': 'Missing name',
+      }, status = 400)
         
     # Create OS and report success.
     template.name         = data['name']
@@ -117,6 +168,6 @@ def main(request, tid=None):
     }, status = response)
   else:
     return JsonResponse({
-      'status': 'error',
+      'status': 'danger',
       'message': 'Method "%s" is not implemented' % request.method,
     }, status = 400)

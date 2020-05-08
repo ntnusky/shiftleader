@@ -37,7 +37,7 @@ def main(request, fid = None):
 
   if(request.method == 'GET' and not fid):
     data = []
-    for element in ConfigFile.objects.all():
+    for element in ConfigFile.objects.order_by('name').all():
       data.append(element.toJSON())
     return JsonResponse(data, safe=False)
 
@@ -217,8 +217,13 @@ def filetype(request, ftid = None):
 
     # If method is "PUT" an existing record should be updated
     if(request.method == 'PUT'):
-      if(not ftid):
+      if(not ftid and 'id' in data):
         ftid = data['id']
+      elif(not ftid):
+        return JsonResponse({
+          'status': 'error',
+          'message': 'No ID defined.',
+        }, status = 400)
         
       # To update an existing record, the existing record must be fetched.
       try:

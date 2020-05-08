@@ -33,6 +33,18 @@ def populateMenu(request):
   menu.append(m)
 
   m = {}
+  m['name'] = 'Config-files' 
+  m['url'] = reverse('netinstall_file')
+  m['active'] = request.path.startswith(m['url'])
+  menu.append(m)
+
+  m = {}
+  m['name'] = 'Boot-Templates' 
+  m['url'] = reverse('netinstall_template')
+  m['active'] = request.path.startswith(m['url'])
+  menu.append(m)
+
+  m = {}
   m['name'] = 'Log out' 
   m['url'] = reverse('logout')
   m['active'] = False
