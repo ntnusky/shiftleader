@@ -37,7 +37,7 @@ def main(request, fid = None):
 
   if(request.method == 'GET' and not fid):
     data = []
-    for element in ConfigFile.objects.order_by('name').all():
+    for element in ConfigFile.objects.all():
       data.append(element.toJSON())
     return JsonResponse(data, safe=False)
 
@@ -82,13 +82,16 @@ def main(request, fid = None):
           'message': 'Missing parameter "%s"' % f,
         }, status = 400)
 
-    try:
-      filetype = ConfigFileType.objects.get(id=data['filetype'])
-    except ConfigFileType.DoesNotExist:
-      return JsonResponse({
-        'status': 'error',
-        'message': 'Could not fine filetype "%s"' % data['filetype'],
-      }, status = 404)
+    if(data['filetype'] != '0'):
+      try:
+        filetype = ConfigFileType.objects.get(id=data['filetype'])
+      except ConfigFileType.DoesNotExist:
+        return JsonResponse({
+          'status': 'error',
+          'message': 'Could not find filetype "%s"' % data['filetype'],
+        }, status = 404)
+    else:
+      filetype = None
 
     # If method is "POST" a new record should be created
     if(request.method == 'POST'):

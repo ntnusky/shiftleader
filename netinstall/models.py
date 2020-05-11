@@ -1,4 +1,9 @@
+import re
+
+from django.core.urlresolvers import reverse
 from django.db import models
+
+from dashboard.settings import parser
 
 class BootTemplate(models.Model):
   name          = models.CharField(max_length=64)
@@ -48,6 +53,9 @@ class BootTemplate(models.Model):
 
     return json
 
+  class Meta:
+    ordering = ['name']
+
 class ConfigFile(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -74,6 +82,63 @@ class ConfigFile(models.Model):
 
     return json
 
+  def getContent(self, host = None):
+    content = []
+
+    substitutions = {
+      'PUPPETSERVER': parser.get('puppet', 'server'),
+      'PUPPETCA': parser.get('puppet', 'caserver'),
+    }
+
+    dashboard = None
+    for key, item in parser.items("hosts"):
+      if(key == 'ipv4' or (dashboard == None and key == 'main')):
+        dashboard = item
+
+    if(dashboard):
+      substitutions['DASHBOARD'] = dashboard
+
+    if(host):
+      substitutions['HOSTID'] = str(host.id)
+      substitutions['HOSTNAME'] = host.name
+      substitutions['ROOTPW'] = host.password
+      substitutions['POSTINSTALL'] = "%s%s" % (
+        parser.get('general', 'api'),
+        reverse('hostPostinstall', args=[host.id]),
+      )
+      substitutions['INSTALLCONFIG'] = "%s%s" % (
+        parser.get('general', 'api'),
+        reverse('hostInstallConfig', args=[host.id]),
+      )
+
+      if(host.getPrimaryIf()):
+        substitutions['INTERFACENAME'] = host.getPrimaryIf().ifname
+
+      if(host.template and host.template.os):
+        substitutions['OSSHORTNAME'] = host.template.os.shortname
+        substitutions['OSKERNELNAME'] = host.template.os.kernelname
+        substitutions['OSINITRDNAME'] = host.template.os.initrdname
+
+    filereplace = re.compile(r'^%FILE:([0-9]+)%$')
+
+    for line in self.content.splitlines():
+      replace = filereplace.match(line)
+      if(replace):
+        try:
+          included = ConfigFile.objects.get(id=replace.group(1))
+          content.append(included.getContent(host))
+        except ConfigFile.DoesNotExist:
+          content.append(line)
+      else:
+        for key in substitutions:
+          line = line.replace('%%%s%%' % key, substitutions[key])
+        content.append(line)
+
+    return '\n'.join(content);
+
+  class Meta:
+    ordering = ['filetype__name', 'name']
+
 class ConfigFileType(models.Model):
   name = models.CharField(max_length=64)
   
@@ -86,6 +151,9 @@ class ConfigFileType(models.Model):
       'name': self.name,
     }
     return json
+
+  class Meta:
+    ordering = ['name']
 
 class OperatingSystem(models.Model):
   name = models.CharField(max_length=64)
@@ -115,3 +183,6 @@ class OperatingSystem(models.Model):
       'initrdsum': self.initrdsum,
     }
     return json
+
+  class Meta:
+    ordering = ['name']

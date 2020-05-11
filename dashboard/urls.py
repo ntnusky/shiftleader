@@ -18,10 +18,12 @@ from django.conf.urls import include, url
 from dashboard.views import main
 
 webapp = [
+  url(r'^host/', include('host.urls')),
   url(r'^netinstall/', include('netinstall.urls')),
 ]
 
 api_v1 = [
+  url(r'^host/', include('host.endpoints')),
   url(r'^netinstall/', include('netinstall.endpoints')),
 ]
 
@@ -36,7 +38,7 @@ urlpatterns = [
   url(r'^puppet/', include('puppet.urls')),
   url(r'^dhcp/', include('dhcp.urls')),
   url(r'^dns/', include('nameserver.urls')),
-  url(r'^host/', include('host.urls')),
+  url(r'^host/', include('host.legacyurls')),
 
   # The new entrypoints, differentiating API from web.
   url(r'^web/', include(webapp)),

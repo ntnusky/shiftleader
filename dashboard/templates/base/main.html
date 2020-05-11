@@ -39,10 +39,39 @@
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             {% for item in menu %}
-              {% if item.active %}
-                <li class="active"><a href="{{ item.url }}">{{ item.name }}</a></li>
-              {% else %}
-                <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+              {% if item.type = 'link' %}
+                {% if item.active %}
+                  <li class="active">
+                    <a href="{{ item.url }}">{{ item.name }}</a>
+                  </li>
+                {% else %}
+                  <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+                {% endif %}
+              {% endif %}
+              {% if item.type = 'dropdown' %}
+                {% if item.active %}
+                  <li class="dropdown active">
+                {% else %}
+                  <li class="dropdown">
+                {% endif %}
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                      role="button" aria-haspopup="true"
+                      aria-expanded="false">
+                    {{ item.name }}<span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu">
+                    {% for element in item.elements %}
+                      {% if element.type = 'link' %}
+                        {% if element.active %}
+                          <li class="active">
+                        {% else %}
+                          <li>
+                        {% endif %}
+                        <a href="{{ element.url }}">{{ element.name }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
+                </li>
               {% endif %}
             {% endfor %}
           </ul>

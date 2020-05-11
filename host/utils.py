@@ -1,5 +1,7 @@
 from django.core.urlresolvers import reverse
 from django.db import transaction 
+from django.http import HttpResponse, Http404, HttpResponseForbidden
+from django.shortcuts import render
 
 from dashboard.settings import parser
 from dashboard.utils import get_client_ip
@@ -40,6 +42,47 @@ def createReplacements(host):
   data['PUPPETCA'] = parser.get('puppet', 'caserver')
 
   return data
+
+def getBootConfigFile(hostid, request, filetype):
+  filetypes = ['TFTP', 'PostInstall', 'InstallConfig']
+  statuschange = {
+    'PostInstall': Host.PUPPETSIGN,
+    'InstallConfig': Host.INSTALLING,
+  }
+
+  if filetype not in filetypes:
+    raise ValueError(
+        'Not a supported fil eype. Supported is %s' % \
+        ', '.join(filetypes)
+    )
+
+  try:
+    host = Host.objects.get(pk=hostid)
+  except:
+    auth = NONE
+  else:
+    auth = authorize(request, host)
+
+  if auth == NONE:
+    return HttpResponseForbidden("This call needs authorization")
+
+  if(filetype == 'TFTP' and host.template.tftpconfig):
+    if(int(host.status) == Host.PROVISIONING):
+      content = host.template.tftpconfig.getContent(host)
+    else:
+      return render(request, 'tftpboot/localboot.cfg', {})
+  elif(filetype == 'InstallConfig' and host.template.installconfig):
+    content = host.template.installconfig.getContent(host)
+  elif(filetype == 'PostInstall' and host.template.postinstall):
+    content = host.template.postinstall.getContent(host)
+  else:
+    raise Http404
+
+  if auth == IP and filetype in statuschange:
+    host.status = statuschange[filetype]
+    host.save()
+
+  return HttpResponse(content)
 
 @transaction.atomic
 def updatePuppetStatus():

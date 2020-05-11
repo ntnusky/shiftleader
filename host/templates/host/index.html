@@ -1,0 +1,129 @@
+{% extends "base/main.html" %}
+
+{% block page-header %}
+{% endblock page-header %}
+
+{% block page-content %}
+  <p class="ajax"></p>
+
+  <div class="col-12 col-sm-12 col-md-12 col-lg-2">
+    <div class="">
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+        <h2>Host-Actions:</h2>
+        <div class="btn-group-vertical">
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateGroup" 
+                data-toggle="dropdown">
+              Set Group <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a class="updateAGroup" id="0">No group</a></li>
+              {% for hg in hostgroups %}
+                <li><a class="updateAGroup" id="{{hg.id}}">{{hg.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateEnv" 
+                data-toggle="dropdown">
+              Update Environment <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              {% for e in environments %}
+                <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateRoles" 
+                data-toggle="dropdown">
+              Update role<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-role" role="menu"> 
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-success disabled dropdown-toggle updateTemplate" 
+                data-toggle="dropdown">
+              Change Boot-Template<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              <li><a class="templateChoice" id="0">Do not netinstall</a></li>
+              {% for t in templates %}
+                <li><a class="templateChoice" id="{{t.id}}">{{t.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
+          <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
+          <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
+        </div>
+      </div>
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+        <h2>Management:</h2>
+        <div class="btn-group-vertical">
+          <div class="btn-group">
+            <a href="#" class="btn btn-primary newHostModal">
+              Add new Host
+            </a>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'bootfiles' %}" class="btn btn-primary">
+              Manage bootfiles
+            </a>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'hostGroupNew' %}" class="btn btn-primary">
+              Add HostGroup
+            </a>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-secondary dropdown-toggle" 
+                data-toggle="dropdown">
+              Modify Host-Group <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              {% for hg in hostgroups %}
+                <li><a href="{% url 'hostGroupEdit' hg.id %}">{{hg.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <a href="{% url 'hostOsNew' %}" class="btn btn-primary">
+              Add OS
+            </a>
+          </div>
+          <div class="btn-group">
+            <button type="button"
+                class="btn btn-secondary dropdown-toggle" 
+                data-toggle="dropdown">
+              Modify OS <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              {% for os in operatingsystems %}
+                <li><a href="{% url 'hostOsEdit' os.id %}">{{os.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-12 col-md-12 col-lg-10">
+    <p class="tablemessage"></p>
+    <div class="hosttable"></div>
+  </div>
+  
+  <script>
+    function lol() {
+    }
+
+    $(document).ready(function(){
+    });
+  </script>
+{% endblock page-content %}

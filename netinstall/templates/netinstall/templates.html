@@ -99,6 +99,7 @@
               .val('0');
 
             for(var i in result) {
+              var selector = false;
               if(result[i]['filetype']['name'] == "TFTP") {
                 var selector = 'tftpconfig'
               }
@@ -109,11 +110,13 @@
                 var selector = 'postinstall'
               }
 
-              $('form#templateForm').find('select#' + selector).
-                append($('<option>', {
-                  value: result[i]['id'],
-                  text: result[i]['name'],
-                }));
+              if(selector) {
+                $('form#templateForm').find('select#' + selector).
+                  append($('<option>', {
+                    value: result[i]['id'],
+                    text: result[i]['name'],
+                  }));
+              }
             }
           },
           error: function(result) {

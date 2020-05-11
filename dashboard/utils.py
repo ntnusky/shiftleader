@@ -12,42 +12,61 @@ def populateMenu(request):
   m['name'] = 'Hosts' 
   m['url'] = reverse('hostIndex')
   m['active'] = request.path.startswith(m['url'])
+  m['type'] = 'link'
+  menu.append(m)
+
+  m = {}
+  m['name'] = 'Boot-config'
+  m['type'] = 'dropdown'
+  m['elements'] = []
+  
+  me = {}
+  me['name'] = 'Config-files' 
+  me['url'] = reverse('netinstall_file')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  me = {}
+  me['name'] = 'Boot-Templates' 
+  me['url'] = reverse('netinstall_template')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  m['active'] = False
+  for e in m['elements']:
+    if e['active']:
+      m['active'] = True
+
   menu.append(m)
 
   m = {}
   m['name'] = 'DNS' 
   m['url'] = reverse('dnsIndex')
   m['active'] = request.path == m['url']
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'DHCP' 
   m['url'] = reverse('dhcpIndex')
   m['active'] = request.path == m['url']
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'Puppet' 
   m['url'] = reverse('puppetIndex')
   m['active'] = request.path == m['url']
-  menu.append(m)
-
-  m = {}
-  m['name'] = 'Config-files' 
-  m['url'] = reverse('netinstall_file')
-  m['active'] = request.path.startswith(m['url'])
-  menu.append(m)
-
-  m = {}
-  m['name'] = 'Boot-Templates' 
-  m['url'] = reverse('netinstall_template')
-  m['active'] = request.path.startswith(m['url'])
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'Log out' 
   m['url'] = reverse('logout')
   m['active'] = False
+  m['type'] = 'link'
   menu.append(m)
 
   return menu

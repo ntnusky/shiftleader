@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dashboard.utils import requireSuperuser, createEUI64
 from dhcp.models import Subnet
 from dhcp.omapi import Servers 
-from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
+from host.models import Host, Interface, OperatingSystem, \
                         BootFile, BootFragment, BootFileFragment, HostGroup
 from host.utils import updatePuppetStatus
 from nameserver.models import Domain
@@ -54,15 +54,6 @@ def roleMenu(request, id):
   environment = Environment.objects.get(pk=id)
   context['roles'] = environment.role_set.all()
   return render(request, 'ajax/roleMenu.html', context)
-
-@user_passes_test(requireSuperuser)
-def setpartition(request, hid, pid):
-  host = Host.objects.get(pk=hid)
-  part = PartitionScheme.objects.get(pk=pid)
-  host.partition = part
-  host.save()
-
-  return redirect(reverse('singleHost', args=[hid])) 
 
 @user_passes_test(requireSuperuser)
 def ifdelete(request, hid, iid):
@@ -457,7 +448,7 @@ def new(request):
   else:
     try:
       bootfile = BootFile.objects.get(pk=int(request.POST['bootfile']))
-    except PartitionScheme.DoesNotExist:
+    except BootFile.DoesNotExist:
       response['status'] = "danger"
       response['message'] = "Bootfile not found."
 
@@ -466,7 +457,7 @@ def new(request):
   else:
     try:
       postinstall = BootFile.objects.get(pk=int(request.POST['postinstall']))
-    except PartitionScheme.DoesNotExist:
+    except BootFile.DoesNotExist:
       response['status'] = "danger"
       response['message'] = "Postinstallscript not found."
 

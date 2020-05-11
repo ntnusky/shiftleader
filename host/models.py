@@ -10,7 +10,10 @@ from dhcp.models import Lease, Subnet
 from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment, Role, Report, ReportMetric
+from netinstall.models import BootTemplate
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.OperatingSystem
 class OperatingSystem(models.Model):
   name = models.CharField(max_length=64)
   shortname = models.CharField(max_length=20)
@@ -25,21 +28,6 @@ class OperatingSystem(models.Model):
   
   def __str__(self):
     return "%s (%s)" % (self.name, self.shortname)
-
-class PartitionScheme(models.Model):
-  name = models.CharField(max_length=64)
-  description = models.TextField()
-  content = models.TextField()
-
-  def __str__(self):
-    maxLength = 30
-    if(len(self.description) > maxLength):
-      return "%s (%s...)" % (self.name, self.getShortDescription(maxLength))
-    else:
-      return "%s (%s)" % (self.name, self.description)
-
-  def getShortDescription(self, length=30):
-    return self.description[0:length]
 
 class HostGroup(models.Model):
   name = models.CharField(max_length=64)
@@ -70,6 +58,7 @@ class Host(models.Model):
   group = models.ForeignKey(HostGroup, null=True)
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
+  template = models.ForeignKey(BootTemplate, null=True)
   bootfile = models.ForeignKey('BootFile', null=True)
   postinstallscript = models.ForeignKey('BootFile', null=True,
       related_name='scripthosts')
@@ -282,6 +271,8 @@ class Interface(models.Model):
   def __str__(self):
     return "%s on %s" % (self.ifname, self.host)
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFile(models.Model):
   UNSET = 0
   BOOTFILE = 1
@@ -327,6 +318,8 @@ class BootFile(models.Model):
 
     return re.sub(r'\r\n', '\n', '\n'.join(content)) 
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -338,6 +331,8 @@ class BootFragment(models.Model):
   def __str__(self):
     return self.name
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFileFragment(models.Model):
   bootfile = models.ForeignKey(BootFile)
   fragment = models.ForeignKey(BootFragment)

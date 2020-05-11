@@ -1,13 +1,13 @@
 from os import path
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import JsonResponse, HttpResponseBadRequest, QueryDict
+from django.http import HttpResponseBadRequest, HttpResponseForbidden,  \
+                        JsonResponse, QueryDict
 
 from dashboard.utils import requireSuperuser
 
 from netinstall.models import OperatingSystem
 
-@user_passes_test(requireSuperuser)
 def main(request, shortname = None):
   """ API View - Add/update/delete operatingsystem 
 
@@ -35,6 +35,8 @@ def main(request, shortname = None):
   """ 
   data = {}
 
+  print(request.user.is_superuser)
+
   if(request.method == 'GET' and not shortname):
     data = []
     for element in OperatingSystem.objects.order_by('name').all():
@@ -53,6 +55,10 @@ def main(request, shortname = None):
       }, status = 404)
 
   elif(request.method == 'DELETE'):
+    # Return a HTTP Forbidden if the request is unauthenticated.
+    if not request.user.is_superuser:
+      return HttpResponseForbidden('This method requires AUTH')
+      
     if not shortname:
       data = QueryDict(request.body)
       shortname = data['shortname']
@@ -72,6 +78,10 @@ def main(request, shortname = None):
     })
 
   elif((request.method == 'POST' and not ftid) or request.method == 'PUT'):
+    # Return a HTTP Forbidden if the request is unauthenticated.
+    if not request.user.is_superuser:
+      return HttpResponseForbidden('This method requires AUTH')
+
     data = QueryDict(request.body)
 
     # Return a bad request if mandatory fields are missing

@@ -7,9 +7,7 @@
       <th><input type="checkbox" class="selectAllHosts" id="0"></th>
       <th></th>
       <th colspan="2">Hostname</th>
-      <th>OS</th>
-      <th>Bootfile</th>
-      <th>Script</th>
+      <th>Boot-template</th>
       <th>Environment</th>
       <th>Role</th>
       <th>Status</th>
@@ -25,20 +23,10 @@
         <td colspan="2"><a href="{% url 'hostIndex' %}{{h.id}}/">
           {{h.name}}
         </a></td>
-        {% if h.os %}
-          <td>{{h.os.name}}</td>
+        {% if h.template %}
+          <td>{{h.template.name}}</td>
         {% else %}
-          <td>N/A</td>
-        {% endif %}
-        {% if h.bootfile %}
-          <td>{{h.bootfile.name}}</td>
-        {% else %}
-          <td>N/A</td>
-        {% endif %}
-        {% if h.postinstallscript %}
-          <td>{{h.postinstallscript.name}}</td>
-        {% else %}
-          <td>N/A</td>
+          <td>Not managed by shiftleader.</td>
         {% endif %}
         <td>{{h.environment.name}}</td>
         {% if h.role %}
@@ -70,9 +58,7 @@
         <th><input type="checkbox" class="selectAllHosts" id="{{hg.0.id}}"></th>
         <th></th>
         <th colspan="2">Hostname</th>
-        <th>OS</th>
-        <th>Bootfile</th>
-        <th>Script</th>
+        <th>Boot-template</th>
         <th>Environment</th>
         <th>Role</th>
         <th>Status</th>
@@ -88,20 +74,10 @@
           <td colspan="2"><a href="{% url 'hostIndex' %}{{h.id}}/">
             {{h.name}}
           </a></td>
-          {% if h.os %}
-            <td>{{h.os.name}}</td>
+          {% if h.template %}
+            <td>{{h.template.name}}</td>
           {% else %}
-            <td>N/A</td>
-          {% endif %}
-          {% if h.bootfile %}
-            <td>{{h.bootfile.name}}</td>
-          {% else %}
-            <td>N/A</td>
-          {% endif %}
-          {% if h.postinstallscript %}
-            <td>{{h.postinstallscript.name}}</td>
-          {% else %}
-            <td>N/A</td>
+            <td>Not managed by shiftleader.</td>
           {% endif %}
           <td>{{h.environment.name}}</td>
           {% if h.role %}

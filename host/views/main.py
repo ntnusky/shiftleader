@@ -10,11 +10,17 @@ from dashboard.utils import createEUI64, createContext, requireSuperuser, get_cl
 from dashboard.settings import parser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
-from host.models import Host, Interface, PartitionScheme, OperatingSystem, \
-                        BootFile, HostGroup
-from host.utils import authorize, createReplacements, NONE, IP, USER
+from host.models import Host, Interface, OperatingSystem, BootFile, HostGroup
+from host.utils import authorize, createReplacements, NONE, IP, USER, \
+    getBootConfigFile
 from nameserver.models import Domain
 from puppet.models import Environment, Report
+from netinstall.models import BootTemplate
+
+@user_passes_test(requireSuperuser)
+def main(request):
+  context = createContext(request)
+  return render(request, 'host/index.html', context)
 
 @user_passes_test(requireSuperuser)
 def index(request):
@@ -22,8 +28,8 @@ def index(request):
 
   context['header'] = "Host status"
   context['hosts'] = Host.objects.all()
+  context['templates'] = BootTemplate.objects.all()
   context['environments'] = Environment.objects.all()
-  context['partitionschemes'] = PartitionScheme.objects.all()
   context['operatingsystems'] = OperatingSystem.objects.order_by('name').all()
   context['hostgroups'] = HostGroup.objects.order_by('name').all()
   context['bootfiles'] = BootFile.objects.filter(
@@ -41,7 +47,6 @@ def single(request, id, logid = 0):
   context['header'] = "%s.%s" % (context['host'].name,
       context['host'].getDomain().name)
   context['reports'] = context['host'].report_set.order_by('-time').all()[:40]
-  context['partitionSchemes'] = PartitionScheme.objects.all()
   if(logid == 0):
     context['report'] = context['host'].report_set.order_by('-time').first()
     context['reporttype'] = "Last report"
@@ -212,58 +217,13 @@ def bootfiles(request):
   return render(request, 'host/bootfiles.html', context)
 
 def preseed(request, id):
-  host = get_object_or_404(Host, pk=id)
-  data = createReplacements(host)
-
-  auth = authorize(request, host)
-  if auth == NONE:
-    return HttpResponseForbidden()
-
-  if auth == IP:
-    host.status = Host.INSTALLING
-    host.save()
-  
-  try:
-    return HttpResponse(host.bootfile.getContent(data)) 
-  except:
-    raise Http404
+  return getBootConfigFile(id, request, 'InstallConfig')
 
 def tftp(request, id):
-  context = {} 
-
-  context['dashboardURL'] = None
-  for key, item in parser.items("hosts"):
-    if(key == 'ipv4' or (context['dashboardURL'] == None and key == 'main')):
-      context['dashboardURL'] = item
-  context['host'] = get_object_or_404(Host, pk=id)
-
-  if not authorize(request, context['host']):
-    return HttpResponseForbidden()
-
-  if(int(context['host'].status) == Host.PROVISIONING and context['host'].os):
-    template = 'tftpboot/install.cfg'
-  else:
-    template = 'tftpboot/localboot.cfg'
-
-  return render(request, template, context)
+  return getBootConfigFile(id, request, 'TFTP')
 
 def postinstall(request, id):
-  host = get_object_or_404(Host, pk=id)
-  data = createReplacements(host)
-
-  auth = authorize(request, host)
-
-  if auth == NONE:
-    return HttpResponseForbidden()
-
-  if auth == IP:
-    host.status = Host.PUPPETSIGN
-    host.save()
-
-  try:
-    return HttpResponse(host.postinstallscript.getContent(data)) 
-  except:
-    raise Http404
+  return getBootConfigFile(id, request, 'PostInstall')
 
 @user_passes_test(requireSuperuser)
 def osform(request, pid=0):
@@ -342,44 +302,6 @@ def hostgroupform(request, pid=0):
       return redirect('hostIndex')
 
   return render(request, 'hostGroupForm.html', context)
-
-@user_passes_test(requireSuperuser)
-def pform(request, pid=0):
-  context = createContext(request)
-
-  if(pid == 0):
-    scheme = None
-    context['header'] = "Create a new partitioning-scheme"
-    context['buttonText'] = "Create new scheme"
-  else:
-    scheme = get_object_or_404(PartitionScheme, pk=pid)
-    context['partitionscheme'] = scheme
-    context['header'] = "Update the scheme %s" % scheme.name
-    context['buttonText'] = "Update scheme"
-
-  if(request.POST.get('csrfmiddlewaretoken')):
-    if(scheme == None):
-      scheme = PartitionScheme()
-
-    toSave = False
-    if(scheme.name != request.POST.get('name')):
-      scheme.name = request.POST.get('name')
-      toSave = True
-    if(scheme.description != request.POST.get('description')):
-      scheme.description = request.POST.get('description')
-      toSave = True
-    if(scheme.content != request.POST.get('scheme')):
-      scheme.content = request.POST.get('scheme')
-      toSave = True
-
-    if(len(scheme.name) == 0 or len(scheme.content) ==0):
-      context['message'] = "You need to fill in name and scheme!"
-      toSave = False
-
-    if(toSave):
-      scheme.save()
-      return redirect('hostIndex')
-  return render(request, 'hostPartitionForm.html', context)
 
 def list(request):
   context = {}
