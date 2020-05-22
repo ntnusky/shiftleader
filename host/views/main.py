@@ -20,6 +20,12 @@ from netinstall.models import BootTemplate
 @user_passes_test(requireSuperuser)
 def main(request):
   context = createContext(request)
+  context['domains'] = Domain.objects.order_by('name').\
+                          exclude(name__endswith='arpa').all()
+  context['environments'] = Environment.objects.order_by('name').all()
+  context['hostgroups'] = HostGroup.objects.order_by('name').all()
+  context['subnets'] = Subnet.objects.filter(ipversion=4).all()
+  context['templates'] = BootTemplate.objects.order_by('name').all()
   return render(request, 'host/index.html', context)
 
 @user_passes_test(requireSuperuser)
@@ -299,7 +305,7 @@ def hostgroupform(request, pid=0):
 
     if(toSave):
       hg.save()
-      return redirect('hostIndex')
+      return redirect('hostMain')
 
   return render(request, 'hostGroupForm.html', context)
 

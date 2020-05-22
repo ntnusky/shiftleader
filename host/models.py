@@ -2,6 +2,7 @@ import re
 import string
 from random import sample, choice
 
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils import timezone
 
@@ -34,6 +35,12 @@ class HostGroup(models.Model):
 
   def __str__(self):
     return "%s" % self.name
+
+  def toJSON(self):
+    return {
+      'id': self.id,
+      'name': self.name,
+    }
 
 class Host(models.Model):
   STATUSES = (
@@ -80,6 +87,107 @@ class Host(models.Model):
       return self.interface_set.filter(primary=True).get()
     except:
       return None
+
+  def getStatusName(self):
+    for id, name in self.STATUSES:
+      if int(id) == int(self.status):
+        return name
+    return None
+ 
+  def toJSON(self):
+    data = {
+      'id': self.id,
+      'name': self.name,
+      'status': self.status,
+      'statusName': self.getStatusName(),
+      'url': reverse('host_api_single', args=[self.id]),
+      'url-hostgroup': reverse('host_api_group', args=[self.id]),
+      'url-puppetstatus': reverse('host_api_puppet', args=[self.id]),
+      'web': reverse('singleHost', args=[self.id]),
+    }
+
+    if(self.template):
+      data['template'] = self.template.toJSON()
+    else:
+      data['template'] = None
+
+    if(self.group):
+      data['group'] = self.group.toJSON()
+    else:
+      data['group'] = None
+
+    if(self.environment):
+      data['environment'] = self.environment.toJSON()
+    else:
+      data['environment'] = None
+
+    if(self.role):
+      data['role'] = self.role.toJSON()
+    else:
+      data['role'] = None
+
+    return data
+
+  def updateInfo(self, data):
+    changed = False
+    if('template_id' in data):
+      if(data['template_id'] == '0'):
+        template = None
+      else:
+        try:
+          template = BootTemplate.objects.get(id = data['template_id'])
+        except BootTemplate.DoesNotExist:
+          raise KeyError('No template with ID %s' % data['template_id'])
+
+      if self.template != template:
+        self.template = template
+        changed = True
+
+    if('environment_id' in data):
+      if(data['environment_id'] == '0'):
+        environment = None
+      else:
+        try:
+          environment = Environment.objects.get(id = data['environment_id'])
+        except Environment.DoesNotExist:
+          raise KeyError('No environment with ID %s' % data['environment_id'])
+
+      if(self.environment != environment):
+        try:
+          role = Role.objects.get(
+                          name=self.role.name, environment = environment)
+        except (Role.DoesNotExist, AttributeError):
+          role = None
+
+        self.environment = environment
+        self.role = role
+        changed = True
+
+    if('role_id' in data):
+      if(data['role_id'] == '0'):
+        role = None
+      else:
+        try:
+          role = Role.objects.get(id = data['role_id'])
+        except Role.DoesNotExist:
+          raise KeyError('No role with ID %s' % data['role_id'])
+
+      if(self.role != role):
+        if(self.environment != role.environment):
+          raise AttributeError('Role %d don\'t belong to environment %d' % \
+                  (role.id, self.environment.id))
+
+        self.role = role
+        changed = True
+
+    if('rebuild' in data): 
+      if(data['rebuild'] == '1'):
+        self.status = Host.PROVISIONING
+      else:
+        self.status = Host.OPERATIONAL
+      changed = True
+
+    return changed
 
   def updatePuppetStatus(self):
     if(int(self.status) not in [self.OPERATIONAL, self.PUPPETREADY,
@@ -151,13 +259,12 @@ class Host(models.Model):
       return ""
 
   def getStatusText(self):
-    status = self.status
-    for s in self.STATUSES:
-      if s[0] == int(status):
-        statusText = s[1]
+    try:
+      report = self.report_set.last()
+    except:
+      report = None
 
-    report = self.report_set.last()
-    if(statusText == 'Operational' and report):
+    if(report):
       met = report.reportmetric_set.filter(metricType=ReportMetric.TYPE_RESOURCE).all()
       metrics = {}
       for metric in met:
@@ -176,7 +283,6 @@ class Host(models.Model):
       except KeyError:
         statusText = "MetricsMissing"
 
-    if statusText:
       return statusText
     else:
       return "N/A"

@@ -1,6 +1,7 @@
 import ipaddress
 import re
 
+from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
 
 from dashboard.settings import parser
@@ -10,7 +11,7 @@ def populateMenu(request):
   
   m = {}
   m['name'] = 'Hosts' 
-  m['url'] = reverse('hostIndex')
+  m['url'] = reverse('hostMain')
   m['active'] = request.path.startswith(m['url'])
   m['type'] = 'link'
   menu.append(m)
@@ -116,3 +117,19 @@ def createEUI64(v6net, mac):
     return ipaddress.IPv6Address(netid+hostid)
   else:
     return False
+
+
+def pretty_time(since):
+    now = datetime.utcnow().replace(tzinfo=since.tzinfo)
+    opened_for = (now - since).total_seconds()
+    names = ["seconds","minutes","hours","days","weeks","months"]
+    modulos = [ 1,60,3600,3600*24,3600*24*7,3660*24*30]
+    values = []
+    for m in modulos[::-1]:
+        values.append(int(opened_for / m))
+        opened_for -= values[-1]*m
+    pretty = [] 
+    for i,nm in enumerate(names[::-1]):
+        if values[i]!=0:
+            pretty.append("%i %s" % (values[i],nm))
+    return " ".join(pretty[0:2])

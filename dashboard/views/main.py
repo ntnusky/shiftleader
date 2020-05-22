@@ -9,7 +9,7 @@ from dashboard.utils import createContext, requireSuperuser
 
 @user_passes_test(requireSuperuser)
 def index(request):
-  return redirect(reverse('hostIndex'))
+  return redirect(reverse('hostMain'))
 
 def loginPage(request):
   context = {}

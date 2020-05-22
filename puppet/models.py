@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils import timezone
 
@@ -10,6 +11,18 @@ class Environment(models.Model):
 
   def __str__(self):
     return "%s (%s)" % (self.name, "Active" if self.is_active() else "In-Active")
+
+  def toJSON(self):
+    data = {
+      'id': self.id,
+      'name': self.name,
+      'active': self.is_active(),
+      'url-roles': reverse('puppet_api_roles', args=[self.id]),
+    }
+    return data
+
+  def getRoleUrl(self):
+    return reverse('puppet_api_roles', args=[self.id])
 
   def getLatestVersion(self):
     return self.version_set.order_by('-created').first()
@@ -136,6 +149,16 @@ class Role(models.Model):
           "Active" if self.is_active() else "In-Active")
     else:
       return "%s in %s" % (self.name, self.environment.name) 
+
+  def toJSON(self):
+    data = {
+      'id': self.id,
+      'name': self.name,
+      'environment': self.environment.name,
+      'environment-url': reverse('puppet_api_environment', args=[self.id]), 
+    }
+    return data
+
 
   def is_active(self):
     invalid = self.last_deployed.timestamp() + 900

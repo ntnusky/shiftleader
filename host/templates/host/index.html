@@ -4,78 +4,242 @@
 {% endblock page-header %}
 
 {% block page-content %}
-  <p class="ajax"></p>
+  <div id="hostModal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-wide">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close"
+            data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Add host</h4>
+        </div>
+        <div class="modal-body">
+          <div class="messages" id="hostform">
+          </div>
+          <form method="post" target="{% url 'host_api_main' %}" id="newHost" class="form-horizontal">
+            {% csrf_token %} 
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="hostname">Hostname</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="hostname" name="hostname">
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2"
+              for="hosttype">Registration-Type</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="hosttype" name="hosttype">
+                  <option> -- Select one -- </option>
+                  <option value="internal">
+                    Internal host - Host placed in a subnet managed by
+                    shiftleader. 
+                  </option>
+                  <option value="external" disabled>
+                    External host - Placed in a subnet not controlled by
+                    shiftleader. (Currently not implemented server-side).
+                  </option>
+                </select>
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="environment">Environment</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="environment" name="environment">
+                  <option value="0">-- No environment --</option>
+                  <option value="0" disabled> ------------ </option>
+                  {% for environment in environments %}
+                    {% if environment.is_active %}
+                      <option value="{{environment.id}}"
+                          url="{{environment.getRoleUrl}}">
+                        {{environment.name}}
+                      </option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="role">Role</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="role" name="role">
+                  <option value="0">-- No role --</option>
+                  <option value="0" disabled> ------------ </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group hostform-internal">
+              <label class="control-label col-sm-2" for="template">Boot Template</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="template" name="template">
+                  <option value="0">-- not managed --</option>
+                  <option value="0" disabled> ------------ </option>
+                  {% for t in templates %}
+                    <option value="{{t.id}}">{{t.name}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="ifname">Interface name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="ifname"
+                        name="ifname" placeholder="auto">
+              </div>
+            </div>
+          
+            <div class="form-group hostform-external">
+              <label class="control-label col-sm-2" for="domain">Domain</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="domain" name="domain">
+                  {% for domain in domains %}
+                    <option value="{{domain.id}}">
+                      {{domain.name}}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          
+            <div class="form-group hostform-internal">
+              <label class="control-label col-sm-2" for="subnet">Subnet</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="subnet" name="subnet">
+                  {% for subnet in subnets %}
+                    <option value="{{subnet.id}}">
+                      '{{subnet.name}}' ({{subnet.prefix}}/{{subnet.mask}})
+                      - {{subnet.free}} free addresses.
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group hostform-internal">
+              <label class="control-label col-sm-2" for="mac">MAC Address</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="mac" 
+                    name="mac" placeholder="00:53:ac:01:4a:f2">
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="ipv4">IPv4 address</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="ipv4" name="ipv4"
+                    placeholder="198.51.100.218 (leave empty for automatic assignment)">
+              </div>
+            </div>
+          
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="ipv6">IPv6 address</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="ipv6" name="ipv6"
+                    placeholder="2001:db8:f00:1337::123 (write 'eui64' for EUI-64 address)">
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="submitNewHost" 
+              class="btn btn-primary">Create</button>
+          <button type="button" class="btn btn-default"
+              data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="col-12 col-sm-12 col-md-12 col-lg-2">
     <div class="">
       <div class="col-4 col-sm-4 col-md-4 col-lg-12">
         <h2>Host-Actions:</h2>
-        <div class="btn-group-vertical">
+        <div class="btn-group-vertical btn-block">
           <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateGroup" 
-                data-toggle="dropdown">
-              Set Group <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-              <li><a class="updateAGroup" id="0">No group</a></li>
-              {% for hg in hostgroups %}
-                <li><a class="updateAGroup" id="{{hg.id}}">{{hg.name}}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-          <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateEnv" 
-                data-toggle="dropdown">
-              Update Environment <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu">
-              {% for e in environments %}
-                <li><a class="updateEvironment" id="{{e.id}}">{{e.name}}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-          <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateRoles" 
-                data-toggle="dropdown">
-              Update role<span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu dropdown-role" role="menu"> 
-            </ul>
-          </div>
-          <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateTemplate" 
-                data-toggle="dropdown">
-              Change Boot-Template<span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu"> 
-              <li><a class="templateChoice" id="0">Do not netinstall</a></li>
-              {% for t in templates %}
-                <li><a class="templateChoice" id="{{t.id}}">{{t.name}}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-          <a href="#" class="btn btn-warning changeButton disabled rebuild">Rebuild host</a>
-          <a href="#" class="btn btn-warning changeButton disabled norebuild">Cancel rebuild of host</a>
-          <a href="#" class="btn btn-danger changeButton disabled deleteHost">Delete Host</a>
-        </div>
-      </div>
-      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-        <h2>Management:</h2>
-        <div class="btn-group-vertical">
-          <div class="btn-group">
-            <a href="#" class="btn btn-primary newHostModal">
+            <button id="newHost" class="btn btn-primary">
               Add new Host
             </a>
           </div>
           <div class="btn-group">
-            <a href="{% url 'bootfiles' %}" class="btn btn-primary">
-              Manage bootfiles
-            </a>
+            <button type="button" id="setGroup"
+                class="btn btn-success disabled dropdown-toggle hostAction" 
+                data-toggle="dropdown">
+              Set Group <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a class="menuitem" id="0"> -- No group --</a></li>
+              <li class="divider"></li>
+              {% for hg in hostgroups %}
+                <li><a class="menuitem" id="{{hg.id}}">{{hg.name}}</a></li>
+              {% endfor %}
+            </ul>
           </div>
+          <div class="btn-group">
+            <button type="button" id="setTemplate"
+                class="btn btn-success disabled dropdown-toggle hostAction" 
+                data-toggle="dropdown">
+              Set Boot-Template <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu"> 
+              <li><a class="menuitem" id="0"> -- Not managed--</a></li>
+              <li class="divider"></li>
+              {% for t in templates %}
+                <li><a class="menuitem" id="{{t.id}}">{{t.name}}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button" id="setEnvironment"
+                class="btn btn-success disabled dropdown-toggle hostAction" 
+                data-toggle="dropdown">
+              Set Puppet env <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a class="menuitem" id="0"> -- Clear environment --</a></li>
+              <li class="divider"></li>
+              {% for e in environments %}
+                {% if e.is_active %}
+                  <li><a class="menuitem" id="{{e.id}}">
+                    {{e.name}}
+                  </a></li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="btn-group">
+            <button type="button" id="setRole"
+                class="btn btn-success disabled dropdown-toggle hostAction" 
+                data-toggle="dropdown">
+              Set Puppet role <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-role" role="menu"> 
+              <li><a class="menuitem" id="0"> -- Clear role --</a></li>
+              <li class="divider"></li>
+            </ul>
+          </div>
+          <button id="rebuild" class="btn btn-warning changeButton disabled hostAction">
+            Rebuild
+          </button>
+          <button id="delete" class="btn btn-danger changeButton disabled hostAction">
+            Delete Host
+          </button>
+        </div>
+      </div>
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+        <h2>Host-Groups:</h2>
+        <p>Select which host-groups to display in the table (ctrl+click for
+        multiple)</p>
+        <select id="hostGroupSelector" class="form-control" multiple 
+            size="{{hostgroups.count|add:1}}">
+          <option value="0" selected>Non-categorized</option>
+          {% for hg in hostgroups %}
+            <option value="{{ hg.id }}">{{ hg.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="btn-group-vertical btn-block">
           <div class="btn-group">
             <a href="{% url 'hostGroupNew' %}" class="btn btn-primary">
               Add HostGroup
@@ -92,6 +256,16 @@
                 <li><a href="{% url 'hostGroupEdit' hg.id %}">{{hg.name}}</a></li>
               {% endfor %}
             </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-4 col-sm-4 col-md-4 col-lg-12">
+        <h2>Management:</h2>
+        <div class="btn-group-vertical">
+          <div class="btn-group">
+            <a href="{% url 'bootfiles' %}" class="btn btn-primary">
+              Manage bootfiles
+            </a>
           </div>
           <div class="btn-group">
             <a href="{% url 'hostOsNew' %}" class="btn btn-primary">
@@ -115,15 +289,560 @@
     </div>
   </div>
   <div class="col-12 col-sm-12 col-md-12 col-lg-10">
-    <p class="tablemessage"></p>
-    <div class="hosttable"></div>
+    <h1>Managed hosts</h1>
+    <div class="messages" id="hosttable-message"></div>
+    <form id="hiddenform">
+      {% csrf_token %}
+      <input type="hidden" name="host" id="host">
+    </form>
+    <table id="host-table" class="table table-hover table-condensed">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="allHosts"></th>
+          <th onclick="sortTable(2, 'host-table')" colspan="2">Name</th>
+          <th onclick="sortTable(3, 'host-table')">Host-Group</th>
+          <th onclick="sortTable(4, 'host-table')">Boot-template</th>
+          <th onclick="sortTable(5, 'host-table')">Status</th>
+          <th onclick="sortTable(6, 'host-table')">Environment</th>
+          <th onclick="sortTable(7, 'host-table')">Role</th>
+          <th>Puppet-status</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
   </div>
   
   <script>
-    function lol() {
+    function printMessage(loc, text, type) {
+      var element = $('<div>', {
+        class: 'alert alert-' + type,
+        id: text,
+        text: text,
+      })
+      $(loc).append(element);
+      setTimeout(function() { $(element).fadeOut(500); }, 2000);
+      setTimeout(function() { $(element).remove(); }, 3000);
+    }
+    function setHostActionButtonState() {
+      if($('input.selectHost:checked').length) {
+        var environments = [];
+        var managed = false;
+        var not_managed = false;
+        var provisioning = false;
+        var operational = false;
+        var role_url = undefined;
+
+        $('input.selectHost:checked').each(function() {
+          var environment = $('tr#' + this.id + '.hostrow')
+                            .find('td.environment').html();
+          role_url = $('tr#' + this.id + '.hostrow')
+                            .find('td.environment').attr('roles');
+          if(! environments.includes(environment)) {
+            environments.push(environment)
+          }
+
+          var statusname = $('tr#' + this.id + '.hostrow').find('td.statusName')
+                                        .html();
+          if(statusname == 'Provisioning' || statusname == 'Installing') {
+            provisioning = true;
+          } else {
+            operational = true;
+          }
+          
+          var template_id = $('tr#' + this.id + '.hostrow').find('td.template')
+                                        .attr('id');
+          if(template_id == '0') {
+            not_managed = true;
+          } else {
+            managed = true;
+          }
+        });
+
+        $('button#setGroup.hostAction').toggleClass('disabled', false);
+        $('button#setTemplate.hostAction').toggleClass('disabled', false);
+        $('button#setEnvironment.hostAction').toggleClass('disabled', false);
+        $('button#delete.hostAction').toggleClass('disabled', false);
+
+        if(provisioning && ! operational) {
+          $('button#rebuild.hostAction').html("Cancel Rebuild");
+          $('button#rebuild.hostAction').attr('action', '0');
+          $('button#rebuild.hostAction').toggleClass('disabled', false);
+        } else if (operational && ! provisioning) {
+          $('button#rebuild.hostAction').html("Rebuild");
+          $('button#rebuild.hostAction').attr('action', '1');
+          $('button#rebuild.hostAction').toggleClass('disabled', false);
+        } else {
+          $('button#rebuild.hostAction').toggleClass('disabled', true);
+        }
+
+        $('button#setRole.hostAction').toggleClass('disabled', true);
+        if(environments.length == 1 && role_url) {
+          $.ajax({
+            url: role_url,
+            type: 'GET',
+            success: function(data) {
+              $('button#setRole.hostAction').parent().find('li.ajax').remove();
+              var menu = $('button#setRole.hostAction').parent().find('ul');
+              for(element in data) {
+                $(menu).append($('<li>', {
+                  class: 'ajax',
+                }).append($('<a>', {
+                  class: 'menuitem', 
+                  id: data[element]['id'],
+                }).append(data[element]['name'])));
+              }
+              $('button#setRole.hostAction').parent().find('li.ajax')
+                  .find('a.menuitem').click(function() {
+                updateHostParameter(undefined,  {'role_id': this.id});
+              });
+              $('button#setRole.hostAction').toggleClass('disabled', false);
+            },
+            error: function(data) {
+              printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'warning');
+            },
+          });
+        }
+      } else {
+        $('button.hostAction').toggleClass('disabled', true);
+      }
+    }
+
+    function selectHostButtonAction() {
+      setHostActionButtonState();
+    }
+
+    function setVisibleTableRows() {
+      $('select#hostGroupSelector > option').each(function() {
+        if(this.selected) {
+          $('table#host-table').find('td#' + this.value + '.hostgroup')
+              .parent().show();
+        } else {
+          $('table#host-table').find('td#' + this.value + '.hostgroup')
+              .parent().hide();
+        }
+      });
+
+      if($('table#host-table > tbody').find('tr:visible').length == 0) {
+        printMessage(
+          'div#hosttable-message.messages', 
+          'Select host-groups in the left-margin menu to display hosts', 'info'
+        );
+      }
+
+      if($('input#allHosts').prop('checked')) {
+        $('input#allHosts').prop("indeterminate", true);
+      }
+    }
+
+    function updateHostParameter(urlelement, parameters) {
+      $('input.selectHost:checked').each(function() {
+        var csrf = $('form#hiddenform')
+                    .find('input[name=csrfmiddlewaretoken]').val();
+        var row = $(this).parent().parent();
+
+        if(urlelement) {
+          var url =  $(row).find(urlelement).attr('url');
+        } else {
+          var url = $(row).attr('url');
+        }
+        console.log(url);
+
+        $.ajax({
+          url: url, 
+          type: 'PUT',
+          data: parameters, 
+          dataType: 'json',
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          },
+          success: function(data) {
+            printMessage('div#hosttable-message.messages', data['message'], 'success');
+            reloadTableRow(row);
+            setVisibleTableRows();
+          },
+          error: function(data) {
+            printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'warning');
+          },
+        });
+      });
+    }
+
+    function loadRoleSelector() {
+      $('form#newHost').find('select#role').attr('disabled', true);
+      $('form#newHost').find('select#role').find('option.roleoption').remove();
+
+      var option = $('form#newHost').find('select#environment')
+                      .children('option:selected')[0];
+      if($(option).attr('url')) {
+        console.log($(option).attr('url'));
+        $.ajax({
+          url: $(option).attr('url'),
+          type: 'GET',
+          success: function(data) {
+            for(id in data) {
+              $('form#newHost').find('select#role').append(
+                $('<option>', {
+                  value: data[id]['id'],
+                  class: 'roleoption',
+                }).append(data[id]['name'])
+              );
+            }
+            $('form#newHost').find('select#role').attr('disabled', false);
+          },
+          error: function(data) {
+            printMessage('div#hostform.messages', 
+                    data['responseJSON']['message'], 'warning');
+          },
+        });
+      } else {
+        $('form#newHost').find('select#role').attr('disabled', false);
+      }
+    }
+
+    function setHostFormFields() {
+      var hosttype = $(this).find('option:selected').val();
+
+      if(hosttype == 'internal') {
+        $('form#newHost').find('input, select').attr('disabled', false);
+        $('div.hostform-external').find('input, select').attr('disabled', true);
+        $('div.hostform-external').hide();
+        $('div.hostform-internal').show();
+      } else if (hosttype == 'external') {
+        $('form#newHost').find('input, select').attr('disabled', false);
+        $('div.hostform-internal').find('input, select').attr('disabled', true);
+        $('div.hostform-internal').hide();
+        $('div.hostform-external').show();
+      } else {
+        $('form#newHost').find('input, select')
+            .not('input[name=hostname],select[name=hosttype]')
+            .attr('disabled', true);
+        $('div.hostform-external').hide();
+        $('div.hostform-internal').hide();
+      }
+    }
+
+    function setButtonAction() {
+      // Enable the 'select-all' checkbox.
+      $('input#allHosts').change(function() {
+        // If the select-all button is checked; select all visible rows.
+        if(this.checked) {
+          $('table#host-table').find('tr:visible').find('input.selectHost')
+              .prop('checked', true);
+
+        // If the select-all button is cleared; deselect ALL rows.
+        } else {
+          $('table#host-table').find('input.selectHost').prop('checked', false);
+        }
+      });
+
+      $('button#newHost').click(function() {
+        $('form#newHost').find('select').prop('selectedIndex', 0);
+        $('form#newHost').find('input.form-control').val("");
+        $("#hostModal").modal('show');
+        setHostFormFields();
+      });
+
+      $('form#newHost').find('select#environment').change(function() {
+        loadRoleSelector();
+      });
+      $('button#setGroup.hostAction').parent().find('a.menuitem').click(function() {
+        updateHostParameter('td.hostgroup', {'group_id': this.id});
+      });
+
+      $('button#setTemplate.hostAction').parent().find('a.menuitem').click(function() {
+        updateHostParameter(undefined,  {'template_id': this.id});
+      });
+
+      $('button#setEnvironment.hostAction').parent().find('a.menuitem').click(function() {
+        updateHostParameter(undefined,  {'environment_id': this.id});
+      });
+
+      $('button#setRole.hostAction').parent().find('a.menuitem').click(function() {
+        updateHostParameter(undefined,  {'role_id': this.id});
+      });
+
+      $('button#rebuild.hostAction').click(function() {
+        updateHostParameter(undefined,  {'rebuild': $(this).attr('action')});
+      });
+      $('button#delete.hostAction').click(function() {
+        if(confirm("Do you really want to delete these hosts?")) {
+          $('input.selectHost:checked').each(function() {
+            var csrf = $('form#hiddenform')
+                        .find('input[name=csrfmiddlewaretoken]').val();
+            var row = $(this).parent().parent();
+
+            $.ajax({
+              url: $(row).attr('url'), 
+              type: 'DELETE',
+              beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFToken", csrf);
+              },
+              success: function(data) {
+                printMessage('div#hosttable-message.messages', data['message'], 'success');
+                $(row).remove();
+              },
+              error: function(data) {
+                printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'warning');
+              },
+            });
+          });
+        }
+      });
+
+      $('select#hostGroupSelector').change(setVisibleTableRows);
+      setHostActionButtonState();
+
+      $('select#hosttype').change(setHostFormFields);
+
+      $('form#newHost').submit(function(e) {
+        e.preventDefault();
+
+        var hosttype = $('form#newHost').find('select#hosttype')
+                            .find('option:selected').val() 
+
+        var ok = true;
+
+        if(hosttype == 'internal') {
+          if($('form#newHost').find('select#subnet').find('option:selected').val()
+              != '0' && $('form#newHost').find('input#mac').val() == '') {
+            ok = false;
+            printMessage('div#hostform.messages', 
+              'A MAC-adress must be supplied', 
+              'warning'
+            );
+          }
+        } else if (hosttype == 'external') {
+          if($('form#newHost').find('input#ipv4').val() == '') {
+            ok = false;
+            printMessage('div#hostform.messages', 
+                'Cannot auto-assign IP-address for external hosts.', 'warning');
+          }
+        } else {
+          ok = false;
+          printMessage('div#hostform.messages', 
+              'A registration-type must be selected.', 'warning');
+        }
+
+        if($('form#newHost').find('input#hostname').val() == '') {
+          ok = false;
+          printMessage('div#hostform.messages', 'Missing hostname', 'warning');
+        }
+
+        if($('form#newHost').find('input#ifname').val() == '') {
+          ok = false;
+          printMessage('div#hostform.messages', 'Missing interface-name', 'warning');
+        }
+
+        if(ok) {
+          $('button#submitNewHost').attr('disabled', 'true');
+          $.ajax({
+            url: $('form#newHost').attr('target'), 
+            type: $('form#newHost').attr('method'),
+            data: $('form#newHost').serialize(), 
+            dataType: 'json',
+            success: function(data) {
+              printMessage('div#hostform.messages', data['message'], 'success');
+              $('button#submitNewHost').removeAttr('disabled');
+              reloadTable();
+              $("#hostModal").modal('hide');
+            },
+            error: function(data) {
+              printMessage('div#hostform.messages', data['responseJSON']['message'], 'warning');
+              $('button#submitNewHost').removeAttr('disabled');
+            },
+          });
+        }
+
+      });
+
+      $("button#submitNewHost").click(function() {
+        $('form#newHost').submit();
+      });
+    }
+    function populateTableRow(row, data) {
+      if(data['group']){
+        var group_name = data['group']['name'];
+        var group_id = data['group']['id'];
+      } else {
+        var group_name = "";
+        var group_id = "0";
+      }
+
+      if(data['template']) {
+        var template = data['template']['name'];
+        var template_id = data['template']['id'];
+      } else {
+        var template = 'N/A';
+        var template_id = '0';
+      }
+
+      if(data['environment']) {
+        var environment = data['environment']['name'];
+        var environment_id = data['environment']['id'];
+        var roles_url = data['environment']['url-roles'];
+      } else {
+        var environment = 'N/A';
+        var environment_id = '0';
+        var roles_url = undefined; 
+      }
+
+      if(data['role']) {
+        var role = data['role']['name'];
+        var role_id = data['role']['id'];
+      } else {
+        var role = 'N/A';
+        var role_id = '0';
+      }
+      
+      switch ( data['status'] ) {
+        case '0': // Operational
+          var icon = 'glyphicon-ok-sign'; 
+          var color = ' text-success'
+          break;
+        case '1': // Provisioning
+          var icon = 'glyphicon-hourglass'; 
+          var color = ' text-info'
+          break; 
+        case '2': // Installing
+          var icon = 'glyphicon-hourglass'; 
+          var color = ' text-info'
+          break; 
+        case '3': // Puppet-Sign
+          var icon = 'glyphicon-hourglass'; 
+          var color = ' text-info'
+          break; 
+        case '4': // Puppet-Ready
+          var icon = 'glyphicon-hourglass'; 
+          var color = ' text-info'
+          break; 
+        case '5': // Puppet-Timeout 
+          var icon = 'glyphicon-remove-sign'; 
+          var color = ' text-danger'
+          break; 
+        case '6': // Puppet-Error 
+          var icon = 'glyphicon-remove-sign'; 
+          var color = ' text-danger'
+          break; 
+        default: 
+          var icon = 'glyphicon-question-sign'; 
+          var color = ' text-danger'
+      }
+
+      row.append($('<td>', {id: 'check'}).append(
+        $('<input>', {
+          type: 'checkbox',
+          id: data['id'],
+          class: 'selectHost',
+          name: 'selectHost',
+        }).change(selectHostButtonAction)
+      ));
+      row.append($('<td>').append($('<span>', {
+        class: 'glyphicon ' + icon + color,
+      })));
+      row.append(
+        $('<td>', { class: 'hostname'}).append(
+          $('<a>', { href: data['web']}).append(data['name'])
+        ));
+      row.append($('<td>', {
+        text: group_name, 
+        id: group_id,
+        class: 'hostgroup',
+        url: data['url-hostgroup'],
+      }));
+      row.append($('<td>', {
+        class: 'template', 
+        text: template,
+        id: template_id,
+      }));
+      row.append($('<td>', {text: data['statusName'], class: 'statusName'}));
+      row.append($('<td>', {
+        text: environment, 
+        class: 'environment',
+        id: environment_id,
+        roles: roles_url,
+      }));
+      row.append($('<td>', {
+        text: role,
+        class: 'role',
+        id: role_id,
+      }));
+      row.append(
+        $('<td>', {class: 'puppet-status', id:data['id']})
+          .append('Loading...')
+      );
+
+
+      $.ajax({
+        url: data['url-puppetstatus'],
+        type: 'GET',
+        success: function(result) {
+          $('td#' + data['id'] + '.puppet-status').text("");
+          $('td#' + data['id'] + '.puppet-status').append(
+              result['status']);
+          $('td#' + data['id'] + '.puppet-status').append(" - ");
+          $('td#' + data['id'] + '.puppet-status').append(
+              result['last_run_pretty']);
+        },
+        error: function(result) {
+          $('td#' + data['id'] + '.puppet-status').text("");
+        },
+      });
+    }
+    function reloadTableRow(row) {
+      var selected = false;
+      if($(row).find('input').length) {
+        selected = $(row).find('input')[0].checked;
+      }
+      $(row).find('td#check').html(" ... ");
+      $.ajax({
+        url: $(row).attr('url'),
+        type: 'GET',
+        success: function(result) {
+          $(row).find('td').remove();
+          populateTableRow(row, result);
+          $(row).find('input')[0].checked = selected;
+        },
+        error: function(data) {
+          printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'danger')
+        },
+      });
+    }
+    function refreshTable() {
+      $('table#host-table > tbody > tr').each(function() {
+        reloadTableRow($(this));
+      });
+      setVisibleTableRows();
+    }
+    function reloadTable() {
+      $.ajax({
+        url: '{% url 'host_api_main' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#host-table > tbody').empty()
+          for(var element in result) {
+            var row = $('<tr>', {
+              class: 'hostrow',
+              id: result[element]['id'],
+              url: result[element]['url'],
+            });
+
+            populateTableRow(row, result[element]);
+
+            $('table#host-table > tbody').append(row);
+          }
+          setVisibleTableRows();
+        },
+        error: function(data) {
+          printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'danger')
+        },
+      });
     }
 
     $(document).ready(function(){
+      reloadTable();
+      setButtonAction();
+      setInterval(refreshTable, 60000);
     });
   </script>
 {% endblock page-content %}

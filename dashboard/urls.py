@@ -18,13 +18,14 @@ from django.conf.urls import include, url
 from dashboard.views import main
 
 webapp = [
-  url(r'^host/', include('host.urls')),
-  url(r'^netinstall/', include('netinstall.urls')),
+  url(r'^host/',        include('host.urls')),
+  url(r'^netinstall/',  include('netinstall.urls')),
 ]
 
 api_v1 = [
-  url(r'^host/', include('host.endpoints')),
-  url(r'^netinstall/', include('netinstall.endpoints')),
+  url(r'^host/',        include('host.endpoints')),
+  url(r'^netinstall/',  include('netinstall.endpoints')),
+  url(r'^puppet/',      include('puppet.endpoints')),
 ]
 
 urlpatterns = [
