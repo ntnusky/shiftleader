@@ -119,6 +119,18 @@ class Domain(models.Model):
   def __str__(self):
     return "%s" % self.name
 
+  def toJSON(self):
+    if(self.name.endswith('in-addr.arpa')):
+      t = 'reverse'
+    else:
+      t = 'forward'
+
+    return {
+      'id': self.id,
+      'name': self.name,
+      'type': t,
+    }
+
   def deleteDomain(self, name):
     self.server.clearName(self.name, name)
 

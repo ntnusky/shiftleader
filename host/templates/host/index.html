@@ -95,11 +95,6 @@
               <label class="control-label col-sm-2" for="domain">Domain</label>
               <div class="col-sm-10">
                 <select class="form-control" id="domain" name="domain">
-                  {% for domain in domains %}
-                    <option value="{{domain.id}}">
-                      {{domain.name}}
-                    </option>
-                  {% endfor %}
                 </select>
               </div>
             </div>
@@ -534,6 +529,25 @@
         } else {
           $('table#host-table').find('input.selectHost').prop('checked', false);
         }
+      });
+
+      $.ajax({
+        url: '{% url 'nameserver_domain' %}',
+        type: 'GET',
+        success: function(data) {
+          for(id in data) {
+            if(data[id]['type'] == 'forward') {
+              $('select#domain').append(
+                $('<option>', { value: data[id]['id'] }).append(data[id]['name'])
+              );
+              console.log(data[id]);
+            }
+          }
+        },
+        error: function(data) {
+          printMessage('div#hosttable-message.messages', 
+              'Could not load domain-list', 'danger');
+        },
       });
 
       $('button#newHost').click(function() {

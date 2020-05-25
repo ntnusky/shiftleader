@@ -24,6 +24,7 @@ webapp = [
 
 api_v1 = [
   url(r'^host/',        include('host.endpoints')),
+  url(r'^dns/',         include('nameserver.endpoints')),
   url(r'^netinstall/',  include('netinstall.endpoints')),
   url(r'^puppet/',      include('puppet.endpoints')),
 ]

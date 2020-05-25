@@ -20,8 +20,6 @@ from netinstall.models import BootTemplate
 @user_passes_test(requireSuperuser)
 def main(request):
   context = createContext(request)
-  context['domains'] = Domain.objects.order_by('name').\
-                          exclude(name__endswith='arpa').all()
   context['environments'] = Environment.objects.order_by('name').all()
   context['hostgroups'] = HostGroup.objects.order_by('name').all()
   context['subnets'] = Subnet.objects.filter(ipversion=4).all()
