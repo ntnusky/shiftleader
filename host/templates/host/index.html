@@ -252,10 +252,15 @@
               {% endfor %}
             </ul>
           </div>
+          <div class="btn-group">
+            <button id="delete-hostgroup" class="btn btn-danger">
+              Delete hostgroup
+            </button>
+          </div>
         </div>
       </div>
       <div class="col-4 col-sm-4 col-md-4 col-lg-12">
-        <h2>Management:</h2>
+        <h2>Legacy links:</h2>
         <div class="btn-group-vertical">
           <div class="btn-group">
             <a href="{% url 'bootfiles' %}" class="btn btn-primary">
@@ -408,15 +413,22 @@
     }
 
     function setVisibleTableRows() {
+      var permanent = false;
+
       $('select#hostGroupSelector > option').each(function() {
         if(this.selected) {
           $('table#host-table').find('td#' + this.value + '.hostgroup')
               .parent().show();
+          if(this.value == '0') {
+            permanent = true;
+          }
         } else {
           $('table#host-table').find('td#' + this.value + '.hostgroup')
               .parent().hide();
         }
       });
+
+      $('button#delete-hostgroup').toggleClass('disabled', permanent);
 
       if($('table#host-table > tbody').find('tr:visible').length == 0) {
         printMessage(
@@ -518,6 +530,31 @@
     }
 
     function setButtonAction() {
+      $('button#delete-hostgroup').click(function() {
+        if(confirm("Do you want to delete the selected host-groups?")) {
+          var csrf = $('form#hiddenform')
+                      .find('input[name=csrfmiddlewaretoken]').val();
+          $('select#hostGroupSelector > option:selected').each(function() {
+            var data = { 'hgid': this.value };
+            $.ajax({
+              url: '{% url 'host_api_groups' %}', 
+              type: 'DELETE',
+              data: data,
+              beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFToken", csrf);
+              },
+              success: function(data) {
+                printMessage('div#hosttable-message.messages', data['message'], 'success');
+                window.location.reload(true);
+              },
+              error: function(data) {
+                printMessage('div#hosttable-message.messages', data['responseJSON']['message'], 'warning');
+              },
+            });
+          });
+        }
+      });
+
       // Enable the 'select-all' checkbox.
       $('input#allHosts').change(function() {
         // If the select-all button is checked; select all visible rows.
@@ -756,8 +793,9 @@
       })));
       row.append(
         $('<td>', { class: 'hostname'}).append(
+          $('<div>', { name: data['name'] }).append(
           $('<a>', { href: data['web']}).append(data['name'])
-        ));
+        )));
       row.append($('<td>', {
         text: group_name, 
         id: group_id,

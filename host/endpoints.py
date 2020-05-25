@@ -1,8 +1,9 @@
 from django.conf.urls import url
-from host.views import host, main
+from host.views import host, group, main
 
 urlpatterns = [
   url(r'^$', host.main, name="host_api_main"),
+  url(r'^group$', group.main, name="host_api_groups"),
   url(r'^([0-9]+)/$', host.single, name="host_api_single"),
   url(r'^([0-9]+)/group$', host.group, name="host_api_group"),
   url(r'^([0-9]+)/installerconfig$', main.installerconfig, 

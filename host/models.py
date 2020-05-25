@@ -66,7 +66,8 @@ class Host(models.Model):
   group = models.ForeignKey(HostGroup, null=True)
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
-  template = models.ForeignKey(BootTemplate, null=True)
+  template = models.ForeignKey(BootTemplate, null=True,
+                                on_delete=models.SET_NULL)
   bootfile = models.ForeignKey('BootFile', null=True)
   postinstallscript = models.ForeignKey('BootFile', null=True,
       related_name='scripthosts')
