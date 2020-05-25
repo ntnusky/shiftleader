@@ -23,7 +23,7 @@ def main(request):
       hostgroup = HostGroup.objects.get(pk=data['hgid'])
     except:
       return JsonResponse({
-        'message': 'Method not implemented.'
+        'message': 'Group not found.'
       }, status=HTTPStatus.NOT_FOUND.value) 
 
     for h in hostgroup.host_set.all():

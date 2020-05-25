@@ -531,7 +531,9 @@
 
     function setButtonAction() {
       $('button#delete-hostgroup').click(function() {
-        if(confirm("Do you want to delete the selected host-groups?")) {
+        if($('button#delete-hostgroup').hasClass('disabled')) {
+          return
+        } else if(confirm("Do you want to delete the selected host-groups?")) {
           var csrf = $('form#hiddenform')
                       .find('input[name=csrfmiddlewaretoken]').val();
           $('select#hostGroupSelector > option:selected').each(function() {
