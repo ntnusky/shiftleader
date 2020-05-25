@@ -299,12 +299,13 @@
       <thead>
         <tr>
           <th><input type="checkbox" id="allHosts"></th>
-          <th onclick="sortTable(2, 'host-table')" colspan="2">Name</th>
-          <th onclick="sortTable(3, 'host-table')">Host-Group</th>
-          <th onclick="sortTable(4, 'host-table')">Boot-template</th>
-          <th onclick="sortTable(5, 'host-table')">Status</th>
-          <th onclick="sortTable(6, 'host-table')">Environment</th>
-          <th onclick="sortTable(7, 'host-table')">Role</th>
+					<th></th>
+          <th>Name</th>
+          <th>Host-Group</th>
+          <th>Boot-template</th>
+          <th>Status</th>
+          <th>Environment</th>
+          <th>Role</th>
           <th>Puppet-status</th>
         </tr>
       </thead>
@@ -892,6 +893,7 @@
 
     $(document).ready(function(){
       reloadTable();
+      enableTableSorter();
       setButtonAction();
       setInterval(refreshTable, 60000);
     });
