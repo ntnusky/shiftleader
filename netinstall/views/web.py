@@ -22,6 +22,5 @@ def template(request):
 @user_passes_test(requireSuperuser)
 def filepreview(request, fid):
   configFile = get_object_or_404(ConfigFile, id=fid)
-  host = Host.objects.first()
-  return HttpResponse(configFile.getContent(host))
+  return HttpResponse(configFile.getContent(None))
   

@@ -220,7 +220,7 @@ def bootfiles(request):
   
   return render(request, 'host/bootfiles.html', context)
 
-def preseed(request, id):
+def installerconfig(request, id):
   return getBootConfigFile(id, request, 'InstallConfig')
 
 def tftp(request, id):

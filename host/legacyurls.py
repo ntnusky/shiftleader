@@ -43,8 +43,8 @@ urlpatterns = [
 
   # TFTP Boot URL's
   url(r'^([0-9]+)/tftp$', main.tftp, name="hostTftp"),
-  url(r'^([0-9]+)/preseed$', main.preseed, name="hostPreseed"),
-  url(r'^([0-9]+)/installconfig$', main.preseed, name="hostInstallConfig"),
+  url(r'^([0-9]+)/preseed$', main.installerconfig, name="hostPreseed"),
+  url(r'^([0-9]+)/installconfig$', main.installerconfig, name="hostInstallConfig"),
   url(r'^([0-9]+)/postinstall\.sh$', main.postinstall, name="hostPostinstall"),
   url(r'^bootfiles/file/([0-9]+)/download$', tftp.bootfile,
       name="downloadBootfile"),

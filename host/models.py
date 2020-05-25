@@ -4,6 +4,7 @@ from random import sample, choice
 
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from dashboard.settings import parser
@@ -93,6 +94,15 @@ class Host(models.Model):
       if int(id) == int(self.status):
         return name
     return None
+
+  def getTFTPConfig(self):
+    if(int(self.status) == Host.PROVISIONING):
+      try:
+        return self.template.tftpconfig.getContent(self)
+      except:
+        return None
+    else:
+      return render_to_string('tftpboot/localboot.cfg', {})
  
   def toJSON(self):
     data = {
@@ -102,7 +112,10 @@ class Host(models.Model):
       'statusName': self.getStatusName(),
       'url': reverse('host_api_single', args=[self.id]),
       'url-hostgroup': reverse('host_api_group', args=[self.id]),
+      'url-installerconfig': reverse('host_api_installerconfig', args=[self.id]),
+      'url-postinstall': reverse('host_api_postinstall', args=[self.id]),
       'url-puppetstatus': reverse('host_api_puppet', args=[self.id]),
+      'url-tftp': reverse('host_api_tftp', args=[self.id]),
       'web': reverse('singleHost', args=[self.id]),
     }
 

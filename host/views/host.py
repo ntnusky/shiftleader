@@ -3,7 +3,7 @@ import re
 from http import HTTPStatus
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.http import JsonResponse, QueryDict
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404
 from django.utils.datastructures import MultiValueDictKeyError
 

@@ -35,7 +35,7 @@ def createReplacements(host):
 
   data['POSTINSTALL'] = "%s%s" % (
     parser.get('general', 'api'), 
-    reverse('hostPostinstall', args=[host.id]),
+    reverse('host_api_postinstall', args=[host.id]),
   )
 
   data['PUPPETSERVER'] = parser.get('puppet', 'server') 

@@ -104,11 +104,11 @@ class ConfigFile(models.Model):
       substitutions['ROOTPW'] = host.password
       substitutions['POSTINSTALL'] = "%s%s" % (
         parser.get('general', 'api'),
-        reverse('hostPostinstall', args=[host.id]),
+        reverse('host_api_postinstall', args=[host.id]),
       )
       substitutions['INSTALLCONFIG'] = "%s%s" % (
         parser.get('general', 'api'),
-        reverse('hostInstallConfig', args=[host.id]),
+        reverse('host_api_installerconfig', args=[host.id]),
       )
 
       if(host.getPrimaryIf()):
