@@ -453,7 +453,6 @@
         } else {
           var url = $(row).attr('url');
         }
-        console.log(url);
 
         $.ajax({
           url: url, 
@@ -482,7 +481,6 @@
       var option = $('form#newHost').find('select#environment')
                       .children('option:selected')[0];
       if($(option).attr('url')) {
-        console.log($(option).attr('url'));
         $.ajax({
           url: $(option).attr('url'),
           type: 'GET',
@@ -579,7 +577,6 @@
               $('select#domain').append(
                 $('<option>', { value: data[id]['id'] }).append(data[id]['name'])
               );
-              console.log(data[id]);
             }
           }
         },
