@@ -23,13 +23,18 @@ class Subnet(models.Model):
     return ipaddress.ip_network("%s/%s" % (self.prefix, self.mask))
 
   def getReservedAddresses(self):
+    # Reserve net-ID and broadcast-address
+    subnet = self.getSubnet()
+    reservedAddresses = [subnet[0], subnet[-1]]
+
+    # Reserve the gateway-IP if it exists
     try:
       gateway = parser.get("DHCP", "%sGateway" % self.name)
-      reservedAddresses = [ipaddress.ip_address(gateway)]
+      reservedAddresses.append(ipaddress.ip_address(gateway))
     except:
-      reservedAddresses = []
+      pass
 
-    free = 0
+    # Iterate through reserved ranges and add the address to the reserved list.
     try:
       reserved = parser.get("DHCP", "%sReserved" % self.name)
       for address in reserved.split(','):
@@ -44,7 +49,9 @@ class Subnet(models.Model):
           reservedAddresses.append(ipaddress.ip_address(address))
     except NoOptionError:
       pass
-    return reservedAddresses
+
+    # Retrun the list of addresses; with duplicates removed.
+    return list(dict.fromkeys(reservedAddresses))
 
   def getIPVersion(self):
     subnet = self.getSubnet()
