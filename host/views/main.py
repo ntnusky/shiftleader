@@ -270,7 +270,7 @@ def osform(request, pid=0):
 
     if(toSave):
       opsys.save()
-      return redirect('hostIndex')
+      return redirect('hostMain')
 
   return render(request, 'hostOsForm.html', context)
 
