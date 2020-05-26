@@ -62,6 +62,9 @@
         $('form#osForm').attr('method', "POST");
         $('form#osForm').find('input#id').val("0");
         $('form#osForm').find('input#name').val("");
+        $('form#osForm').find('input#shortname').val("");
+        $('form#osForm').find('input#kernelurl').val("");
+        $('form#osForm').find('input#initrdurl').val("");
         $('form#osForm').find('input, button').prop('disabled', false);
       } else {
         $.ajax({
