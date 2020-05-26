@@ -35,6 +35,13 @@ def populateMenu(request):
   me['active'] = request.path.startswith(me['url'])
   m['elements'].append(me)
 
+  me = {}
+  me['name'] = 'Operating-systems' 
+  me['url'] = reverse('netinstall_os')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
   m['active'] = False
   for e in m['elements']:
     if e['active']:

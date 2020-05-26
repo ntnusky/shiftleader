@@ -315,16 +315,6 @@
   </div>
   
   <script>
-    function printMessage(loc, text, type) {
-      var element = $('<div>', {
-        class: 'alert alert-' + type,
-        id: text,
-        text: text,
-      })
-      $(loc).append(element);
-      setTimeout(function() { $(element).fadeOut(500); }, 2000);
-      setTimeout(function() { $(element).remove(); }, 3000);
-    }
     function setHostActionButtonState() {
       if($('input.selectHost:checked').length) {
         var environments = [];

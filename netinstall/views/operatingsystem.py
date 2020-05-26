@@ -3,12 +3,13 @@ from os import path
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseBadRequest, HttpResponseForbidden,  \
                         JsonResponse, QueryDict
+from django.shortcuts import get_object_or_404
 
 from dashboard.utils import requireSuperuser
 
 from netinstall.models import OperatingSystem
 
-def main(request, shortname = None):
+def main(request, osid = None):
   """ API View - Add/update/delete operatingsystem 
 
   This view let you create, update and delete operating-system.
@@ -35,49 +36,33 @@ def main(request, shortname = None):
   """ 
   data = {}
 
-  print(request.user.is_superuser)
-
-  if(request.method == 'GET' and not shortname):
+  if(request.method == 'GET' and not osid):
     data = []
     for element in OperatingSystem.objects.order_by('name').all():
       data.append(element.toJSON())
     return JsonResponse(data, safe=False)
 
-  elif(request.method == 'GET' and shortname):
-    try:
-      return JsonResponse(
-          OperatingSystem.objects.get(shortname=shortname).toJSON()
-      )
-    except OperatingSystem.DoesNotExist:
-      return JsonResponse({
-        'status': 'error',
-        'message': 'Could not find OS with shortname %s' % data['shortname'],
-      }, status = 404)
+  elif(request.method == 'GET' and osid):
+    opsys = get_object_or_404(OperatingSystem, pk=osid)
+    return JsonResponse(opsys.toJSON())
 
   elif(request.method == 'DELETE'):
     # Return a HTTP Forbidden if the request is unauthenticated.
     if not request.user.is_superuser:
       return HttpResponseForbidden('This method requires AUTH')
       
-    if not shortname:
+    if not osid:
       data = QueryDict(request.body)
-      shortname = data['shortname']
+      osid = data['id']
 
-    try:
-      opsys = OperatingSystem.objects.get(shortname=shortname)
-    except OperatingSystem.DoesNotExist:
-      return JsonResponse({
-        'status': 'error',
-        'message': 'Could not find OS with shortname %s' % shortname,
-        }, status = 404)
-
+    opsys = get_object_or_404(OperatingSystem, pk=osid)
     opsys.delete()
+
     return JsonResponse({
-      'status': 'success',
       'message': 'Deleted OS %s' % opsys.name,
     })
 
-  elif((request.method == 'POST' and not ftid) or request.method == 'PUT'):
+  elif((request.method == 'POST' and not osid) or request.method == 'PUT'):
     # Return a HTTP Forbidden if the request is unauthenticated.
     if not request.user.is_superuser:
       return HttpResponseForbidden('This method requires AUTH')
@@ -89,7 +74,6 @@ def main(request, shortname = None):
     for f in fields:
       if f not in data:
         return JsonResponse({
-          'status': 'error',
           'message': 'Missing parameter (%s)' % f,
         }, status = 400)
 
@@ -98,7 +82,6 @@ def main(request, shortname = None):
       # Return a HTTP Conflict if an OS with the same shortname exists.
       if(OperatingSystem.objects.filter(shortname=data['shortname']).count()):
         return JsonResponse({
-          'status': 'error',
           'message': 'OS with that shortname already exists',
           }, status = 409)
 
@@ -108,18 +91,13 @@ def main(request, shortname = None):
 
     # If method is "PUT" an existing record should be updated
     if(request.method == 'PUT'):
-      if(not shortname):
-        shortname = data['shortname']
+      if(not osid):
+        osid = data['id']
+
       # To update an existing record, the existing record must be fetched.
-      try:
-        opsys = OperatingSystem.objects.get(shortname=shortname)
-        response = 200 # if a record is updated, return HTTP OK
-        message = 'Operating System information updated'
-      except OperatingSystem.DoesNotExist:
-        return JsonResponse({
-          'status': 'error',
-          'message': 'Could not find OS with shortname %s' % data['shortname'],
-          }, status = 404)
+      opsys = get_object_or_404(OperatingSystem, pk=osid)
+      response = 200 # if a record is updated, return HTTP OK
+      message = 'Operating System information updated'
         
     # Create OS and report success.
     opsys.name       = data['name']
@@ -137,11 +115,9 @@ def main(request, shortname = None):
     opsys.save()
 
     return JsonResponse({
-      'status': 'success',
       'message': message, 
     }, status = response)
   else:
     return JsonResponse({
-      'status': 'error',
       'message': 'Method "%s" is not implemented' % request.method,
     }, status = 400)

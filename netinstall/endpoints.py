@@ -10,8 +10,7 @@ urlpatterns = [
   url(r'^configfile/type/([0-9]+)/$', configfile.filetype, 
                               name="netinstall_rest_file_type"),
   url(r'^os/$', operatingsystem.main, name="netinstall_rest_oss"),
-  url(r'^os/([0-9a-zA-Z\.]+)/$', operatingsystem.main, 
-                              name="netinstall_rest_os"),
+  url(r'^os/([0-9]+)/$', operatingsystem.main, name="netinstall_rest_os"),
   url(r'^template/$', template.main, name="netinstall_rest_templates"),
   url(r'^template/([0-9]+)/$', template.main, name="netinstall_rest_template"),
 ]

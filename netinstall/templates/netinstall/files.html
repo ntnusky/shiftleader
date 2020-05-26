@@ -12,15 +12,15 @@
     </div>
     <div class="col-12 col-sm-12 col-md-12 col-lg-12">
       <h3>Existing config-files</h3>
-      <p class="ajax" id="files"></p>
+      <div class="messages" id="filetable"></div>
 
       <table id="file-table" class="table table-hover table-condensed">
         <thead>
           <tr>
             <th>ID</th>
-            <th onclick="sortTable(1, 'file-table')">Name</th>
-            <th onclick="sortTable(2, 'file-table')">Type</th>
-            <th onclick="sortTable(3, 'file-table')">Description</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
             <th></th>
           </tr>
         </thead>
@@ -32,6 +32,7 @@
   <div class="row">
     <div class="col-12 col-sm-12 col-md-12 col-lg-6">
       <h3 id=fileform-header>Create file:</h3>
+      <div class="messages" id="fileform"></div>
       <form method="POST" action="{% url 'netinstall_rest_files' %}" id="fileForm">
         {% csrf_token %}
         <input type="hidden" name="id" id="id" value="0">
@@ -107,7 +108,7 @@
       sections/parts and similar.</p>
     </div>
     <div class="col-12 col-sm-12 col-md-12 col-lg-6">
-      <p class="ajax" id="filetype"></p>
+      <div class="messages" id="filetypetable"></div>
       <table id="filetype-table" class="table table-hover table-condensed">
         <thead>
           <tr>
@@ -121,6 +122,7 @@
     </div>
     <div class="col-12 col-sm-12 col-md-12 col-lg-6">
       <h3 id=filetypeform-header>Create file-type:</h3>
+      <div class="messages" id="filetypeform"></div>
       <form method="POST" action="{% url 'netinstall_rest_file_types' %}"
           id="fileTypeForm">
         {% csrf_token %}
@@ -164,10 +166,8 @@
             $('form#fileForm').find('input, textarea, button, select').prop('disabled', false);
           },
           error: function(result) {
-            $('p.ajax#file').html($('<div>', {
-              class: 'alert alert-danger',
-              text: 'Could not retrieve file to edit!',
-            }));
+            printMessage('div#fileform.messages',
+              'Could not retrieve file to edit.', 'danger');
           },
         })
       }
@@ -190,10 +190,8 @@
             $('form#fileTypeForm').find('input, button').prop('disabled', false);
           },
           error: function(result) {
-            $('p.ajax#filetype').html($('<div>', {
-              class: 'alert alert-danger',
-              text: 'Could not retrieve file to edit!',
-            }));
+            printMessage('div#filetypeform.messages',
+              'Could not retrieve file-type to edit.', 'danger');
           },
         })
       }
@@ -263,16 +261,12 @@
                   xhr.setRequestHeader("X-CSRFToken", csrf);
                 },
                 error: function(data) {
-                  $('p.ajax#files').html($('<div>', {
-                    class: 'alert alert-' + data['responseJSON']['status'],
-                    text: data['responseJSON']['message'],
-                  }));
+                  printMessage('div#filetable.messages',
+                    data['responseJSON']['message'], 'warning');
                 },
                 success: function(data) {
-                  $('p.ajax#files').html($('<div>', {
-                    class: 'alert alert-' + data['status'],
-                    text: data['message'],
-                  }));
+                  printMessage('div#filetable.messages',
+                    data['message'], 'success');
                   loadFiles();
                 },
               });
@@ -281,10 +275,8 @@
         },
         error: function(result) {
           $('table#file-table > tbody').empty()
-          $('p.ajax#files').html($('<div>', {
-            class: 'alert alert-danger',
-            text: 'Could not dowinload files!',
-          }));
+          printMessage('div#filetable.messages',
+           'Could not download files', 'danger');
         },
       });
     }
@@ -347,16 +339,12 @@
                   xhr.setRequestHeader("X-CSRFToken", csrf);
                 },
                 error: function(data) {
-                  $('p.ajax#filetype').html($('<div>', {
-                    class: 'alert alert-' + data['responseJSON']['status'],
-                    text: data['responseJSON']['message'],
-                  }));
+                  printMessage('div#filetypetable.messages',
+                    data['responseJSON']['message'], 'danger');
                 },
                 success: function(data) {
-                  $('p.ajax#filetype').html($('<div>', {
-                    class: 'alert alert-' + data['status'],
-                    text: data['message'],
-                  }));
+                  printMessage('div#filetypetable.messages',
+                    data['message'], 'danger');
                   loadFileTypes();
                 },
               });
@@ -365,10 +353,8 @@
         },
         error: function(result) {
           $('table#file-table > tbody').empty()
-          $('p.ajax#files').html($('<div>', {
-            class: 'alert alert-danger',
-            text: 'Could not dowinload files!',
-          }));
+          printMessage('div#filetypetable.messages',
+            'Could not download file-types', 'danger');
         },
       });
     }
@@ -377,12 +363,14 @@
       loadFileTypes();
       resetFileForm(0);
       resetFileTypeForm(0);
+      enableTableSorter();
 
       $('form').submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
         var csrf = form.find("input[name=csrfmiddlewaretoken]").val();
+        var messages = $(form).parent('div').find('div.messages');
 
         $.ajax({
           type: form.attr('method'),
@@ -392,16 +380,10 @@
             xhr.setRequestHeader("X-CSRFToken", csrf);
           },
           error: function(data) {
-            $('p.ajax#files').html($('<div>', {
-              class: 'alert alert-' + data['responseJSON']['status'],
-              text: data['responseJSON']['message'],
-            }));
+            printMessage(messages, data['responseJSON']['message'], 'danger');
           },
           success: function(data) {
-            $('p.ajax#-files').html($('<div>', {
-              class: 'alert alert-' + data['status'],
-              text: data['message'],
-            }));
+            printMessage(messages, data['message'], 'success');
             loadFiles();
             loadFileTypes()
             resetFileForm(0);

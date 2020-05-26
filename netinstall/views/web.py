@@ -14,6 +14,12 @@ def file(request):
   return render(request, 'netinstall/files.html', context)
 
 @user_passes_test(requireSuperuser)
+def os(request):
+  context = createContext(request)
+  context['header'] = "Operating-systems"
+  return render(request, 'netinstall/os.html', context)
+
+@user_passes_test(requireSuperuser)
 def template(request):
   context = createContext(request)
   context['header'] = "Boot-Templates"

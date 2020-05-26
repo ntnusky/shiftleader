@@ -8,6 +8,7 @@
     machines. To install a machine we need a TFTP-file, a configfile for the OS
     installer, a post-installation script and a OS.</p>
 
+    <div class="messages" id="template"></div>
   </div>
   
   <div class="row">
@@ -16,16 +17,14 @@
       <p>The following table contains the templates registered in the
       system</p>
 
-      <p class="ajax" id="templates"></p>
-
       <table id="boot-template" class="table table-hover table-condensed">
         <thead>
           <tr>
-            <th onclick="sortTable(0, 'boot-template')">Name</th>
-            <th onclick="sortTable(1, 'boot-template')">TFTP-config</th>
-            <th onclick="sortTable(2, 'boot-template')">Installation-config</th>
-            <th onclick="sortTable(3, 'boot-template')">Post-install script</th>
-            <th onclick="sortTable(4, 'boot-template')">OS</th>
+            <th>Name</th>
+            <th>TFTP-config</th>
+            <th>Installation-config</th>
+            <th>Post-install script</th>
+            <th>OS</th>
             <th></th>
           </tr>
         </thead>
@@ -36,7 +35,6 @@
 
     <div class="col-12 col-sm-12 col-md-12 col-lg-4">
       <h2 id="templateForm">Create template:</h2>
-      <p class="ajax" id="template-form"></p>
       <form method="POST" action="{% url 'netinstall_rest_templates' %}" id="templateForm">
         {% csrf_token %}
         <input type="hidden" name="id" id="id" value="0">
@@ -120,10 +118,8 @@
             }
           },
           error: function(result) {
-            $('p.ajax#template-form').html($('<div>', {
-              class: 'alert alert-danger',
-              text: 'Could not download form-data!',
-            }));
+            printMessage('div#template.messages',
+              'Could not download form-data', 'danger');
           },
         }),
 
@@ -149,10 +145,8 @@
             }
           },
           error: function(result) {
-            $('p.ajax#template-form').html($('<div>', {
-              class: 'alert alert-danger',
-              text: 'Could not download OS-form-data!',
-            }));
+            printMessage('div#template.messages',
+              'Could not download OS-form-data', 'danger');
           },
         })
       ).then(function() {
@@ -190,10 +184,8 @@
               $('form#templateForm').find('input, button').prop('disabled', false);
             },
             error: function(result) {
-              $('p.ajax#template-form').html($('<div>', {
-                class: 'alert alert-danger',
-                text: 'Could not retrieve template to edit!',
-              }));
+              printMessage('div#template.messages',
+                'Could not retrieve template to edit', 'danger');
             },
           })
 
@@ -279,16 +271,12 @@
                   xhr.setRequestHeader("X-CSRFToken", csrf);
                 },
                 error: function(data) {
-                  $('p.ajax#templates').html($('<div>', {
-                    class: 'alert alert-' + data['responseJSON']['status'],
-                    text: data['responseJSON']['message'],
-                  }));
+                  printMessage('div#template.messages',
+                    data['responseJSON']['message'], 'warning');
                 },
                 success: function(data) {
-                  $('p.ajax#templates').html($('<div>', {
-                    class: 'alert alert-' + data['status'],
-                    text: data['message'],
-                  }));
+                  printMessage('div#template.messages',
+                    data['message'], 'success');
 
                   loadTemplateTable();
                 },
@@ -298,10 +286,8 @@
         },
         error: function(result) {
           $('table#boot-template > tbody').empty()
-          $('p.ajax#templates').html($('<div>', {
-            class: 'alert alert-danger',
-            text: 'Could not dowinload template-table!',
-          }));
+          printMessage('div#template.messages',
+            'Could not download template-table', 'danger');
         },
       });
     }
@@ -309,6 +295,7 @@
     $(document).ready(function(){
       loadTemplateTable();
       resetTemplateForm(0);
+      enableTableSorter();
 
       $('form#templateForm').submit(function(e) {
         e.preventDefault();
@@ -324,16 +311,12 @@
             xhr.setRequestHeader("X-CSRFToken", csrf);
           },
           error: function(data) {
-            $('p.ajax#template-form').html($('<div>', {
-              class: 'alert alert-' + data['responseJSON']['status'],
-              text: data['responseJSON']['message'],
-            }));
+            printMessage('div#template.messages',
+              data['responseJSON']['message'], 'warning');
           },
           success: function(data) {
-            $('p.ajax#template-form').html($('<div>', {
-              class: 'alert alert-' + data['status'],
-              text: data['message'],
-            }));
+            printMessage('div#template.messages',
+              data['message'], 'success');
             loadTemplateTable();
             resetTemplateForm(0);
           },

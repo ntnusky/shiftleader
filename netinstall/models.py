@@ -173,6 +173,7 @@ class OperatingSystem(models.Model):
   def toJSON(self):
     json = {
       'id': self.id,
+      'url': reverse('netinstall_rest_os', args=[self.id]),
       'name': self.name,
       'shortname': self.shortname,
       'kernelurl': self.kernelurl,
