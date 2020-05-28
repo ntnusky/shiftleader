@@ -830,7 +830,7 @@
       });
     }
     function refreshTable() {
-      $('table#host-table > tbody > tr').each(function() {
+      $('table#host-table > tbody > tr:visible').each(function() {
         reloadTableRow($(this));
       });
       setVisibleTableRows();
