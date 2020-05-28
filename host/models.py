@@ -2,7 +2,9 @@ import re
 import string
 from random import sample, choice
 
+from django.core.urlresolvers import reverse
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from dashboard.settings import parser
@@ -10,7 +12,10 @@ from dhcp.models import Lease, Subnet
 from dhcp.omapi import Servers
 from nameserver.models import Domain
 from puppet.models import Environment, Role, Report, ReportMetric
+from netinstall.models import BootTemplate
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.OperatingSystem
 class OperatingSystem(models.Model):
   name = models.CharField(max_length=64)
   shortname = models.CharField(max_length=20)
@@ -26,26 +31,17 @@ class OperatingSystem(models.Model):
   def __str__(self):
     return "%s (%s)" % (self.name, self.shortname)
 
-class PartitionScheme(models.Model):
-  name = models.CharField(max_length=64)
-  description = models.TextField()
-  content = models.TextField()
-
-  def __str__(self):
-    maxLength = 30
-    if(len(self.description) > maxLength):
-      return "%s (%s...)" % (self.name, self.getShortDescription(maxLength))
-    else:
-      return "%s (%s)" % (self.name, self.description)
-
-  def getShortDescription(self, length=30):
-    return self.description[0:length]
-
 class HostGroup(models.Model):
   name = models.CharField(max_length=64)
 
   def __str__(self):
     return "%s" % self.name
+
+  def toJSON(self):
+    return {
+      'id': self.id,
+      'name': self.name,
+    }
 
 class Host(models.Model):
   STATUSES = (
@@ -70,6 +66,8 @@ class Host(models.Model):
   group = models.ForeignKey(HostGroup, null=True)
   password = models.CharField(max_length=64, null=True)
   os = models.ForeignKey(OperatingSystem, null=True)
+  template = models.ForeignKey(BootTemplate, null=True,
+                                on_delete=models.SET_NULL)
   bootfile = models.ForeignKey('BootFile', null=True)
   postinstallscript = models.ForeignKey('BootFile', null=True,
       related_name='scripthosts')
@@ -91,6 +89,119 @@ class Host(models.Model):
       return self.interface_set.filter(primary=True).get()
     except:
       return None
+
+  def getStatusName(self):
+    for id, name in self.STATUSES:
+      if int(id) == int(self.status):
+        return name
+    return None
+
+  def getTFTPConfig(self):
+    if(int(self.status) == Host.PROVISIONING):
+      try:
+        return self.template.tftpconfig.getContent(self)
+      except:
+        return None
+    else:
+      return render_to_string('tftpboot/localboot.cfg', {})
+ 
+  def toJSON(self):
+    data = {
+      'id': self.id,
+      'name': self.name,
+      'status': self.status,
+      'statusName': self.getStatusName(),
+      'url': reverse('host_api_single', args=[self.id]),
+      'url-hostgroup': reverse('host_api_group', args=[self.id]),
+      'url-installerconfig': reverse('host_api_installerconfig', args=[self.id]),
+      'url-postinstall': reverse('host_api_postinstall', args=[self.id]),
+      'url-puppetstatus': reverse('host_api_puppet', args=[self.id]),
+      'url-tftp': reverse('host_api_tftp', args=[self.id]),
+      'web': reverse('singleHost', args=[self.id]),
+    }
+
+    if(self.template):
+      data['template'] = self.template.toJSON()
+    else:
+      data['template'] = None
+
+    if(self.group):
+      data['group'] = self.group.toJSON()
+    else:
+      data['group'] = None
+
+    if(self.environment):
+      data['environment'] = self.environment.toJSON()
+    else:
+      data['environment'] = None
+
+    if(self.role):
+      data['role'] = self.role.toJSON()
+    else:
+      data['role'] = None
+
+    return data
+
+  def updateInfo(self, data):
+    changed = False
+    if('template_id' in data):
+      if(data['template_id'] == '0'):
+        template = None
+      else:
+        try:
+          template = BootTemplate.objects.get(id = data['template_id'])
+        except BootTemplate.DoesNotExist:
+          raise KeyError('No template with ID %s' % data['template_id'])
+
+      if self.template != template:
+        self.template = template
+        changed = True
+
+    if('environment_id' in data):
+      if(data['environment_id'] == '0'):
+        environment = None
+      else:
+        try:
+          environment = Environment.objects.get(id = data['environment_id'])
+        except Environment.DoesNotExist:
+          raise KeyError('No environment with ID %s' % data['environment_id'])
+
+      if(self.environment != environment):
+        try:
+          role = Role.objects.get(
+                          name=self.role.name, environment = environment)
+        except (Role.DoesNotExist, AttributeError):
+          role = None
+
+        self.environment = environment
+        self.role = role
+        changed = True
+
+    if('role_id' in data):
+      if(data['role_id'] == '0'):
+        role = None
+      else:
+        try:
+          role = Role.objects.get(id = data['role_id'])
+        except Role.DoesNotExist:
+          raise KeyError('No role with ID %s' % data['role_id'])
+
+      if(self.role != role):
+        if(self.environment != role.environment):
+          raise AttributeError('Role %d don\'t belong to environment %d' % \
+                  (role.id, self.environment.id))
+
+        self.role = role
+        changed = True
+
+    if('rebuild' in data): 
+      if(data['rebuild'] == '1'):
+        self.status = Host.PROVISIONING
+      else:
+        self.status = Host.OPERATIONAL
+      changed = True
+
+    return changed
 
   def updatePuppetStatus(self):
     if(int(self.status) not in [self.OPERATIONAL, self.PUPPETREADY,
@@ -162,13 +273,12 @@ class Host(models.Model):
       return ""
 
   def getStatusText(self):
-    status = self.status
-    for s in self.STATUSES:
-      if s[0] == int(status):
-        statusText = s[1]
+    try:
+      report = self.report_set.last()
+    except:
+      report = None
 
-    report = self.report_set.last()
-    if(statusText == 'Operational' and report):
+    if(report):
       met = report.reportmetric_set.filter(metricType=ReportMetric.TYPE_RESOURCE).all()
       metrics = {}
       for metric in met:
@@ -187,7 +297,6 @@ class Host(models.Model):
       except KeyError:
         statusText = "MetricsMissing"
 
-    if statusText:
       return statusText
     else:
       return "N/A"
@@ -282,6 +391,8 @@ class Interface(models.Model):
   def __str__(self):
     return "%s on %s" % (self.ifname, self.host)
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFile(models.Model):
   UNSET = 0
   BOOTFILE = 1
@@ -327,6 +438,8 @@ class BootFile(models.Model):
 
     return re.sub(r'\r\n', '\n', '\n'.join(content)) 
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -338,6 +451,8 @@ class BootFragment(models.Model):
   def __str__(self):
     return self.name
 
+# This class is deprecated, and will be removed soon. Same functionality is now
+# placed in netboot.models.ConfigFile
 class BootFileFragment(models.Model):
   bootfile = models.ForeignKey(BootFile)
   fragment = models.ForeignKey(BootFragment)

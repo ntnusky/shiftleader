@@ -17,13 +17,32 @@ from django.conf.urls import include, url
 
 from dashboard.views import main
 
+webapp = [
+  url(r'^host/',        include('host.urls')),
+  url(r'^netinstall/',  include('netinstall.urls')),
+]
+
+api_v1 = [
+  url(r'^host/',        include('host.endpoints')),
+  url(r'^dns/',         include('nameserver.endpoints')),
+  url(r'^netinstall/',  include('netinstall.endpoints')),
+  url(r'^puppet/',      include('puppet.endpoints')),
+]
+
 urlpatterns = [
+  # To be changed: Redirect to new webapp-URL.
   url(r'^$', main.index, name="index"),
+
+  # To be migrated to new webapp URL.
   url(r'^login/$', main.loginPage, name="login"),
   url(r'^logout/$', main.logoutPage, name="logout"),
 
   url(r'^puppet/', include('puppet.urls')),
   url(r'^dhcp/', include('dhcp.urls')),
   url(r'^dns/', include('nameserver.urls')),
-  url(r'^host/', include('host.urls')),
+  url(r'^host/', include('host.legacyurls')),
+
+  # The new entrypoints, differentiating API from web.
+  url(r'^web/', include(webapp)),
+  url(r'^api/v1/', include(api_v1)),
 ]

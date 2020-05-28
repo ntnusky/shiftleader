@@ -12,27 +12,20 @@ class Command(BaseCommand):
   def handle(self, *args, **options):
     data = {}
     location = os.path.join(parser.get("TFTP", "rootdir"), 'pxelinux.cfg')
-    data['dashboardURL'] = None
-    for key, item in parser.items("hosts"):
-      if(key == 'ipv4' or (data['dashboardURL'] == None and key == 'main')):
-        data['dashboardURL'] = item
 
     if not os.path.exists(location):
       os.makedirs(location)
 
     path = os.path.join(location, 'default')
-    self.stdout.write("Creating %s based on %s" % (path, 'tftpboot/localboot.cfg'))
     open(path, "w").write(render_to_string('tftpboot/localboot.cfg', {}))
 
     for host in Host.objects.all():
-      if(int(host.status) == Host.PROVISIONING and host.os):
-        template = 'tftpboot/install.cfg'
-      else:
-        template = 'tftpboot/localboot.cfg'
+      try:
+        mac = host.interface_set.filter(primary=True).get().ipv4Lease.MAC
+        filename = os.path.join(location, "01-%s" % mac.replace(':', '-'))
 
-      mac = host.interface_set.filter(primary=True).get().ipv4Lease.MAC
-      filename = os.path.join(location, "01-%s" % mac.replace(':', '-'))
-      data['host'] = host
-
-      self.stdout.write("Creating %s based on %s" % (filename, template))
-      open(filename, "w").write(render_to_string(template, data))
+        f = open(filename, "w")
+        f.write(host.getTFTPConfig())
+        f.close()
+      except:
+        pass

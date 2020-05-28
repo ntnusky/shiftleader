@@ -47,40 +47,14 @@
           </div>
           <div class="btn-group">
             <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateOs" 
+                class="btn btn-success disabled dropdown-toggle updateTemplate" 
                 data-toggle="dropdown">
-              Change OS<span class="caret"></span>
+              Change Boot-Template<span class="caret"></span>
             </button>
             <ul class="dropdown-menu" role="menu"> 
-              <li><a class="updateOS" id="0">Do not manage OS</a></li>
-              {% for o in operatingsystems %}
-                <li><a class="updateOS" id="{{o.id}}">{{o.name}}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-          <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updateBootFile" 
-                data-toggle="dropdown">
-              Change BootFile<span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu"> 
-              <li><a class="updateBF" id="0">No bootfile</a></li>
-              {% for bf in bootfiles %}
-                <li><a class="updateBF" id="{{bf.id}}">{{bf.name}}</a></li>
-              {% endfor %}
-            </ul>
-          </div>
-          <div class="btn-group">
-            <button type="button"
-                class="btn btn-success disabled dropdown-toggle updatePIScripts" 
-                data-toggle="dropdown">
-              Change Script<span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu"> 
-              <li><a class="updatePIScript" id="0">No script</a></li>
-              {% for is in installscripts %}
-                <li><a class="updatePIScript" id="{{is.id}}">{{is.name}}</a></li>
+              <li><a class="templateChoice" id="0">Do not netinstall</a></li>
+              {% for t in templates %}
+                <li><a class="templateChoice" id="{{t.id}}">{{t.name}}</a></li>
               {% endfor %}
             </ul>
           </div>
@@ -225,27 +199,12 @@
           });
         }
       });
-      $(".updateOS").click(function() {
+      $(".templateChoice").click(function() {
         var data = {'os': this.id};
         data['selected'] = $('input[name="selectHost"]:checked').serialize();
 
-        if (confirm('Are you sure you want to change the OS image for these hosts?')) {
-          $(".tablemessage").html("<div class='alert alert-info'>" +
-              "Request sent to the server</div>");
-          $.ajax({
-            type        : 'POST',
-            url         : '{% url 'hostOs' %}',
-            data        : data,
-            dataType    : 'json',
-          }).done(function(response) {
-            $(".tablemessage").html("<div class='alert alert-" +
-                response['status'] + "'>" +
-                response['message'] + "</div>");
-
-            if(response['status'] == 'success') {
-              reloadTable();
-            }
-          });
+        if (confirm('Are you sure you want to change the boot-template for these hosts?')) {
+          console.log(data);
         }
       });
       $(".updateBF").click(function() {
@@ -454,9 +413,7 @@
       $(".rebuild").toggleClass('disabled', buttone);
       $(".norebuild").toggleClass('disabled', buttone);
       $(".deleteHost").toggleClass('disabled', buttone);
-      $(".updateOs").toggleClass('disabled', buttone);
-      $(".updateBootFile").toggleClass('disabled', buttone);
-      $(".updatePIScripts").toggleClass('disabled', buttone);
+      $(".updateTemplate").toggleClass('disabled', buttone);
     }
 
     function reloadRoleButton(env) {

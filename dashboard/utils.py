@@ -1,6 +1,7 @@
 import ipaddress
 import re
 
+from datetime import datetime, timedelta
 from django.core.urlresolvers import reverse
 
 from dashboard.settings import parser
@@ -10,32 +11,70 @@ def populateMenu(request):
   
   m = {}
   m['name'] = 'Hosts' 
-  m['url'] = reverse('hostIndex')
+  m['url'] = reverse('hostMain')
   m['active'] = request.path.startswith(m['url'])
+  m['type'] = 'link'
+  menu.append(m)
+
+  m = {}
+  m['name'] = 'Boot-config'
+  m['type'] = 'dropdown'
+  m['elements'] = []
+  
+  me = {}
+  me['name'] = 'Config-files' 
+  me['url'] = reverse('netinstall_file')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  me = {}
+  me['name'] = 'Boot-Templates' 
+  me['url'] = reverse('netinstall_template')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  me = {}
+  me['name'] = 'Operating-systems' 
+  me['url'] = reverse('netinstall_os')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  m['active'] = False
+  for e in m['elements']:
+    if e['active']:
+      m['active'] = True
+
   menu.append(m)
 
   m = {}
   m['name'] = 'DNS' 
   m['url'] = reverse('dnsIndex')
   m['active'] = request.path == m['url']
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'DHCP' 
   m['url'] = reverse('dhcpIndex')
   m['active'] = request.path == m['url']
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'Puppet' 
   m['url'] = reverse('puppetIndex')
   m['active'] = request.path == m['url']
+  m['type'] = 'link'
   menu.append(m)
 
   m = {}
   m['name'] = 'Log out' 
   m['url'] = reverse('logout')
   m['active'] = False
+  m['type'] = 'link'
   menu.append(m)
 
   return menu
@@ -85,3 +124,19 @@ def createEUI64(v6net, mac):
     return ipaddress.IPv6Address(netid+hostid)
   else:
     return False
+
+
+def pretty_time(since):
+    now = datetime.utcnow().replace(tzinfo=since.tzinfo)
+    opened_for = (now - since).total_seconds()
+    names = ["seconds","minutes","hours","days","weeks","months"]
+    modulos = [ 1,60,3600,3600*24,3600*24*7,3660*24*30]
+    values = []
+    for m in modulos[::-1]:
+        values.append(int(opened_for / m))
+        opened_for -= values[-1]*m
+    pretty = [] 
+    for i,nm in enumerate(names[::-1]):
+        if values[i]!=0:
+            pretty.append("%i %s" % (values[i],nm))
+    return " ".join(pretty[0:2])

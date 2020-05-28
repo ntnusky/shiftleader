@@ -1,0 +1,396 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <h2>Config-files</h2>
+      <p>This page lets you administer configfiles. A config-file is a
+      more-or-less static file used in installation of hosts. These files can be
+      used as TFTP-config-files, installer-configuration for the os-installers or
+      as a post-installation script bootstrapping the installation of
+      config-management of our hosts.</p>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <h3>Existing config-files</h3>
+      <div class="messages" id="filetable"></div>
+
+      <table id="file-table" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <h3 id=fileform-header>Create file:</h3>
+      <div class="messages" id="fileform"></div>
+      <form method="POST" action="{% url 'netinstall_rest_files' %}" id="fileForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Display-name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea class="form-control" name="description" id="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="filetype">File-type:</label>
+          <select disabled class="form-control" id="filetype" name="filetype">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="content">Content:</label>
+          <textarea class="form-control" name="content" id="content" rows=10></textarea>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <h3>Config-file substitutes</h3>
+      <p>There are a range of shiftleader-specific macros which can be placed in
+      configfiles. These macros will be replaced before the file is handed to a
+      system being installed. These are the available macros:</p>
+      <ul>
+        <li><b>%DASHBOARD%</b>: A fqdn for the dashboard.</li>
+        <li><b>%FILE:&lt;ID&gt;%</b>: Includes content from another config-file.
+        Useful to be able to keep some common parts in one place, and specifics
+        in another (This macro needs to be on its own line).</li>
+        <li><b>%HOSTID%</b>: The shiftleader ID of the installing host.</li>
+        <li><b>%HOSTNAME%</b>: The hostname of the installing host.</li>
+        <li><b>%INTERFACENAME%</b>: The name of the primary interface of the
+        host.</li> 
+        <li><b>%INSTALLCONFIG%</b>: A url pointing to the configfile to the
+        os-installer installing a certain host.</li>
+        <li><b>%OSSHORTNAME%</b>: The shortname of the selected OS. Used in the
+        path to OS-kernel and initrd-images.</li>
+        <li><b>%OSKERNELNAME%</b>: The filename of the selected OS kernel. Used 
+        in the path to OS-kernel</li>
+        <li><b>%OSINITRDNAME%</b>: The filename of the selected OS initrd image.
+        Used in the path to netboot from.</li>
+        <li><b>%POSTINSTALL%</b>: A url pointing to the postinstall-script for a
+        certain host.</li>
+        <li><b>%PUPPETSERVER%</b>: The fqdn of the puppetserver(s)</li>
+        <li><b>%PUPPETCA%</b>: The fqdn of the puppet CA server.</li>
+        <li><b>%ROOTPW%</b>: The host's root-password. In cleartext.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <h2>Config-file-types</h2>
+      <p>Configuration-files are associated to types. There are three special
+      types which are used to populate the choices in the boot-templates page:</p>
+      <ul>
+        <li><b>TFTP</b>: TFTP-boot-configurations. Controls if and how a host
+        PXE-boots.</li>
+        <li><b>PostInstall</b>: Post-install scripts. Typical a bash-script
+        started after the OS-installation is finished.</li>
+        <li><b>InstallConfig</b>: Configuration-file passed to the OS installer.
+        Typical a preseed-file or a kickstart-file.</li>
+      </ul>
+      <p>You are able to create custom config-file-types to help you organize
+      sections/parts and similar.</p>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <div class="messages" id="filetypetable"></div>
+      <table id="filetype-table" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0, 'filetype-table')">Name</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-12 col-sm-12 col-md-12 col-lg-6">
+      <h3 id=filetypeform-header>Create file-type:</h3>
+      <div class="messages" id="filetypeform"></div>
+      <form method="POST" action="{% url 'netinstall_rest_file_types' %}"
+          id="fileTypeForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Display-name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function resetFileForm(id) {
+      $('form#fileForm').find('select, input, button, textarea').prop('disabled', true);
+      if(id == 0) {
+        $('form#fileForm').attr('method', "POST");
+        $('form#fileForm').find('input#id').val("0");
+        $('form#fileForm').find('input#name').val("");
+        $('form#fileForm').find('textarea').val("");
+        $('form#fileForm').find('input, textarea, button, select').prop('disabled', false);
+      } else {
+        $.ajax({
+          url: '{% url 'netinstall_rest_files' %}' + id + '/',
+          type: 'GET',
+          success: function(result) {
+            $('form#fileForm').attr('method', "PUT");
+            $('form#fileForm').find('input#id').val(result['id']);
+            $('form#fileForm').find('input#name').val(result['name']);
+            $('form#fileForm').find('textarea#description').val(result['description']);
+            $('form#fileForm').find('textarea#content').val(result['content']);
+
+            if(result['filetype']) {
+              $('form#fileForm').find('select#filetype')
+                .val(result['filetype']['id']);
+            }
+            $('form#fileForm').find('input, textarea, button, select').prop('disabled', false);
+          },
+          error: function(result) {
+            printMessage('div#fileform.messages',
+              'Could not retrieve file to edit.', 'danger');
+          },
+        })
+      }
+    } 
+    function resetFileTypeForm(id) {
+      $('form#fileTypeForm').find('input, button').prop('disabled', true);
+      if(id == 0) {
+        $('form#fileTypeForm').attr('method', "POST");
+        $('form#fileTypeForm').find('input#id').val("0");
+        $('form#fileTypeForm').find('input#name').val("");
+        $('form#fileTypeForm').find('input, button').prop('disabled', false);
+      } else {
+        $.ajax({
+          url: '{% url 'netinstall_rest_file_types' %}' + id + '/',
+          type: 'GET',
+          success: function(result) {
+            $('form#fileTypeForm').attr('method', "PUT");
+            $('form#fileTypeForm').find('input#id').val(result['id']);
+            $('form#fileTypeForm').find('input#name').val(result['name']);
+            $('form#fileTypeForm').find('input, button').prop('disabled', false);
+          },
+          error: function(result) {
+            printMessage('div#filetypeform.messages',
+              'Could not retrieve file-type to edit.', 'danger');
+          },
+        })
+      }
+    } 
+    function loadFiles() {
+      $('table#file-table > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_files' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#file-table > tbody').empty()
+          for(var element in result) {
+            if(result[element]['filetype']) {
+              var filetype = result[element]['filetype']['name'];
+            } else {
+              var filetype = "N/A";
+            }
+            $('table#file-table > tbody').append(
+              $('<tr>')
+              .append($('<td>', { class: 'min', text: result[element]['id'] }))
+              .append($('<td>', { class: 'min', text: result[element]['name'] }))
+              .append($('<td>', { class: 'min', text: filetype }))
+              .append($('<td>', { text: result[element]['description'] }))
+              .append($('<td>', { style: 'width:175px' })
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateFile',
+                    file: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<a>',{
+                    class: 'btn btn-sm btn-info',
+                    text: 'Display',
+                    href: 
+                      '{% url 'netinstall_file' %}' + result[element]['id'] + '/',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteFile',
+                    file: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+          }
+          $('button#updateFile').click(function() {
+            var fileID = this.attributes['file'].value;
+            $('h3#fileform-header').text("Update file");
+            resetFileForm(fileID);
+          });
+          $('button#deleteFile').click(function() {
+            var fileID = this.attributes['file'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this" +
+                "file?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_files' %}' + fileID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  printMessage('div#filetable.messages',
+                    data['responseJSON']['message'], 'warning');
+                },
+                success: function(data) {
+                  printMessage('div#filetable.messages',
+                    data['message'], 'success');
+                  loadFiles();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#file-table > tbody').empty()
+          printMessage('div#filetable.messages',
+           'Could not download files', 'danger');
+        },
+      });
+    }
+    function loadFileTypes() {
+      $('table#filetype-table > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+      $('select#filetype').find('option').remove()
+        .end().prop('disabled', false)
+        .append('<option value="0"> -- none selected -- </option>')
+        .val('0');
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_file_types' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#filetype-table > tbody').empty()
+          for(var element in result) {
+            $('table#filetype-table > tbody').append(
+              $('<tr>')
+              .append($('<td>', { text: result[element]['name'] }))
+              .append($('<td>')
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateFileType',
+                    file: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteFileType',
+                    file: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+            $('select#filetype').append($('<option>', {
+              value: result[element]['id'],
+              text: result[element]['name'],
+            }));
+          }
+          $('button#updateFileType').click(function() {
+            var fileID = this.attributes['file'].value;
+            $('h3#filetypeform-header').text("Update file-type");
+            resetFileTypeForm(fileID);
+          });
+          $('button#deleteFileType').click(function() {
+            var fileID = this.attributes['file'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this" +
+                "filetype?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_file_types' %}' + fileID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  printMessage('div#filetypetable.messages',
+                    data['responseJSON']['message'], 'danger');
+                },
+                success: function(data) {
+                  printMessage('div#filetypetable.messages',
+                    data['message'], 'danger');
+                  loadFileTypes();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#file-table > tbody').empty()
+          printMessage('div#filetypetable.messages',
+            'Could not download file-types', 'danger');
+        },
+      });
+    }
+    $(document).ready(function(){
+      loadFiles();
+      loadFileTypes();
+      resetFileForm(0);
+      resetFileTypeForm(0);
+      enableTableSorter();
+
+      $('form').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var csrf = form.find("input[name=csrfmiddlewaretoken]").val();
+        var messages = $(form).parent('div').find('div.messages');
+
+        $.ajax({
+          type: form.attr('method'),
+          url: form.attr('action'),
+          data: form.serialize(), // serializes the form's elements.
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          },
+          error: function(data) {
+            printMessage(messages, data['responseJSON']['message'], 'danger');
+          },
+          success: function(data) {
+            printMessage(messages, data['message'], 'success');
+            loadFiles();
+            loadFileTypes()
+            resetFileForm(0);
+            resetFileTypeForm(0);
+          },
+        });
+      });
+    });
+  </script>
+{% endblock page-content %}

@@ -1,0 +1,205 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+      <div class="messages" id="ostable-message"></div>
+    </div>
+
+    <div class="col-12 col-sm-12 col-md-12 col-lg-8">
+      <p>The following table contains the operating-systems registered in the
+      system</p>
+
+      <table id="os" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Shortname</th>
+            <th>Kernel-url</th>
+            <th>Initrd-url</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-12 col-sm-12 col-md-12 col-lg-4">
+      <h2 id="osForm">Create os:</h2>
+      <form method="POST" action="{% url 'netinstall_rest_oss' %}" id="osForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group">
+          <label for="shortname">Short-name:</label>
+          <input type="text" class="form-control" id="shortname" name="shortname">
+        </div>
+        <div class="form-group">
+          <label for="kernelurl">Kernel-url:</label>
+          <input type="text" class="form-control" id="kernelurl" name="kernelurl">
+        </div>
+        <div class="form-group">
+          <label for="initrdurl">Initrd-url:</label>
+          <input type="text" class="form-control" id="initrdurl" name="initrdurl">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function resetOSForm(id) {
+      $('form#osForm').find('input, button').prop('disabled', true);
+
+      if(id == 0) {
+        $('form#osForm').attr('method', "POST");
+        $('form#osForm').find('input#id').val("0");
+        $('form#osForm').find('input#name').val("");
+        $('form#osForm').find('input#shortname').val("");
+        $('form#osForm').find('input#kernelurl').val("");
+        $('form#osForm').find('input#initrdurl').val("");
+        $('form#osForm').find('input, button').prop('disabled', false);
+      } else {
+        $.ajax({
+          url: '{% url 'netinstall_rest_oss' %}' + id + '/',
+          type: 'GET',
+          success: function(result) {
+            $('form#osForm').attr('method', "PUT");
+            $('form#osForm').find('input#id').val(result['id']);
+            $('form#osForm').find('input#name').val(result['name']);
+            $('form#osForm').find('input#shortname').val(result['shortname']);
+            $('form#osForm').find('input#kernelurl').val(result['kernelurl']);
+            $('form#osForm').find('input#initrdurl').val(result['initrdurl']);
+
+            $('form#osForm').find('input, button').prop('disabled', false);
+          },
+          error: function(result) {
+            printMessage('div#ostable-message.messages',
+              'Could not populate the form for editing.', 'warning');
+          },
+        })
+      }
+    }
+    function loadOSTable() {
+      $('table#os > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_oss' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#os > tbody').empty()
+          for(var element in result) {
+            $('table#os > tbody').append(
+              $('<tr>', { 
+                osid: result[element]['id'], 
+                url: result[element]['url']
+              })
+              .append($('<td>', { text: result[element]['name'] }))
+              .append($('<td>', { text: result[element]['shortname'] }))
+              .append($('<td>').append($('<a>', { 
+                href: result[element]['kernelurl'], 
+                text: result[element]['kernelname'], 
+              })))
+              .append($('<td>').append($('<a>', { 
+                href: result[element]['initrdurl'], 
+                text: result[element]['initrdname'], 
+              })))
+              .append($('<td>')
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateOs',
+                    os: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteOs',
+                    os: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+          }
+          $('button#updateOs').click(function() {
+            var osID = this.attributes['os'].value;
+            $('h2#osForm').text("Update OS");
+            resetOSForm(osID);
+          });
+          $('button#deleteOs').click(function() {
+            var osID = this.attributes['os'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this os?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_oss' %}' + osID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  printMessage('div#ostable-message.messages',
+                    data['responseJSON']['message'], 'warning');
+                },
+                success: function(data) {
+                  printMessage('div#ostable-message.messages',
+                    data['message'], 'success');
+
+                  loadOSTable();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#os > tbody').empty()
+          printMessage('div#ostable-message.messages',
+            'Could not download template-table!', 'danger');
+        },
+      });
+    }
+
+    $(document).ready(function(){
+      loadOSTable();
+      resetOSForm(0);
+      enableTableSorter();
+
+      $('form#osForm').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var csrf = form.find("input[name=csrfmiddlewaretoken]").val();
+
+        $.ajax({
+          type: form.attr('method'),
+          url: form.attr('action'),
+          data: form.serialize(), // serializes the form's elements.
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          },
+          error: function(data) {
+            printMessage('div#ostable-message.messages',
+              data['responseJSON']['message'], 'warning');
+          },
+          success: function(data) {
+            printMessage('div#ostable-message.messages',
+              data['message'], 'success');
+            loadOSTable();
+            resetOSForm(0);
+          },
+        });
+      });
+    });
+  </script>
+{% endblock page-content %}

@@ -1,0 +1,327 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <div class="col-12 col-sm-12 col-md-12 col-lg-12">
+
+    <p> This page lets you administer boot-templates. A Boot-template is a
+    collection of config-files and a OS-kernel used to automaticly install our
+    machines. To install a machine we need a TFTP-file, a configfile for the OS
+    installer, a post-installation script and a OS.</p>
+
+    <div class="messages" id="template"></div>
+  </div>
+  
+  <div class="row">
+    <div class="col-12 col-sm-12 col-md-12 col-lg-8">
+      <h2>Templates:</h2>
+      <p>The following table contains the templates registered in the
+      system</p>
+
+      <table id="boot-template" class="table table-hover table-condensed">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>TFTP-config</th>
+            <th>Installation-config</th>
+            <th>Post-install script</th>
+            <th>OS</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-12 col-sm-12 col-md-12 col-lg-4">
+      <h2 id="templateForm">Create template:</h2>
+      <form method="POST" action="{% url 'netinstall_rest_templates' %}" id="templateForm">
+        {% csrf_token %}
+        <input type="hidden" name="id" id="id" value="0">
+        <div class="form-group">
+          <label for="name">Display-name:</label>
+          <input type="text" class="form-control" id="name" name="name">
+        </div>
+        <div class="form-group">
+          <label for="description">Description:</label>
+          <textarea class="form-control" name="description" id="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="tftpconfig">TFTP configuration:</label>
+          <select disabled class="form-control" id="tftpconfig" name="tftpconfig">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="installconfig">Installation-configuration (preseed/kickstart file):</label>
+          <select disabled class="form-control" id="installconfig" name="installconfig">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="postinstall">Post-install script:</label>
+          <select disabled class="form-control" id="postinstall" name="postinstall">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="os">Operating-system:</label>
+          <select disabled class="form-control" id="os" name="os">
+            <option value="0">loading-elements....</option>
+          </select>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function resetTemplateForm(id) {
+      $('form#templateForm').find('select, input, button').prop('disabled', true);
+
+      $.when( 
+        // Retrieve config-files, and populate the lists.
+        $.ajax({
+          url: '{% url 'netinstall_rest_files' %}',
+          type: 'GET',
+          success: function(result) {
+            $('form#templateForm').find('select').not('#os')
+              .find('option')
+              .remove()
+              .end()
+              .prop('disabled', false)
+              .append('<option value="0"> -- none selected -- </option>')
+              .val('0');
+
+            for(var i in result) {
+              var selector = false;
+              if(result[i]['filetype']['name'] == "TFTP") {
+                var selector = 'tftpconfig'
+              }
+              if(result[i]['filetype']['name'] == "InstallConfig") {
+                var selector = 'installconfig'
+              }
+              if(result[i]['filetype']['name'] == "PostInstall") {
+                var selector = 'postinstall'
+              }
+
+              if(selector) {
+                $('form#templateForm').find('select#' + selector).
+                  append($('<option>', {
+                    value: result[i]['id'],
+                    text: result[i]['name'],
+                  }));
+              }
+            }
+          },
+          error: function(result) {
+            printMessage('div#template.messages',
+              'Could not download form-data', 'danger');
+          },
+        }),
+
+        // Retrieve OSs, and populate the list.
+        $.ajax({
+          url: '{% url 'netinstall_rest_oss' %}',
+          type: 'GET',
+          success: function(result) {
+            $('form#templateForm').find('select#os')
+              .find('option')
+              .remove()
+              .end()
+              .prop('disabled', false)
+              .append('<option value="0"> -- none selected -- </option>')
+              .val('0');
+
+            for(var i in result) {
+              $('form#templateForm').find('select#os').
+                append($('<option>', {
+                  value: result[i]['shortname'],
+                  text: result[i]['name'],
+                }));
+            }
+          },
+          error: function(result) {
+            printMessage('div#template.messages',
+              'Could not download OS-form-data', 'danger');
+          },
+        })
+      ).then(function() {
+        if(id == 0) {
+          $('form#templateForm').attr('method', "POST");
+          $('form#templateForm').find('input#id').val("0");
+          $('form#templateForm').find('input#name').val("");
+          $('form#templateForm').find('input, button').prop('disabled', false);
+        } else {
+          $.ajax({
+            url: '{% url 'netinstall_rest_templates' %}' + id + '/',
+            type: 'GET',
+            success: function(result) {
+              $('form#templateForm').attr('method', "PUT");
+              $('form#templateForm').find('input#id').val(result['id']);
+              $('form#templateForm').find('input#name').val(result['name']);
+
+              if(result['tftpconfig']) {
+                $('form#templateForm').find('select#tftpconfig')
+                    .val(result['tftpconfig']['id']);
+              }
+              if(result['installconfig']) {
+                $('form#templateForm').find('select#installconfig')
+                  .val(result['installconfig']['id']);
+              }
+              if(result['postinstall']) {
+                $('form#templateForm').find('select#postinstall')
+                  .val(result['postinstall']['id']);
+              }
+              if(result['os']) {
+                $('form#templateForm').find('select#os')
+                  .val(result['os']['shortname']);
+              }
+
+              $('form#templateForm').find('input, button').prop('disabled', false);
+            },
+            error: function(result) {
+              printMessage('div#template.messages',
+                'Could not retrieve template to edit', 'danger');
+            },
+          })
+
+        }
+      });
+    }
+    function loadTemplateTable() {
+      $('table#boot-template > tbody').append(
+        $('<tr>').append($('<td>', { colspan: '6'}).append("Loading templates..."))
+      );
+
+      $.ajax({
+        url: '{% url 'netinstall_rest_templates' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#boot-template > tbody').empty()
+          for(var element in result) {
+            if(result[element]['tftpconfig']) {
+              var tftpconfig = result[element]['tftpconfig']['name'];
+            } else {
+              var tftpconfig = 'N/A'; 
+            }
+
+            if(result[element]['installconfig']) {
+              var installconfig = result[element]['installconfig']['name'];
+            } else {
+              var installconfig = 'N/A'; 
+            }
+
+            if(result[element]['postinstall']) {
+              var postinstall = result[element]['postinstall']['name'];
+            } else {
+              var postinstall = 'N/A'; 
+            }
+
+            if(result[element]['os']) {
+              var os = result[element]['os']['name'];
+            } else {
+              var os = 'N/A'; 
+            }
+
+            $('table#boot-template > tbody').append(
+              $('<tr>')
+              .append($('<td>', { text: result[element]['name'] }))
+              .append($('<td>', { text: tftpconfig }))
+              .append($('<td>', { text: installconfig }))
+              .append($('<td>', { text: postinstall }))
+              .append($('<td>', { text: os }))
+              .append($('<td>')
+                .append( $('<div>', { class: 'btn-group', role: 'group', })
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-warning',
+                    id: 'updateTemplate',
+                    template: result[element]['id'],
+                    text: 'Edit',
+                  }))
+                  .append($('<button>',{
+                    type: 'button',
+                    class: 'btn btn-sm btn-danger',
+                    id: 'deleteTemplate',
+                    template: result[element]['id'],
+                    text: 'Delete',
+                  }))
+                )
+              )
+            );
+          }
+          $('button#updateTemplate').click(function() {
+            var templateID = this.attributes['template'].value;
+            $('h2#templateForm').text("Update template");
+            resetTemplateForm(templateID);
+          });
+          $('button#deleteTemplate').click(function() {
+            var templateID = this.attributes['template'].value;
+            var csrf = $("input[name=csrfmiddlewaretoken]").val();
+            if(confirm("Are you sure you would like to delete this" +
+                "boot-template?")) {
+              $.ajax({
+                type: 'DELETE', 
+                url: '{% url 'netinstall_rest_templates' %}' + templateID + '/', 
+                beforeSend: function(xhr) {
+                  xhr.setRequestHeader("X-CSRFToken", csrf);
+                },
+                error: function(data) {
+                  printMessage('div#template.messages',
+                    data['responseJSON']['message'], 'warning');
+                },
+                success: function(data) {
+                  printMessage('div#template.messages',
+                    data['message'], 'success');
+
+                  loadTemplateTable();
+                },
+              });
+            }
+          });
+        },
+        error: function(result) {
+          $('table#boot-template > tbody').empty()
+          printMessage('div#template.messages',
+            'Could not download template-table', 'danger');
+        },
+      });
+    }
+
+    $(document).ready(function(){
+      loadTemplateTable();
+      resetTemplateForm(0);
+      enableTableSorter();
+
+      $('form#templateForm').submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var csrf = form.find("input[name=csrfmiddlewaretoken]").val();
+
+        $.ajax({
+          type: form.attr('method'),
+          url: form.attr('action'),
+          data: form.serialize(), // serializes the form's elements.
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrf);
+          },
+          error: function(data) {
+            printMessage('div#template.messages',
+              data['responseJSON']['message'], 'warning');
+          },
+          success: function(data) {
+            printMessage('div#template.messages',
+              data['message'], 'success');
+            loadTemplateTable();
+            resetTemplateForm(0);
+          },
+        });
+      });
+    });
+  </script>
+{% endblock page-content %}
