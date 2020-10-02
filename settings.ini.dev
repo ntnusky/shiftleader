@@ -13,9 +13,9 @@ localhost = 127.0.0.1
 hostname = fqdn.example.loc
 
 [LDAP]
-url = ldaps://win-dc3.win.ntnu.no:636
-search-base = OU=Brukere,DC=win,DC=ntnu,DC=no
-domain = win-ntnu-no
+url = ldaps://dc.windows.domain.example:636
+search-base = OU=Users,DC=windows,DC=domain,DC=example
+domain = windows-domain-example
 
 [DHCP-SERVERS]
 servers = primary
