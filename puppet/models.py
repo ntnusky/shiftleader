@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 class Environment(models.Model):
-  name = models.CharField(max_length=64)
+  name = models.CharField(max_length=64, unique=True)
   last_deployed = models.DateTimeField(null=True)
   active = models.BooleanField(default=False)
 
@@ -171,6 +171,9 @@ class Role(models.Model):
 
   class Meta:
     ordering = ['name']
+    unique_together = (
+      ("name", "environment"),
+    )
 
 class Report(models.Model):
   STATUSES = (

@@ -3,12 +3,6 @@
 # If we are the only instance of this script running; start doing something:
 lockdir="/tmp/r10k.run.lock"
 if mkdir $lockdir &> /dev/null; then
-  # Run r10k to discover new environments
-  /usr/bin/r10k deploy environment production &> /dev/null
-
-  # Register new environments in shiftleader
-  /opt/shiftleader/manage.py puppet_env2create &> /dev/null
-  
   # For each environment shiftleader knows about:
   for env in $(/opt/shiftleader/manage.py puppet_env2list); do
     # If it is tagged for an update:

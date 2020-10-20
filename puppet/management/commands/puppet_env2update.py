@@ -40,12 +40,7 @@ class Command(BaseCommand):
       server.checkin(Server.STATUS_ERR)
       return
 
-    try:
-      environment = Environment.objects.get(name=env)
-    except Environment.DoesNotExist:
-      environment = Environment(name=env)
-      self.stderr.write("Creating environment %s" % env)
-
+    environment = Environment.objects.get(name=env)
     environment.last_deployed = now()
     environment.save()
 

@@ -6,7 +6,9 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.datastructures import MultiValueDictKeyError
 
+from dashboard.models import Task
 from dashboard.utils import createContext, requireSuperuser
+from puppet.constants import R10KDEPLOY
 from puppet.models import Version, Role, Environment, Server, ReportLog
 
 @user_passes_test(requireSuperuser)
@@ -65,6 +67,10 @@ def deploy(request, eid, sid = 0):
     servers = Server.objects.all()
 
   for server in servers:
+    task = Task(system=Task.PUPPET, typeid=R10KDEPLOY)
+    task.payload = "%s,%s" % (server.name, environment.name)
+    task.save()
+
     latestVersion = server.getLatestVersion(environment)
     if(not latestVersion or \
         (latestVersion and latestVersion.is_deployable())): 
