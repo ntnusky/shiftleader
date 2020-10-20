@@ -12,6 +12,8 @@ from dashboard.models import Task
 from puppet.constants import R10KENVIMPORT
 from puppet.models import Server, Environment, Version
 
+# This command is a small utility returning 0 if a refresh of environments is
+# requested.
 class Command(BaseCommand):
   def handle(self, *args, **options):
     with transaction.atomic():
@@ -21,11 +23,10 @@ class Command(BaseCommand):
         sys.exit(1)
 
       if(task):
-        task.status = Task.FINISHED
+        task.status = Task.PROGRESS
         task.save()
 
     if(task):
-      print("Started %d" % task.id)
       sys.exit(0)
     else:
       sys.exit(2)
