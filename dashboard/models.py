@@ -44,4 +44,5 @@ class Task(models.Model):
       if(id == self.status):
         status = name
 
-    return "%s (%s)" % (system, status)
+    return "Task: %s-%d (%s) Created:%s Updated:%s" % (system, self.typeid, 
+                          status, self.created, self.updated)
