@@ -3,8 +3,7 @@
 host=$(hostname -f)
 
 while /bin/true; do
-  environment=$(/opt/shiftleader/manage.py puppet_deploy_start "$host")
-  if $?; then
+  if environment=$(/opt/shiftleader/manage.py puppet_deploy_start "$host"); then
     logger "[SLDaemon-R10k-Deploy] Deploying environment $environment"
     /usr/bin/r10k deploy environment $environment -pv
 
