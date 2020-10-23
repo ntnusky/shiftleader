@@ -254,9 +254,15 @@ def puppet(request, id):
   if(request.method == 'GET'):
     data = {}
 
-    data['status'] = host.getStatusText()
-    data['last_run'] = host.report_set.last().time
-    data['last_run_pretty'] = "%s ago" % pretty_time(data['last_run'])
+    try:
+      data['status'] = host.getStatusText()
+      data['last_run'] = host.report_set.last().time
+      data['last_run_pretty'] = "%s ago" % pretty_time(data['last_run'])
+    except AttributeError:
+      return JsonResponse(
+        {'message': 'No puppet-run found'},
+        status=HTTPStatus.NOT_FOUND.value,
+      )
 
     return JsonResponse(data)
   else:
