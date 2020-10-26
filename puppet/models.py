@@ -18,6 +18,7 @@ class Environment(models.Model):
       'name': self.name,
       'active': self.is_active(),
       'url-roles': reverse('puppet_api_roles', args=[self.id]),
+      'url-deploy': reverse('puppet_api_deploy', args=[self.id]),
     }
     return data
 
@@ -36,9 +37,9 @@ class Environment(models.Model):
 class Server(models.Model):
   STATUSES = (
     ('0', 'Ok'),
-    ('1', 'Checkin started'),
-    ('2', 'r10k is running'),
-    ('3', 'r10k failed'),
+    ('1', 'Scheduled'),
+    ('2', 'Deploying'),
+    ('3', 'r10k-failed'),
     ('4', 'Timeout')
   )
 
