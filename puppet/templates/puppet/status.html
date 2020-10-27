@@ -47,6 +47,7 @@
           var first = true
           sts.html('');
           refresh = false;
+          btnstatus = false;
           for (var server in result) {
             var stat = result[server];
             if(first) {
@@ -59,6 +60,7 @@
               sts.append($('<span>', {
                 class: 'text-success glyphicon glyphicon-ok',
               }));
+              btnstatus = true;
             } else if (stat == 'Deploying') {
               sts.append($('<span>', {
                 class: 'text-info glyphicon glyphicon-download-alt',
@@ -73,18 +75,22 @@
               sts.append($('<span>', {
                 class: 'text-muted glyphicon glyphicon-remove',
               }));
+              btnstatus = true;
             } else {
               sts.append(stat);
             }
           }
           if(refresh) {
-            button.attr('disabled', 'disabled');
             setTimeout(
               function() {updateEnvironmentStatus(environment_id);},
               5000,
             );
-          } else {
+          }
+
+          if(btnstatus) {
             button.removeAttr('disabled');
+          } else {
+            button.attr('disabled', 'disabled');
           }
         },
         error: function(data) {
