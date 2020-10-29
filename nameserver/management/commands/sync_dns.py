@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from dashboard.settings import parser
 from host.models import Host
-from nameserver.models import Forward, Record, StaticRecord
+from nameserver.models import CName, Forward, Record, Reverse, StaticRecord
 
 class Command(BaseCommand):
   help = ""
@@ -19,3 +19,7 @@ class Command(BaseCommand):
       sr.delete()
     for host in Host.objects.all():
       host.updateDNS()
+
+    for t in [Forward, CName, Reverse]: 
+      for record in t.objects.filter(active=True).all():
+        record.configure()

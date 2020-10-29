@@ -15,6 +15,7 @@ import string
 
 from django.db import models, transaction
 from django.db.models.signals import pre_delete
+from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -274,6 +275,8 @@ class Forward(Record):
           reverse.configure()
         except Domain.DoesNotExist:
           logger.debug('Could not find reverse-domain %s' % reverseDomain)
+        except IntegrityError:
+          logger.warning('Reverse-record already exists %s' % reverseDomain)
 
     if(self.ipv6):
       logger.debug('Configuring AAAA-record for %s.%s to %s' % (
@@ -296,6 +299,8 @@ class Forward(Record):
         except Domain.DoesNotExist:
           logger.debug('Could not find reverse-domain %s' %
                                   v6.reverse_pointer[32:])
+        except IntegrityError:
+          logger.warning('Reverse-record already exists %s' % reverseDomain)
 
   def activate(self):
     super().activate()
