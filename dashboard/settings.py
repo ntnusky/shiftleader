@@ -134,8 +134,30 @@ STATIC_URL = '/static/'
 try:
   STATIC_ROOT = parser.get('general', 'staticpath')
 except NoOptionError:
-  STATIV_ROOT = None
+  STATIC_ROOT = None
 LOGIN_URL = '/login/'
+
+try:
+  loglevel = parser.get('general', 'loglevel')
+except:
+  if(DEBUG):
+    loglevel = 'DEBUG'
+  else:
+    loglevel = 'WARNING'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': loglevel, 
+    },
+}
 
 # The URL of the LDAP server.
 LDAP_AUTH_URL = parser.get('LDAP', 'url') 

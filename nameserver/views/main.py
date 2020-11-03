@@ -11,13 +11,11 @@ from dashboard.utils import createContext, requireSuperuser
 from nameserver.models import Domain, Server, StaticRecord
 
 @user_passes_test(requireSuperuser)
-def index(request):
+def records(request):
   context = createContext(request)
-  context['header'] = "DNS status"
-  context['servers'] = Server.objects.all()
+  context['header'] = "DNS Records"
   context['domains'] = Domain.objects.all()
-
-  return render(request, "dnsStatus.html", context)
+  return render(request, "dns/records.html", context)
 
 @user_passes_test(requireSuperuser)
 def form(request, id=0):

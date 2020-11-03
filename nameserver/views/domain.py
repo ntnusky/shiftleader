@@ -8,6 +8,7 @@ from dashboard.utils import requireSuperuser
 
 from nameserver.models import Domain
 
+@user_passes_test(requireSuperuser)
 def main(request):
   if(request.method == 'GET'):
     domains = []

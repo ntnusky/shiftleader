@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 
 class Environment(models.Model):
-  name = models.CharField(max_length=64)
+  name = models.CharField(max_length=64, unique=True)
   last_deployed = models.DateTimeField(null=True)
   active = models.BooleanField(default=False)
 
@@ -18,6 +18,7 @@ class Environment(models.Model):
       'name': self.name,
       'active': self.is_active(),
       'url-roles': reverse('puppet_api_roles', args=[self.id]),
+      'url-deploy': reverse('puppet_api_deploy', args=[self.id]),
     }
     return data
 
@@ -36,9 +37,9 @@ class Environment(models.Model):
 class Server(models.Model):
   STATUSES = (
     ('0', 'Ok'),
-    ('1', 'Checkin started'),
-    ('2', 'r10k is running'),
-    ('3', 'r10k failed'),
+    ('1', 'Scheduled'),
+    ('2', 'Deploying'),
+    ('3', 'r10k-failed'),
     ('4', 'Timeout')
   )
 
@@ -171,6 +172,9 @@ class Role(models.Model):
 
   class Meta:
     ordering = ['name']
+    unique_together = (
+      ("name", "environment"),
+    )
 
 class Report(models.Model):
   STATUSES = (

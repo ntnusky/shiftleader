@@ -10,7 +10,7 @@ from django.utils import timezone
 from dashboard.settings import parser
 from dhcp.models import Lease, Subnet
 from dhcp.omapi import Servers
-from nameserver.models import Domain
+from nameserver.models import Domain, Forward, Record
 from puppet.models import Environment, Role, Report, ReportMetric
 from netinstall.models import BootTemplate
 
@@ -301,31 +301,28 @@ class Host(models.Model):
     else:
       return "N/A"
 
-  def deleteDNS(self):
-    for interface in self.interface_set.all():
-      # Delete the interface-specific A record
-      try:
-        interface.network.domain.deleteDomain(self.name)
-      except AttributeError:
-        pass
-
   def updateDNS(self):
     for interface in self.interface_set.all():
       if(interface.ipv4Lease):
-        interface.network.domain.configure(self.name, interface.ipv4Lease.IP)
+        ipv4 = interface.ipv4Lease.IP
+      else:
+        ipv4 = None
 
-        # If we manage the reverse-zone, configure a reverse name for this
-        # interface.
-        ip = interface.ipv4Lease.IP.split('.')
-        try:
-          reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
-          domain = Domain.objects.get(name=reverseDomain)
-          domain.configure(ip[3], "%s.%s." % (self.name, interface.network.domain.name))
-        except Domain.DoesNotExist:
-          pass
+      try:
+        record = Forward.objects.get(name=self.name, 
+                                domain=interface.network.domain)
+      except Forward.DoesNotExist:
+        record = Forward(name=self.name, domain=interface.network.domain)
 
-      if(interface.ipv6):
-        interface.network.domain.configure(self.name, interface.ipv6)
+      record.active = True
+      record.record_type = Record.TYPE_HOST
+      record.reverse = True
+      record.ipv4 = ipv4
+      record.ipv6 = interface.ipv6
+      record.configure()
+      record.save()
+      interface.dns = record
+      interface.save()
 
   def generatePassword(self):
     chars = string.ascii_letters + string.digits
@@ -333,7 +330,6 @@ class Host(models.Model):
     self.save()
 
   def remove(self):
-    self.deleteDNS()
     dhcp = Servers()
     for interface in self.interface_set.all():
       dhcp.configureLease(interface.ipv4Lease.IP, interface.ipv4Lease.MAC,
@@ -344,6 +340,7 @@ class Host(models.Model):
       lease.save()
       lease.subnet.free += 1
       lease.subnet.save()
+      interface.dns.delete()
       interface.delete()
     self.delete()
 
@@ -383,6 +380,7 @@ class Interface(models.Model):
   ifname = models.CharField(max_length=20)
   mac = models.CharField(max_length=64)
   host = models.ForeignKey(Host)
+  dns = models.ForeignKey(Forward, default=None, null=True)
   primary = models.BooleanField(default=False)
   network = models.ForeignKey(Network, null=True, default=None)
   ipv4Lease = models.OneToOneField(Lease, null=True)

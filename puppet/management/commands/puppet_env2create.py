@@ -24,11 +24,10 @@ class Command(BaseCommand):
     levelInPath = len(path.rstrip('/').split('/'))
     environments = []
     for environmentName in r10kenv:
-      try:
-        environment = Environment.objects.get(name=environmentName)
-      except Environment.DoesNotExist:
-        environment = Environment(name=environmentName)
-        self.stdout.write("Creating environment %s" % environmentName)
-
+      environment, created = Environment.objects.get_or_create(
+                                                  name=environmentName)
       environment.last_deployed = now()
       environment.save()
+
+      if created:
+        self.stdout.write("Creating environment %s" % environmentName)

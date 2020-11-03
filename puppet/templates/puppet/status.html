@@ -1,0 +1,220 @@
+{% extends "base/main.html" %}
+
+{% block page-content %}
+  <form method="post" id="csrf">
+    {% csrf_token %}
+  </form>
+
+  <h2>Pull new environments</h2>
+  <p>You can use the following button to discover new environments from the
+  r10k git-repository</p>
+  <div class="messages" id="envdiscover-message"></div>
+  <p id='envdiscover'>
+  </p>
+  <button id="discoverEnvs" class="btn btn-primary">Retrieve new environments</button>
+
+  <h2>Puppet environments</h2>
+  <p>The following table diplays the environments currently known to
+  shiftleader</p>
+
+  <div class="messages" id="env-message"></div>
+  <table id="environments" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Deploy</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+
+  <script>
+    function updateEnvironmentStatus(environment_id) {
+      var row = $('table#environments').find('tr#' + environment_id);
+      var button = row.find('button');
+      var sts = row.find('td.envstatus');
+      var url = sts.attr('url');
+
+      sts.append('...');
+
+      $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(result) {
+          var first = true
+          sts.html('');
+          refresh = false;
+          btnstatus = false;
+          for (var server in result) {
+            var stat = result[server];
+            if(first) {
+              first = false
+            } else {
+              sts.append(' - ');
+            }
+            sts.append(server + ': ');
+            if(stat == 'Deployed') {
+              sts.append($('<span>', {
+                class: 'text-success glyphicon glyphicon-ok',
+              }));
+              btnstatus = true;
+            } else if (stat == 'Deploying') {
+              sts.append($('<span>', {
+                class: 'text-info glyphicon glyphicon-download-alt',
+              }));
+              refresh = true;
+            } else if (stat == 'Scheduled') {
+              sts.append($('<span>', {
+                class: 'text-info glyphicon glyphicon-hourglass',
+              }));
+              refresh = true;
+            } else if (stat == 'Undeployed') {
+              sts.append($('<span>', {
+                class: 'text-muted glyphicon glyphicon-remove',
+              }));
+              btnstatus = true;
+            } else {
+              sts.append(stat);
+            }
+          }
+          if(refresh) {
+            setTimeout(
+              function() {updateEnvironmentStatus(environment_id);},
+              5000,
+            );
+          }
+
+          if(btnstatus) {
+            button.removeAttr('disabled');
+          } else {
+            button.attr('disabled', 'disabled');
+          }
+        },
+        error: function(data) {
+          sts.html($('<span>', {
+            class: 'text-danger glyphicon glyphicon-remove-circle',
+          }).append(' - Could not get env-status'));
+        },
+      });
+
+    }
+    function reloadEnvironments() {
+      $.ajax({
+        url: '{% url 'puppet_api_environments' %}',
+        type: 'GET',
+        success: function(result) {
+          $('table#environments > tbody').empty();
+
+          for(var e in result) {
+            var row = $('<tr>', {
+              class: 'envrow',
+              id:    result[e]['id'],
+            });
+
+            row.append($('<td>').append(result[e]['name']));
+            row.append($('<td>', {
+              class: 'envstatus',
+              url: result[e]['url-deploy'],
+            }));
+            row.append($('<td>').append($('<button>', {
+              class: 'btn btn-sm btn-success envDeploy',
+              id: result[e]['id'],
+            }).append('Deploy on all puppet-masters')));
+            $('table#environments > tbody').append(row);
+
+            $('button#' + result[e]['id'] + '.envDeploy').click(function() {
+              var button = $(this)
+              var eid = $(this).attr('id');
+              var row = $('table#environments').find('tr#' + eid);            
+              var uri = row.find('td.envstatus').attr('url');
+              button.attr('disabled', 'disabled');
+              $.ajax({
+                url: uri, 
+                type: 'POST',
+                data: $('form#csrf').serialize(),
+                success: function(result) {
+                  updateEnvironmentStatus(eid);
+                },
+                error: function(result) {
+                  button.removeAttr('disabled');
+                  printMessage('div#env-message', 'Could not deploy!', 
+                    'danger');
+                },
+              });
+            });
+            updateEnvironmentStatus(result[e]['id']);
+          }
+        },
+        error: function(data) {
+          printMessage('div#env-message', 'Could not load environments', 
+              'danger');
+        },
+      });
+    }
+
+    $(document).ready(function(){
+      reloadEnvironments();
+    });
+
+    function updateEnvDiscoveryStatus() {
+      var url = "{% url 'puppet_api_environment_discover' %}"
+      $("#discoverEnvs").attr('disabled', 'disabled');
+      $.ajax({
+        type : 'GET',
+        url  : url,
+        success: function(data) {
+          if ( data['status'] == 'running' ) {
+            setTimeout(
+              function() { updateEnvDiscoveryStatus();},
+              5000,
+            );
+          } else {
+            $("#discoverEnvs").removeAttr('disabled');
+            $('p#envdiscover').html('');
+            reloadEnvironments();
+          }
+        },
+      })
+    }
+    
+    $("#discoverEnvs").click(function() {
+      var url = "{% url 'puppet_api_environment_discover' %}"
+      $("#discoverEnvs").attr('disabled', 'disabled');
+      $.ajax({
+        type : 'POST',
+        url  : url,
+        data: $('form#csrf').serialize(),
+        success: function(data) {
+          printMessage('div#envdiscover-message', data['message'], 'success');
+          $('p#envdiscover').html('Loading environments...');
+          updateEnvDiscoveryStatus();
+        },
+        error: function(data) {
+          printMessage('div#envdiscover-message', data['responseJSON']['message'], 'warning');
+          $("#discoverEnvs").removeAttr('disabled');
+
+        },
+      })
+    });
+    $(".deletePuppetServer").click(function() {
+      if (confirm('Are you sure you want to delete this puppet-server?')) {
+        var url = $(this).data('url');
+        console.log(url);
+        $.ajax({
+          type : 'GET',
+          url  : url ,
+        }).done(function(response) {
+          $(".puppettablemessage").html("<div class='alert alert-" +
+            response['status'] + "'>" + response['message'] + "</div>");
+          
+          if(response['status']  == "success") {
+            location.reload(true);
+          }
+        });
+      }
+    });
+  </script>
+{% endblock page-content %}

@@ -19,7 +19,9 @@ from dashboard.views import main
 
 webapp = [
   url(r'^host/',        include('host.urls')),
+  url(r'^dns/',         include('nameserver.urls')),
   url(r'^netinstall/',  include('netinstall.urls')),
+  url(r'^puppet/',      include('puppet.urls')),
 ]
 
 api_v1 = [
@@ -37,9 +39,7 @@ urlpatterns = [
   url(r'^login/$', main.loginPage, name="login"),
   url(r'^logout/$', main.logoutPage, name="logout"),
 
-  url(r'^puppet/', include('puppet.urls')),
   url(r'^dhcp/', include('dhcp.urls')),
-  url(r'^dns/', include('nameserver.urls')),
   url(r'^host/', include('host.legacyurls')),
 
   # The new entrypoints, differentiating API from web.

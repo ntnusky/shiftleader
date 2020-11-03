@@ -51,9 +51,21 @@ def populateMenu(request):
 
   m = {}
   m['name'] = 'DNS' 
-  m['url'] = reverse('dnsIndex')
-  m['active'] = request.path == m['url']
-  m['type'] = 'link'
+  m['type'] = 'dropdown'
+  m['elements'] = []
+
+  me = {}
+  me['name'] = 'Records' 
+  me['url'] = reverse('dns_records')
+  me['type'] = 'link'
+  me['active'] = request.path.startswith(me['url'])
+  m['elements'].append(me)
+
+  m['active'] = False
+  for e in m['elements']:
+    if e['active']:
+      m['active'] = True
+
   menu.append(m)
 
   m = {}
