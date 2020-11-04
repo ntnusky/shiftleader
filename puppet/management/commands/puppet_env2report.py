@@ -18,40 +18,12 @@ class Command(BaseCommand):
     path = '/etc/puppetlabs/code/environments/'
     levelInPath = len(path.rstrip('/').split('/'))
 
-    fqdn = socket.getfqdn()
-    try:
-      server = Server.objects.get(name=fqdn)
-    except Server.DoesNotExist:
-      sys.stderr.write("Could not find the server")
-      return
-
     try:
       environment = Environment.objects.get(name=env)
+      environment.active = True
+      environment.save()
     except Environment.DoesNotExist:
       sys.stderr.write("Could not find the environment")
-      return
-
-    lastVersion = server.getLatestVersion(environment)
-
-    # Grab the signature after the deployment.
-    try:
-      envinfo = json.load(open(os.path.join(path, env, 
-          '.r10k-deploy.json'), "r"))
-    except FileNotFoundError:
-      self.stderr.write(\
-          "Environment %s is not deployed yet" % env)
-      return
-
-    try:
-      vid = lastVersion.id
-      lastVersion = Version.objects.get(id=vid) 
-      # Save the version-object
-      lastVersion.signature=envinfo['signature']
-      lastVersion.status = Version.STATUS_DEPLOYED
-      lastVersion.save()
-    except Exception as err:
-      sys.stderr.write("Could not save environment information:\n")
-      sys.stderr.write(traceback.print_tb(err.__traceback__))
       return
 
     for current, dirs, files in os.walk(os.path.join(path, env, 
