@@ -2,11 +2,14 @@ import json
 import os
 import socket
 import traceback
+import logging
 
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
 from puppet.models import Server, Environment, Version, Role
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
   def add_arguments(self, parser):
@@ -23,7 +26,7 @@ class Command(BaseCommand):
       environment.active = True
       environment.save()
     except Environment.DoesNotExist:
-      sys.stderr.write("Could not find the environment")
+      logger.error("Could not find the environment %s" % env)
       return
 
     for current, dirs, files in os.walk(os.path.join(path, env, 
@@ -38,6 +41,6 @@ class Command(BaseCommand):
           role = environment.role_set.get(name=fullname)
         except Role.DoesNotExist:
           role = environment.role_set.create(name=fullname)
-          self.stdout.write("Creating role %s-%s" % (env, role))
+          logger.info("Creating role %s-%s" % (env, role))
         role.last_deployed = now()
         role.save()
