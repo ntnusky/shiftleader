@@ -1,3 +1,4 @@
+import ipaddress
 import re
 import string
 from random import sample, choice
@@ -314,11 +315,16 @@ class Host(models.Model):
       except Forward.DoesNotExist:
         record = Forward(name=self.name, domain=interface.network.domain)
 
+      try:
+        v6 = ipaddress.IPv6Address(interface.ipv6)
+        record.ipv6 = interface.ipv6
+      except:
+        record.ipv6 = None
+
       record.active = True
       record.record_type = Record.TYPE_HOST
       record.reverse = True
       record.ipv4 = ipv4
-      record.ipv6 = interface.ipv6
       record.configure()
       record.save()
       interface.dns = record
