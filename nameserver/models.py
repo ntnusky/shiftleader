@@ -284,7 +284,12 @@ class Forward(Record):
       self.domain.configure(self.name, self.ipv6)
 
       if(self.reverse):
-        v6 = ipaddress.IPv6Address(self.ipv6)
+        try:
+          v6 = ipaddress.IPv6Address(self.ipv6)
+        except:
+          logger.warning("Could not parse %s as an IPv6 address" % self.ipv6)
+          return
+
         try:
           domain = Domain.objects.get(name=v6.reverse_pointer[32:])
           logger.debug('Confiuring PTR-record %s.%s for %s.%s' % (
