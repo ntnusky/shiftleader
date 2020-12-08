@@ -346,7 +346,8 @@ class Host(models.Model):
       lease.save()
       lease.subnet.free += 1
       lease.subnet.save()
-      interface.dns.delete()
+      if interface.dns:
+        interface.dns.delete()
       interface.delete()
     self.delete()
 
