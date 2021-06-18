@@ -20,7 +20,7 @@ class Command(BaseCommand):
       server = Server.objects.get(name=fqdn)
     except Server.DoesNotExist:
       server = Server(name=fqdn)
-      server.status = STATUS_TIMEOUT
+      server.status = Server.STATUS_TIMEOUT
       server.save()
 
     with transaction.atomic():
