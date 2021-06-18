@@ -5,6 +5,7 @@ from django.db import transaction
 
 from dashboard.models import Task
 from puppet.constants import R10KDEPLOY
+from puppet.models import Server
 
 class Command(BaseCommand):
   def add_arguments(self, parser):
@@ -12,6 +13,14 @@ class Command(BaseCommand):
 
   def handle(self, *args, **options):
     hostname = options['hostname']
+
+    fqdn = socket.getfqdn()
+    try:
+      server = Server.objects.get(name=fqdn)
+    except Server.DoesNotExist:
+      server = Server(name=fqdn)
+      server.status = STATUS_TIMEOUT
+      server.save()
 
     with transaction.atomic():
       task = Task.objects.filter(typeid=R10KDEPLOY, status=Task.READY,
