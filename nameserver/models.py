@@ -125,7 +125,7 @@ class Server(models.Model):
 class Domain(models.Model):
   name = models.CharField(max_length=200)
   alias = models.CharField(max_length=200, null=True, default=None)
-  server = models.ForeignKey(Server)
+  server = models.ForeignKey(Server, on_delete=models.PROTECT)
 
   def __str__(self):
     return "%s" % self.name
@@ -194,7 +194,7 @@ class Record(models.Model):
   )
 
   name = models.CharField(max_length=200)
-  domain = models.ForeignKey(Domain)
+  domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
   active = models.BooleanField(default=True)
   record_type = models.IntegerField(choices=RECORDTYPES)
 
@@ -377,7 +377,7 @@ def deactivate_before_delete(sender, instance, **kwargs):
 
 class StaticRecord(models.Model):
   name = models.CharField(max_length=200)
-  domain = models.ForeignKey(Domain)
+  domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
   ipv4 = models.GenericIPAddressField(protocol='IPv4', null=True)
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
   expire = models.DateField(default=None, null=True)

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -19,7 +20,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
                 ('name', models.CharField(max_length=64)),
                 ('status', models.CharField(max_length=1, choices=[(0, 'Operational'), (1, 'Provisioning'), (2, 'Installing')])),
-                ('environment', models.ForeignKey(to='puppet.Environment')),
+                ('environment', models.ForeignKey(to='puppet.Environment',
+                                                    on_delete=django.db.models.deletion.SET_NULL)),
             ],
         ),
         migrations.CreateModel(
@@ -31,9 +33,12 @@ class Migration(migrations.Migration):
                 ('mac', models.CharField(max_length=64)),
                 ('ipv4', models.GenericIPAddressField(protocol='IPv4', null=True)),
                 ('ipv6', models.GenericIPAddressField(protocol='IPv6', null=True)),
-                ('domain', models.ForeignKey(to='nameserver.Domain')),
-                ('host', models.ForeignKey(to='host.Host')),
-                ('ipv4Lease', models.ForeignKey(to='dhcp.Lease', null=True)),
+                ('domain', models.ForeignKey(to='nameserver.Domain',
+                                      on_delete=django.db.models.deletion.SET_NULL)),
+                ('host', models.ForeignKey(to='host.Host',
+                                            on_delete=django.db.models.deletion.PROTECT)),
+                ('ipv4Lease', models.ForeignKey(to='dhcp.Lease', null=True,
+                                            on_delete=django.db.models.deletion.SET_NULL)),
             ],
         ),
     ]

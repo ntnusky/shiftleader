@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -18,9 +19,14 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, verbose_name='ID', serialize=False, primary_key=True)),
                 ('name', models.CharField(max_length=64)),
-                ('domain', models.ForeignKey(to='nameserver.Domain')),
-                ('v4subnet', models.ForeignKey(null=True, related_name='v4network', to='dhcp.Subnet')),
-                ('v6subnet', models.ForeignKey(null=True, related_name='v6network', to='dhcp.Subnet')),
+                ('domain', models.ForeignKey(to='nameserver.Domain',
+                    on_delete=django.db.models.deletion.PROTECT)),
+                ('v4subnet', models.ForeignKey(null=True,
+                    related_name='v4network', to='dhcp.Subnet',
+                    on_delete=django.db.models.deletion.PROTECT)),
+                ('v6subnet', models.ForeignKey(null=True,
+                    related_name='v6network', to='dhcp.Subnet',
+                    on_delete=django.db.models.deletion.PROTECT)),
             ],
         ),
         migrations.AddField(
@@ -31,6 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interface',
             name='network',
-            field=models.ForeignKey(null=True, default=None, to='host.Network'),
+            field=models.ForeignKey(null=True, default=None, to='host.Network',
+                on_delete=django.db.models.deletion.PROTECT),
         ),
     ]

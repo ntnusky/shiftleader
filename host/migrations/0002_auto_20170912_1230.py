@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -15,7 +16,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='host',
             name='domain',
-            field=models.ForeignKey(default=None, to='nameserver.Domain'),
+            field=models.ForeignKey(default=None, to='nameserver.Domain',
+                                                  on_delete=django.db.models.deletion.PROTECT),
             preserve_default=False,
         ),
         migrations.AddField(

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -14,6 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='host',
             name='partition',
-            field=models.ForeignKey(to='host.PartitionScheme', null=True, default=None),
+            field=models.ForeignKey(to='host.PartitionScheme', null=True,
+            default=None, on_delete=django.db.models.deletion.SET_NULL),
         ),
     ]

@@ -2,7 +2,7 @@ import ipaddress
 import re
 
 from datetime import datetime, timedelta
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from dashboard.settings import parser
 

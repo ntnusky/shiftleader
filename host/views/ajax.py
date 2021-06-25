@@ -2,9 +2,9 @@ import re
 import ipaddress
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.core.urlresolvers import reverse
 from django.http import JsonResponse, HttpResponseBadRequest 
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt 
 
 from dashboard.utils import requireSuperuser, createEUI64
