@@ -1,19 +1,14 @@
 import ipaddress
-import os
 import re
 
 from django.contrib.auth.decorators import user_passes_test 
-from django.http import HttpResponse, Http404, HttpResponseForbidden, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 
-from dashboard.utils import createEUI64, createContext, requireSuperuser, get_client_ip
-from dashboard.settings import parser
+from dashboard.utils import createEUI64, createContext, requireSuperuser
 from dhcp.models import Subnet, Lease
 from dhcp.omapi import Servers
-from host.models import Host, Interface, OperatingSystem, BootFile, HostGroup
-from host.utils import authorize, createReplacements, NONE, IP, USER, \
-    getBootConfigFile
-from nameserver.models import Domain
+from host.models import Host, Interface, HostGroup
+from host.utils import getBootConfigFile
 from puppet.models import Environment, Report
 from netinstall.models import BootTemplate
 
@@ -25,23 +20,6 @@ def main(request):
   context['subnets'] = Subnet.objects.filter(ipversion=4).all()
   context['templates'] = BootTemplate.objects.order_by('name').all()
   return render(request, 'host/index.html', context)
-
-@user_passes_test(requireSuperuser)
-def index(request):
-  context = createContext(request)
-
-  context['header'] = "Host status"
-  context['hosts'] = Host.objects.all()
-  context['templates'] = BootTemplate.objects.all()
-  context['environments'] = Environment.objects.all()
-  context['operatingsystems'] = OperatingSystem.objects.order_by('name').all()
-  context['hostgroups'] = HostGroup.objects.order_by('name').all()
-  context['bootfiles'] = BootFile.objects.filter(
-      filetype__in = [None, BootFile.BOOTFILE]).all()
-  context['installscripts'] = BootFile.objects.filter(
-      filetype__in = [None, BootFile.POSTINSTALLSCRIPT]).all()
-
-  return render(request, 'hostOverview.html', context)
 
 @user_passes_test(requireSuperuser)
 def single(request, id, logid = 0):
@@ -212,14 +190,6 @@ def interface(request, hid, iid = 0):
 
   return render(request, 'hostInterface.html', context)
 
-@user_passes_test(requireSuperuser)
-def bootfiles(request):
-  context = createContext(request)
-  context['header'] = "Bootfiles"
-  context['filetypes'] = BootFile.filetypes
-  
-  return render(request, 'host/bootfiles.html', context)
-
 def installerconfig(request, id):
   return getBootConfigFile(id, request, 'InstallConfig')
 
@@ -228,51 +198,6 @@ def tftp(request, id):
 
 def postinstall(request, id):
   return getBootConfigFile(id, request, 'PostInstall')
-
-@user_passes_test(requireSuperuser)
-def osform(request, pid=0):
-  context = createContext(request)
-
-  if(pid == 0):
-    opsys = None
-    context['header'] = "Add an OS"
-    context['buttonText'] = "Add"
-  else:
-    opsys = get_object_or_404(OperatingSystem, pk=pid)
-    context['os'] = opsys
-    context['header'] = "Update '%s'" % opsys.name
-    context['buttonText'] = "Update"
-  
-  if(request.POST.get('csrfmiddlewaretoken')):
-    if(opsys == None):
-      opsys = OperatingSystem()
-    
-    toSave = False
-    if(opsys.name != request.POST.get('name')):
-      opsys.name = request.POST.get('name')
-      toSave = True
-    if(opsys.shortname != request.POST.get('shortname')):
-      opsys.shortname = request.POST.get('shortname')
-      toSave = True
-    if(opsys.kernelurl != request.POST.get('kernelurl')):
-      opsys.kernelurl = request.POST.get('kernelurl')
-      opsys.kernelname = os.path.basename(opsys.kernelurl)
-      toSave = True
-    if(opsys.initrdurl != request.POST.get('initrdurl')):
-      opsys.initrdurl = request.POST.get('initrdurl')
-      opsys.initrdname = os.path.basename(opsys.initrdurl)
-      toSave = True
-
-    if(len(opsys.name) == 0 or len(opsys.shortname) == 0 or
-        len(opsys.kernelurl) == 0 or len(opsys.initrdurl) == 0):
-      context['message'] = "All fields need a value!"
-      toSave = False
-
-    if(toSave):
-      opsys.save()
-      return redirect('hostMain')
-
-  return render(request, 'hostOsForm.html', context)
 
 @user_passes_test(requireSuperuser)
 def hostgroupform(request, pid=0):

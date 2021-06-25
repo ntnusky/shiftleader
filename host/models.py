@@ -17,6 +17,9 @@ from netinstall.models import BootTemplate
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.OperatingSystem
+#
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class OperatingSystem(models.Model):
   name = models.CharField(max_length=64)
   shortname = models.CharField(max_length=20)
@@ -403,6 +406,9 @@ class Interface(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFile(models.Model):
   UNSET = 0
   BOOTFILE = 1
@@ -450,6 +456,9 @@ class BootFile(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -463,6 +472,9 @@ class BootFragment(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFileFragment(models.Model):
   bootfile = models.ForeignKey(BootFile, on_delete=models.PROTECT)
   fragment = models.ForeignKey(BootFragment, on_delete=models.PROTECT)
