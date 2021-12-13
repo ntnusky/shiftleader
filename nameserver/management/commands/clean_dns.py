@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from host.models import Interface
-from nameserver.models import Domain, StaticRecord
+from nameserver.models import Domain, StaticRecord, Forward, CName, Reverse
 
 class Command(BaseCommand):
   help = ""
@@ -48,42 +48,29 @@ class Command(BaseCommand):
       except Domain.DoesNotExist:
         pass
 
-    # Iterate trough all static DNS records and add these names to the insl list
-    # as well.
-    for sr in StaticRecord.objects.all():
-      # If the record is not active, just skip it. This will have the name 
-      # removed from DNS
-      if(not sr.isActive()):
-        continue
-
-      if(len(sr.name)):
-        domain = '%s.%s' % (sr.name, sr.domain)
+    for f in Forward.objects.filter(active=True).all():
+      if(len(f.name)):
+        domain = '%s.%s' % (f.name, f.domain.name)
       else:
-        domain = '@.%s' % sr.domain
+        domain = '@.%s' % f.domain.name
 
-      if(sr.ipv4):
+      if(f.ipv4):
         try:
-          insl[domain].append(sr.ipv4)
+          insl[domain].append(f.ipv4)
         except:
-          insl[domain] = [sr.ipv4]
-
+          insl[domain] = [f.ipv4]
+      if(f.ipv6):
         try:
-          ip = sr.ipv4.split('.')
-          reverseDomain = "%s.%s.%s.in-addr.arpa" % (ip[2], ip[1], ip[0])
-          d = Domain.objects.get(name=reverseDomain)
-          try:
-            insl['%s.%s' % (ip[3], reverseDomain)].append('%s.' % domain)
-          except KeyError:
-            insl['%s.%s' % (ip[3], reverseDomain)] = ['%s.' % domain]
-        except Domain.DoesNotExist:
-          pass
-
-      if(sr.ipv6):
-        try:
-          insl[domain].append(sr.ipv6)
+          insl[domain].append(f.ipv6)
         except:
-          insl[domain] = [sr.ipv6]
+          insl[domain] = [f.ipv6]
     
+    for r in Reverse.objects.filter(active=True).all():
+      try:
+        insl['%s.%s' % (r.name, r.domain.name)].append('%s.' % r.target)
+      except KeyError:
+        insl['%s.%s' % (r.name, r.domain.name)] = ['%s.' % r.target]
+
     # For each name found in DNS:
     for name in indns:
       for record in indns[name]:
