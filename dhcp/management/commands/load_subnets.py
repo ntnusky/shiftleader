@@ -96,7 +96,7 @@ class Command(BaseCommand):
     netsToDisable = [ net for net in activeNets if net not in pools ]
 
     for net in netsToDisable:
-      subnet = Subnet.objects.get(name=net)
-      subnet.active = False
-      subnet.save()
-      self.stdout.write("Disabling the subnet '%s'" % net)
+      for subnet in Subnet.objects.filter(name=net).all():
+        subnet.active = False
+        subnet.save()
+        self.stdout.write("Disabling the subnet '%s' (%s)" % (net, subnet.prefix))
