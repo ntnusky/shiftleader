@@ -199,7 +199,7 @@ def bootfiles(request):
   return render(request, 'host/bootfiles.html', context)
 
 def installerblank(request, id):
-  return ""
+  return render(request, 'host/blank.html', {})
 
 def installerconfig(request, id):
   return getBootConfigFile(id, request, 'InstallConfig')
