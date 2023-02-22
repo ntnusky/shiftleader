@@ -190,6 +190,17 @@ def interface(request, hid, iid = 0):
 
   return render(request, 'hostInterface.html', context)
 
+@user_passes_test(requireSuperuser)
+def bootfiles(request):
+  context = createContext(request)
+  context['header'] = "Bootfiles"
+  context['filetypes'] = BootFile.filetypes
+  
+  return render(request, 'host/bootfiles.html', context)
+
+def installerblank(request, id):
+  return ""
+
 def installerconfig(request, id):
   return getBootConfigFile(id, request, 'InstallConfig')
 
