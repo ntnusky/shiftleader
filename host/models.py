@@ -3,9 +3,9 @@ import re
 import string
 from random import sample, choice
 
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 
 from dashboard.settings import parser
@@ -17,6 +17,9 @@ from netinstall.models import BootTemplate
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.OperatingSystem
+#
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class OperatingSystem(models.Model):
   name = models.CharField(max_length=64)
   shortname = models.CharField(max_length=20)
@@ -64,16 +67,17 @@ class Host(models.Model):
   ERROR = 6
 
   name = models.CharField(max_length=64)
-  group = models.ForeignKey(HostGroup, null=True)
+  group = models.ForeignKey(HostGroup, null=True, on_delete=models.SET_NULL)
   password = models.CharField(max_length=64, null=True)
-  os = models.ForeignKey(OperatingSystem, null=True)
+  os = models.ForeignKey(OperatingSystem, null=True, on_delete=models.SET_NULL)
   template = models.ForeignKey(BootTemplate, null=True,
                                 on_delete=models.SET_NULL)
-  bootfile = models.ForeignKey('BootFile', null=True)
+  bootfile = models.ForeignKey('BootFile', null=True, on_delete=models.SET_NULL)
   postinstallscript = models.ForeignKey('BootFile', null=True,
-      related_name='scripthosts')
-  environment = models.ForeignKey(Environment, null=True)
-  role = models.ForeignKey(Role, null=True)
+      related_name='scripthosts', on_delete=models.SET_NULL)
+  environment = models.ForeignKey(Environment, null=True,
+      on_delete=models.SET_NULL)
+  role = models.ForeignKey(Role, null=True, on_delete=models.SET_NULL)
   status = models.CharField(max_length=1, choices=STATUSES)
 
   def __str__(self):
@@ -347,7 +351,10 @@ class Host(models.Model):
       lease.subnet.free += 1
       lease.subnet.save()
       if interface.dns:
-        interface.dns.delete()
+        r = interface.dns
+        interface.dns = None
+        interface.save()
+        r.delete()
       interface.delete()
     self.delete()
 
@@ -356,9 +363,11 @@ class Host(models.Model):
 
 class Network(models.Model):
   name = models.CharField(max_length=64)
-  domain = models.ForeignKey(Domain)
-  v4subnet = models.ForeignKey(Subnet, related_name="v4network", null=True)
-  v6subnet = models.ForeignKey(Subnet, related_name="v6network", null=True)
+  domain = models.ForeignKey(Domain, on_delete=models.PROTECT)
+  v4subnet = models.ForeignKey(Subnet, related_name="v4network", null=True,
+                                on_delete=models.PROTECT)
+  v6subnet = models.ForeignKey(Subnet, related_name="v6network", null=True,
+                                on_delete=models.PROTECT)
 
   def __str__(self):
     if(self.v4subnet):
@@ -386,11 +395,13 @@ class Interface(models.Model):
 
   ifname = models.CharField(max_length=20)
   mac = models.CharField(max_length=64)
-  host = models.ForeignKey(Host)
-  dns = models.ForeignKey(Forward, default=None, null=True)
+  host = models.ForeignKey(Host, on_delete=models.PROTECT)
+  dns = models.ForeignKey(Forward, default=None, null=True,
+                           on_delete=models.PROTECT)
   primary = models.BooleanField(default=False)
-  network = models.ForeignKey(Network, null=True, default=None)
-  ipv4Lease = models.OneToOneField(Lease, null=True)
+  network = models.ForeignKey(Network, null=True, default=None,
+                           on_delete=models.PROTECT)
+  ipv4Lease = models.OneToOneField(Lease, null=True, on_delete=models.SET_NULL)
   ipv6 = models.GenericIPAddressField(protocol='IPv6', null=True)
 
   def __str__(self):
@@ -398,6 +409,9 @@ class Interface(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFile(models.Model):
   UNSET = 0
   BOOTFILE = 1
@@ -445,6 +459,9 @@ class BootFile(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFragment(models.Model):
   name = models.CharField(max_length=64)
   description = models.TextField()
@@ -458,9 +475,12 @@ class BootFragment(models.Model):
 
 # This class is deprecated, and will be removed soon. Same functionality is now
 # placed in netboot.models.ConfigFile
+# 
+# This class is now not used anymore, and can be removed when all our
+# installations are running the django2-version of shiftleader
 class BootFileFragment(models.Model):
-  bootfile = models.ForeignKey(BootFile)
-  fragment = models.ForeignKey(BootFragment)
+  bootfile = models.ForeignKey(BootFile, on_delete=models.PROTECT)
+  fragment = models.ForeignKey(BootFragment, on_delete=models.PROTECT)
   order = models.IntegerField()
 
   class Meta:

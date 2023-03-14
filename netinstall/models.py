@@ -1,6 +1,6 @@
 import re
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import models
 
 from dashboard.settings import parser

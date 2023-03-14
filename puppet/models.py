@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from django.core.urlresolvers import reverse
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 class Environment(models.Model):
@@ -115,8 +115,8 @@ class Version(models.Model):
   STATUS_DEPLOYED = '2'
   STATUS_ERROR = '3'
 
-  environment = models.ForeignKey(Environment)
-  server = models.ForeignKey(Server)
+  environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
+  server = models.ForeignKey(Server, on_delete=models.CASCADE)
   signature = models.CharField(max_length=64)
   status = models.CharField(max_length=1, choices=STATUS,
       default=STATUS_SCHEDULED)
@@ -141,7 +141,7 @@ class Version(models.Model):
 
 class Role(models.Model):
   name = models.CharField(max_length=64)
-  environment = models.ForeignKey(Environment)
+  environment = models.ForeignKey(Environment, on_delete=models.CASCADE)
   last_deployed = models.DateTimeField(null=True)
 
   def __str__(self):
@@ -186,8 +186,9 @@ class Report(models.Model):
   STATUS_CHANGED = 1
   STATUS_FAILED = 2
 
-  host = models.ForeignKey('host.Host')
-  environment = models.ForeignKey(Environment)
+  host = models.ForeignKey('host.Host', on_delete=models.CASCADE)
+  environment = models.ForeignKey(Environment, null=True,
+                                    on_delete=models.SET_NULL)
   noop = models.BooleanField()
   noop_pending = models.BooleanField()
   configuration_version = models.CharField(max_length=32)
@@ -239,7 +240,7 @@ class ReportMetric(models.Model):
   TYPE_EVENT = 2
   TYPE_CHANGE = 3
 
-  report = models.ForeignKey(Report)
+  report = models.ForeignKey(Report, on_delete=models.CASCADE)
   metricType = models.IntegerField(choices=TYPES)
   name = models.CharField(max_length=32)
   value = models.CharField(max_length=64)
@@ -273,7 +274,7 @@ class ReportLog(models.Model):
   LEVEL_INFO = 6
   LEVEL_DEBUG = 7
 
-  report = models.ForeignKey(Report)
+  report = models.ForeignKey(Report, on_delete=models.CASCADE)
   level = models.IntegerField(choices=LEVELS)
   message = models.TextField()
   source = models.TextField()

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -19,6 +20,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='configfile',
             name='filetype',
-            field=models.ForeignKey(null=True, to='netinstall.ConfigFileType'),
+            field=models.ForeignKey(null=True, to='netinstall.ConfigFileType',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
     ]

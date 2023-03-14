@@ -9,7 +9,7 @@ from nameserver.models import Domain
 class Subnet(models.Model):
   name = models.CharField(max_length=64)
   active = models.BooleanField()
-  domain = models.ForeignKey(Domain, null=True)
+  domain = models.ForeignKey(Domain, null=True, on_delete=models.PROTECT)
   prefix = models.GenericIPAddressField()
   mask = models.IntegerField()
   free = models.IntegerField(default = -1)
@@ -124,7 +124,7 @@ class Subnet(models.Model):
 class Lease(models.Model):
   IP = models.GenericIPAddressField()
   MAC = models.CharField(max_length=18)
-  subnet = models.ForeignKey(Subnet)
+  subnet = models.ForeignKey(Subnet, on_delete=models.PROTECT)
   present = models.BooleanField(default=True)
   lease = models.BooleanField(default=False)
 

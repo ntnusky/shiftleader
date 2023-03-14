@@ -14,7 +14,8 @@ class Command(BaseCommand):
     environment = options['environment']
 
     with transaction.atomic():
-      task = Task.objects.get(typeid=R10KDEPLOY, status=Task.PROGRESS,
-                              payload="%s,%s" % (hostname,environment))
-      task.status = Task.FINISHED
-      task.save()
+      tasks = Task.objects.filter(typeid=R10KDEPLOY, status=Task.PROGRESS,
+                              payload="%s,%s" % (hostname,environment)).all()
+      for task in tasks:
+        task.status = Task.FINISHED
+        task.save()

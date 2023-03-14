@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -50,26 +51,34 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='configfile',
             name='filetype',
-            field=models.ForeignKey(to='netinstall.ConfigFileType'),
+            field=models.ForeignKey(to='netinstall.ConfigFileType',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='boottemplate',
             name='installconifg',
-            field=models.ForeignKey(to='netinstall.ConfigFile', related_name='bt_inst'),
+            field=models.ForeignKey(to='netinstall.ConfigFile',
+                related_name='bt_inst', 
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='boottemplate',
             name='os',
-            field=models.ForeignKey(to='netinstall.OperatingSystem'),
+            field=models.ForeignKey(to='netinstall.OperatingSystem',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='boottemplate',
             name='postinstall',
-            field=models.ForeignKey(to='netinstall.ConfigFile', related_name='bt_postinst'),
+            field=models.ForeignKey(to='netinstall.ConfigFile', 
+                related_name='bt_postinst',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
         migrations.AddField(
             model_name='boottemplate',
             name='tftpconfig',
-            field=models.ForeignKey(to='netinstall.ConfigFile', related_name='bt_tftp'),
+            field=models.ForeignKey(to='netinstall.ConfigFile', 
+                related_name='bt_tftp',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
     ]

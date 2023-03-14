@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -27,7 +28,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
                 ('order', models.IntegerField()),
-                ('bootfile', models.ForeignKey(to='host.BootFile')),
+                ('bootfile', models.ForeignKey(to='host.BootFile',
+                    on_delete=django.db.models.deletion.PROTECT)),
             ],
             options={
                 'ordering': ['order'],
@@ -52,11 +54,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='bootfilefragment',
             name='fragment',
-            field=models.ForeignKey(to='host.BootFragment'),
+            field=models.ForeignKey(to='host.BootFragment',
+                on_delete=django.db.models.deletion.PROTECT),
         ),
         migrations.AddField(
             model_name='host',
             name='bootfile',
-            field=models.ForeignKey(null=True, to='host.BootFile'),
+            field=models.ForeignKey(null=True, to='host.BootFile',
+                on_delete=django.db.models.deletion.SET_NULL),
         ),
     ]

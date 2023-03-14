@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -19,7 +20,8 @@ class Migration(migrations.Migration):
                 ('ipv4', models.GenericIPAddressField(protocol='IPv4', null=True)),
                 ('ipv6', models.GenericIPAddressField(protocol='IPv6', null=True)),
                 ('active', models.BooleanField(default=True)),
-                ('domain', models.ForeignKey(to='nameserver.Domain')),
+                ('domain', models.ForeignKey(to='nameserver.Domain',
+                    on_delete=django.db.models.deletion.PROTECT)),
             ],
         ),
     ]

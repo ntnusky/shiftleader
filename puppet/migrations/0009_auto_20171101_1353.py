@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -22,8 +23,10 @@ class Migration(migrations.Migration):
                 ('puppet_version', models.CharField(max_length=12)),
                 ('status', models.IntegerField(choices=[(0, 'Unchanged'), (1, 'Changed'), (2, 'Failed')])),
                 ('time', models.DateTimeField()),
-                ('environment', models.ForeignKey(to='puppet.Environment')),
-                ('host', models.ForeignKey(to='host.Host')),
+                ('environment', models.ForeignKey(to='puppet.Environment',
+                on_delete=django.db.models.deletion.SET_NULL)),
+                ('host', models.ForeignKey(to='host.Host',
+                on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -36,7 +39,8 @@ class Migration(migrations.Migration):
                 ('line', models.IntegerField()),
                 ('file', models.CharField(max_length=128)),
                 ('time', models.DateTimeField()),
-                ('report', models.ForeignKey(to='puppet.Report')),
+                ('report', models.ForeignKey(to='puppet.Report',
+                on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -46,7 +50,8 @@ class Migration(migrations.Migration):
                 ('metricType', models.IntegerField(choices=[(0, 'Time'), (1, 'Resource'), (2, 'Event'), (3, 'Change')])),
                 ('name', models.CharField(max_length=32)),
                 ('value', models.CharField(max_length=64)),
-                ('report', models.ForeignKey(to='puppet.Report')),
+                ('report', models.ForeignKey(to='puppet.Report',
+                on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(

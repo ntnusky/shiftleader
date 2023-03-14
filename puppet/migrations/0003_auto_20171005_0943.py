@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -19,7 +20,8 @@ class Migration(migrations.Migration):
                 ('started', models.CharField(max_length=64)),
                 ('finished', models.CharField(max_length=64)),
                 ('success', models.BooleanField()),
-                ('environment', models.ForeignKey(to='puppet.Environment')),
+                ('environment', models.ForeignKey(to='puppet.Environment',
+                    on_delete=django.db.models.deletion.PROTECT)),
             ],
         ),
         migrations.CreateModel(
@@ -35,6 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='environmentversion',
             name='server',
-            field=models.ForeignKey(to='puppet.Server'),
+            field=models.ForeignKey(to='puppet.Server',
+            on_delete=django.db.models.deletion.PROTECT),
         ),
     ]

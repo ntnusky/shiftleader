@@ -1,7 +1,7 @@
-from django.core.urlresolvers import reverse
 from django.db import transaction 
 from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.shortcuts import render
+from django.urls import reverse
 
 from dashboard.settings import parser
 from dashboard.utils import get_client_ip
