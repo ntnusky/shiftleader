@@ -33,10 +33,10 @@ class Servers:
       if s.active:
         self.servers.append(s)
 
-  def configureLease(self, ip, mac, present=True, hostname=None):
+  def configureLease(self, ip, mac, present=True, hostname=None, debug=False):
     status = 0
     for server in self.servers:
-      status = status | server.configureLease(ip, mac, present, hostname)
+      status = status | server.configureLease(ip, mac, present, hostname, debug)
     return status
 
   def status(self):
@@ -83,23 +83,34 @@ class Server:
   def deleteLease(self, mac):
     self.connection.del_host(mac)
 
-  def configureLease(self, ip, mac, present=True, hostname=None):
+  def configureLease(self, ip, mac, present=True, hostname=None, debug=False):
     try:
       currentIP = self.getLease(mac)
 
+      if debug:
+        print("DHCP-Server: %s - Current: %s - Should be: %s %s" % (
+          self.host, currentIP, (ip if present else None), 
+          "for %s" % hostname if hostname else ""))
+
       # If the lease exists, but contains wrong IP, recreate it.
       if(present and currentIP and currentIP != ip):
+        if debug:
+          print(" - Recreating the lease")
         self.deleteLease(mac)
         self.addLease(ip, mac, hostname)
         return Servers.UPDATED
 
       # If lease does not already exist, but should exist, create it.
       elif(present and not currentIP):
+        if debug:
+          print(" - Adding the lease")
         self.addLease(ip, mac, hostname)
         return Servers.CREATED
 
       # If lease exists and should not, delete it
       elif(not present and currentIP and currentIP == ip):
+        if debug:
+          print(" - Removing the lease")
         self.deleteLease(mac)
         return Servers.DELETED
     except OSError:

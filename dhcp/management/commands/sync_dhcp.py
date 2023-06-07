@@ -27,7 +27,8 @@ class Command(BaseCommand):
         except Interface.DoesNotExist:
           pass
 
-        status = servers.configureLease(lease.IP, lease.MAC, lease.present, name)
+        status = servers.configureLease(lease.IP, lease.MAC, lease.present,
+          name, debug=True)
 
         if status & Servers.CREATED:
           self.stdout.write("Created lease for %s->%s" % (lease.IP, lease.MAC))
